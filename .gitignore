@@ -1,6 +1,9 @@
 # Debug files
 testing.py
-
+WARNING.OUT
+ERROR.OUT
+fort.*
+LUN.LST 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
