@@ -6,72 +6,16 @@ import os
 import tempfile
 from datetime import datetime
 
+__MODELS__ = { # Associates model name to file name (CUL, SPE, ECO)
+    'PRFRM047':  'ALFRM047',
+    'RICER047': 'RICER047'
+}
+
+
 class CSMRun():
     def __init__(self, DSSATPath, DSSATexec='dscsm047', **kwargs):
-        ''' 
-        Is the object that handles the execution of the DSSAT model, its
-        initializated passing the exec arg, among other kwargs.
+       return
 
-            DSSATexec: DSSAT Shell command | str
-            DSSATPath: path were DSSAT source code is located | str
-        '''
-        self.dssat = DSSATexec
-        # It checks whether DSSAT Shell command can't be found or not
-        if shutil.which(self.dssat) != None:
-            print(f'DSSAT found at {shutil.which(self.dssat)}')
-            # Removes all the Out files from the previous execution
-            # for ext in ['*.OUT', '*.LST', 'fort.*']:
-            #     for f in glob.glob(ext):
-            #         os.remove(f)
-
-        else:
-            raise DSSATNotFound(f'{self.dssat} was not found in your environment, please make sure it is compiled and added to $PATH and exec arg is well defined')
-        self.DSSATPath = DSSATPath
-
-        # Define attributes if those haven't been defined during the init
-        # DataPath is the path that contains all DSSAT built data
-        if 'DataPath' in kwargs.keys():
-            self.DataPath = kwargs['DataPath']
-        else:
-            self.DataPath = os.path.join(self.DSSATPath, 'Data')
-        # StandardData is a path than contains some of the required files to run the model
-        if 'StandardData' in kwargs.keys():
-            self.StandardDataPath = kwargs['StandardData']
-        else:
-            self.StandardDataPath = os.path.join(self.DataPath, 'StandardData')
-
-        # Genotype is the folder that contains CUL, ECO and SPE files for the different crops
-        if 'GenotypePath' in kwargs.keys():
-            self.GenotypePath = kwargs['GenotypePath']
-        else:
-            self.GenotypePath = os.path.join(self.DataPath, 'Genotype')
-
-        # Create a Temporary dir for working there
-        self.tmp_dir = os.path.join(tempfile.gettempdir(), 'DSSATTools', datetime.now().strftime('%y%m%d%H%M%S'))
-        os.makedirs(self.tmp_dir)
-        print(f'{self.tmp_dir} Temporary working directory created')
-
-        # Link necessary files for simulation on the temporary directory
-        subprocess.run(['ln', '-sf', os.path.join(self.DataPath, 'MODEL.ERR'), os.path.join(self.tmp_dir, 'MODEL.ERR')])
-        subprocess.run(['ln', '-sf', os.path.join(self.DataPath, 'DSSATPRO.L47'), os.path.join(self.tmp_dir, 'DSSATPRO.L47')])
-        subprocess.run(['ln', '-sf', os.path.join(self.DataPath, 'SIMULATION.CDE'), os.path.join(self.tmp_dir, 'SIMULATION.CDE')])
-        subprocess.run(['ln', '-sf', os.path.join(self.DataPath, 'DETAIL.CDE'), os.path.join(self.tmp_dir, 'DETAIL.CDE')])
-        subprocess.run(['ln', '-sf', os.path.join(self.DataPath, 'DATA.CDE'), os.path.join(self.tmp_dir, 'DATA.CDE')])
-        # Link StandardData directory to DSSAT Path
-        subprocess.run(['ln', '-sf', self.StandardDataPath, os.path.join(self.DSSATPath, 'StandardData')])
-
-        # If specific file locations are passed as args, then it will take those
-        if 'RIX' in kwargs.keys():
-            self.RIX = kwargs['RIX']
-        else:
-            None
-
-        if 'WTH' in kwargs.keys():
-            self.WTH = kwargs['WTH']
-            if isinstance(self.WTH, str):
-                self.WTH = [self.WTH]
-        else:
-            None
 
         # if 'SPE' in kwargs.keys():
         #     self.SPE = kwargs['SPE']
@@ -89,12 +33,16 @@ class CSMRun():
             None
 
         # Link input files to temporary directory
-        subprocess.run(['ln', '-sf', self.RIX, os.path.join(self.tmp_dir, os.path.basename(self.RIX))])
+        subprocess.run(['ln', '-sf', self.Experimental, os.path.join(self.tmp_dir, os.path.basename(self.Experimental))])
         # subprocess.run(['ln', '-sf', self.SPE, os.path.join(self.tmp_dir, os.path.basename(self.SPE))])
         # subprocess.run(['ln', '-sf', self.CUL, os.path.join(self.tmp_dir, os.path.basename(self.CUL))])
-        subprocess.run(['ln', '-sf', self.SOL, os.path.join(self.tmp_dir, os.path.basename(self.SOL))])
+        subprocess.run(['ln', '-sf', self.SOL, os.path.join(self.tmp_dir, 'SOIL.SOL')])
         for WTH_file in self.WTH:
             subprocess.run(['ln', '-sf', WTH_file, os.path.join(self.tmp_dir, os.path.basename(WTH_file))])
+        try:
+            subprocess.run(['ln', '-sf', self.MOW, os.path.join(self.tmp_dir, os.path.basename(self.MOW))])
+        except AttributeError:
+            None
 
 
     def run(self, model, runmode, argA, argB='', control_file=''):
@@ -170,26 +118,26 @@ class CSMRun():
         # Create Links to Crop Files
         subprocess.run([
             'ln', '-sf', 
-            os.path.join(self.GenotypePath, f'{model}.SPE'), 
-            os.path.join(self.tmp_dir, f'{model}.SPE')
+            os.path.join(self.GenotypePath, f'{__MODELS__[model]}.SPE'), 
+            os.path.join(self.tmp_dir, f'{__MODELS__[model]}.SPE')
         ])
-        if os.path.exists( os.path.join(self.GenotypePath, f'{model}.CUL')):
+        if os.path.exists( os.path.join(self.GenotypePath, f'{__MODELS__[model]}.CUL')):
             subprocess.run([
                 'ln', '-sf', 
-                 os.path.join(self.GenotypePath, f'{model}.CUL'), 
-                os.path.join(self.tmp_dir, f'{model}.CUL')
+                 os.path.join(self.GenotypePath, f'{__MODELS__[model]}.CUL'), 
+                os.path.join(self.tmp_dir, f'{__MODELS__[model]}.CUL')
             ])
-        if os.path.exists(os.path.join(self.GenotypePath, f'{model}.ECO')):
+        if os.path.exists(os.path.join(self.GenotypePath, f'{__MODELS__[model]}.ECO')):
             subprocess.run([
                 'ln', '-sf', 
-                 os.path.join(self.GenotypePath, f'{model}.ECO'), 
-                os.path.join(self.tmp_dir, f'{model}.ECO')
+                 os.path.join(self.GenotypePath, f'{__MODELS__[model]}.ECO'), 
+                os.path.join(self.tmp_dir, f'{__MODELS__[model]}.ECO')
             ])
         # Save the current Path
         prev_path = os.getcwd()
         # Create ArgA based on run mode
         if runmode in ['A', 'C', 'G']:
-            argA = os.path.basename(self.RIX)
+            argA = os.path.basename(self.Experimental)
         os.chdir(self.tmp_dir) # Go to tmp_dir
         subprocess.run([self.dssat, model, runmode, argA, argB, control_file])
         os.chdir(prev_path) # Back to previous path
