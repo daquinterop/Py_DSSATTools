@@ -3,8 +3,9 @@ import shutil
 from .exceptions import DSSATNotFound
 import glob
 import os
-import tempfile
 from datetime import datetime
+import docker
+import sys
 
 __MODELS__ = { # Associates model name to file name (CUL, SPE, ECO)
     'PRFRM047':  'ALFRM047',
@@ -12,40 +13,38 @@ __MODELS__ = { # Associates model name to file name (CUL, SPE, ECO)
 }
 
 
-class CSMRun():
-    def __init__(self, DSSATPath, DSSATexec='dscsm047', **kwargs):
-       return
+class CSM():
+    def __init__(self, DSSATimage='eusojk/dssat:v47', **kwargs):
+        self.DSSATimage = DSSATimage
+        self.client = docker.from_env()
+        all_images = sum(list(map(lambda x: x.attrs['RepoTags'], self.client.images.list())), [])
+        if DSSATimage not in all_images:
+           raise OSError(f'{DSSATimage} image was not found on your docker client')
+        # if not os.path.exists(os.path.join(tempfile.gettempdir(), 'dssat')):
+        #     os.mkdir(os.path.join(tempfile.gettempdir(), 'dssat'))
+        return
 
 
-        # if 'SPE' in kwargs.keys():
-        #     self.SPE = kwargs['SPE']
-        # else:
-        #     None
 
-        # if 'CUL' in kwargs.keys():
-        #     self.CUL = kwargs['CUL']
-        # else:
-        #     None
-
-        if 'SOL' in kwargs.keys():
-            self.SOL = kwargs['SOL']
+    def runFileX(self, experimental, crop):
+        '''
+        Crop is defined as it is indicated in: https://dssat.net/plant-growth-modules-in-dssat-csm/
+        '''
+        container = self.client.containers.run(
+            self.DSSATimage, f'infinity', detach=True,
+            volumes={os.path.dirname(experimental): {'bind': '/tmp/dssat', 'mode': 'rw'}},
+            working_dir='/tmp/dssat', auto_remove=False, entrypoint='/bin/sleep',
+        )
+        exe_thr = container.exec_run(f'/dssat47/dscsm047 {crop} A {os.path.basename(experimental)}')
+        if exe_thr.exit_code != 0:
+            container.kill()
+            container.remove()
+            raise OSError(f'DSSAT execution failed  \n {exe_thr.output.decode("utf-8")}')
         else:
-            None
-
-        # Link input files to temporary directory
-        subprocess.run(['ln', '-sf', self.Experimental, os.path.join(self.tmp_dir, os.path.basename(self.Experimental))])
-        # subprocess.run(['ln', '-sf', self.SPE, os.path.join(self.tmp_dir, os.path.basename(self.SPE))])
-        # subprocess.run(['ln', '-sf', self.CUL, os.path.join(self.tmp_dir, os.path.basename(self.CUL))])
-        subprocess.run(['ln', '-sf', self.SOL, os.path.join(self.tmp_dir, 'SOIL.SOL')])
-        for WTH_file in self.WTH:
-            subprocess.run(['ln', '-sf', WTH_file, os.path.join(self.tmp_dir, os.path.basename(WTH_file))])
-        try:
-            subprocess.run(['ln', '-sf', self.MOW, os.path.join(self.tmp_dir, os.path.basename(self.MOW))])
-        except AttributeError:
-            None
-
-
-    def run(self, model, runmode, argA, argB='', control_file=''):
+            sys.stdout.buffer.write(exe_thr.output)
+        container.kill()
+        container.remove()
+        return
         '''
         -----------------------------------------------------------------------------                                           
         DSSAT COMMAND LINE USAGE:                                                                                               
@@ -116,28 +115,29 @@ class CSMRun():
         ----------------------------------------------------------------------------- 
         '''
         # Create Links to Crop Files
-        subprocess.run([
-            'ln', '-sf', 
-            os.path.join(self.GenotypePath, f'{__MODELS__[model]}.SPE'), 
-            os.path.join(self.tmp_dir, f'{__MODELS__[model]}.SPE')
-        ])
-        if os.path.exists( os.path.join(self.GenotypePath, f'{__MODELS__[model]}.CUL')):
-            subprocess.run([
-                'ln', '-sf', 
-                 os.path.join(self.GenotypePath, f'{__MODELS__[model]}.CUL'), 
-                os.path.join(self.tmp_dir, f'{__MODELS__[model]}.CUL')
-            ])
-        if os.path.exists(os.path.join(self.GenotypePath, f'{__MODELS__[model]}.ECO')):
-            subprocess.run([
-                'ln', '-sf', 
-                 os.path.join(self.GenotypePath, f'{__MODELS__[model]}.ECO'), 
-                os.path.join(self.tmp_dir, f'{__MODELS__[model]}.ECO')
-            ])
-        # Save the current Path
-        prev_path = os.getcwd()
-        # Create ArgA based on run mode
-        if runmode in ['A', 'C', 'G']:
-            argA = os.path.basename(self.Experimental)
-        os.chdir(self.tmp_dir) # Go to tmp_dir
-        subprocess.run([self.dssat, model, runmode, argA, argB, control_file])
-        os.chdir(prev_path) # Back to previous path
+        # subprocess.run([
+        #     'ln', '-sf', 
+        #     os.path.join(self.GenotypePath, f'{__MODELS__[model]}.SPE'), 
+        #     os.path.join(self.tmp_dir, f'{__MODELS__[model]}.SPE')
+        # ])
+        # if os.path.exists( os.path.join(self.GenotypePath, f'{__MODELS__[model]}.CUL')):
+        #     subprocess.run([
+        #         'ln', '-sf', 
+        #          os.path.join(self.GenotypePath, f'{__MODELS__[model]}.CUL'), 
+        #         os.path.join(self.tmp_dir, f'{__MODELS__[model]}.CUL')
+        #     ])
+        # if os.path.exists(os.path.join(self.GenotypePath, f'{__MODELS__[model]}.ECO')):
+        #     subprocess.run([
+        #         'ln', '-sf', 
+        #          os.path.join(self.GenotypePath, f'{__MODELS__[model]}.ECO'), 
+        #         os.path.join(self.tmp_dir, f'{__MODELS__[model]}.ECO')
+        #     ])
+        # # Save the current Path
+        # prev_path = os.getcwd()
+        # # Create ArgA based on run mode
+        # if runmode in ['A', 'C', 'G']:
+        #     argA = os.path.basename(self.Experimental)
+        # os.chdir(self.tmp_dir) # Go to tmp_dir
+        # subprocess.run([self.dssat, model, runmode, argA, argB, control_file])
+        # os.chdir(prev_path) # Back to previous path
+        
