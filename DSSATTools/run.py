@@ -1,10 +1,8 @@
-from sndhdr import whathdr
 import subprocess
 import shutil
 
 from numpy import isin
-from .exceptions import DSSATNotFound
-import glob
+from .exceptions import DSSATNotFound, DSSATInputError
 import os
 from datetime import datetime
 import docker
@@ -22,7 +20,7 @@ class CSM_EXE():
         if os.path.exists(DSSATExe):
             print(f'DSSAT Executable at {self.DSSATExe}')
         else:
-            raise FileNotFoundError(f'DSSAT Executable was not found on {self.DSSATExe}')
+            raise DSSATNotFound(f'DSSAT Executable was not found on {self.DSSATExe}')
         return
 
 
@@ -48,44 +46,37 @@ class CSM_EXE():
             shutil.copy(source_path, os.path.join(destinations[type], os.path.basename(source_path)))
 
 
-    def __wrap_out(self):
-        self.results = {}
+    def __wrap_out(self, treat):
+        treatOut = {}
         out_filenames = [f for f in os.listdir(self.wdir) if '.OUT' in f]
         for filename in out_filenames:
-            self.results[filename[:-4]] = dssatUtils.out_wrapper(os.path.join(self.wdir, filename))
+            treatOut[filename[:-4]] = dssatUtils.out_wrapper(os.path.join(self.wdir, filename))
+        self.results.addTreatmentOut(treat, treatOut)
         return
 
+    def __get_treatments(self):
+        treatments = []
+        flag = False
+        with open(os.path.basename(self.experimental), 'r') as expfile:
+            for line in expfile:
+                if '*TREATMENTS' in line:
+                    flag = True
+                    continue
+                if flag:
+                    if len(line.strip()) < 1:
+                        return treatments[1:]
+                    treatments.append(line.split()[0])
+        raise DSSATInputError(f'Treatments not detected on {os.path.basename(self.experimental)} file')
 
-    def runDSSAT(
-        self, experimental, crop, mode='A', arg1='', arg2='', wth_folder=None, 
-        soil_profile=None, wdir=None, mow=None, field_data=None
-        ):
+    def runDSSAT(self, experimental, crop, treatments=None, wth_folder=None, soil_profile=None, wdir=None):
         '''
-        experimental: str, Path to Exprimental File (.--X)
+        experimental: str, Path to Exprimental File (.crX)
         wth_folder: str, Path to weather files (.WTH). If None then the Weather files 
             are expected to be one of the default ones.
         soil_profile: str, Path to soil file (.SOL). If none a Default soil is expected on 
             the Experimental File.
         wdir: str, Path to working directory. If None, then it's current directory.
-        mow: str, mow file for Forages
-        field_data: str, field collected data
-        mode, arg2, arg1: str, Define run mode of the Model and args. Are defined as follows:
-            mode argA       argB  Description                                                                                       
-            ---- ---------  ----- ------------------------------------------------------                                            
-            A   FileX      NA    All: Run all treatments in the specified FileX.                                                   
-            B   BatchFile  NA    Batch: Batchfile lists experiments and treatments.                                                
-            C   FileX      TrtNo Command line: Run single FileX and treatment #.                                                   
-            D   TempFile   NA    Debug: Skip input module and use existing TempFile.                                               
-            E   BatchFile  NA    Sensitivity: Batchfile lists FileX and TrtNo.                                                     
-            F   BatchFile  NA    Farm model: Batchfile lists experiments and treatments.                                           
-            G   FileX      TrtNo Gencalc: Run single FileX and treatment #.                                                        
-            I   NA         NA    Interactive: Interactively select FileX and TrtNo.                                                
-            L   BatchFile  NA    Gene-based model (Locus): Batchfile for FileX and TrtNo                                           
-            N   BatchFile  NA    Seasonal analysis: Batchfile lists FileX and TrtNo.                                               
-            Q   BatchFile  NA    Sequence analysis: Batchfile lists FileX & rotation #.                                            
-            S   BatchFile  NA    Spatial: Batchfile lists experiments and treatments.                                              
-            T   BatchFile  NA    Gencalc: Batchfile lists experiments and treatments.                                              
-            Y   BatchFile  NA    Yield forecast mode uses ensemble weather data.  
+        treatements: list, any iterable listing the treatements to run. If None all treatements are run
         crop: str, two character crop code, defined as follows:
             +----------------+----+----------+----------------------+---------------+-------------+
             |    CROP        |DSSA|  ICASA   | Default Model        | Alt Model 1   | Alt Model 2 |
@@ -138,6 +129,7 @@ class CSM_EXE():
             self.wdir = wdir
             if not os.path.exists(self.wdir):
                 os.mkdir(self.wdir)
+
         for f in os.listdir(os.path.dirname(experimental)):
             if os.path.basename(experimental).split('.')[0] in f:
                 self.__put_files(os.path.join(os.path.dirname(experimental), f), type='exp')
@@ -145,18 +137,35 @@ class CSM_EXE():
             self.__put_files(wth_folder, type='wth')
         if not isinstance(soil_profile, type(None)):
             self.__put_files(soil_profile, type='sol')
+        
         os.chdir(self.wdir)
-        if mode in ['A', 'C', 'G']:
-            arg1 = os.path.basename(experimental)
-        # exe_thr = subprocess.getoutput(f'{self.DSSATExe} {crop} {mode} {arg1} {arg2}')
-        exe_thr = subprocess.Popen([self.DSSATExe, crop, mode, arg1, str(arg2)], stdout=subprocess.PIPE)
-        returncode = exe_thr.wait()
-        for line in exe_thr.stdout.readlines(): print(line.decode('utf-8'), end='')
-        if returncode != 0:
-            self.__wrap_out()
-            raise OSError(f'DSSAT execution failed')
+        
+        if not hasattr(treatments, '__iter__'):
+            self.treatments = self.__get_treatments()
         else:
-            self.__wrap_out()
+            self.treatments = treatments
+            treatments_on_file = self.__get_treatments()
+            for treatment in self.treatments:
+                if treatment not in treatments_on_file:
+                    raise DSSATInputError(f'Treatment {treatment} not found in {os.path.basename(self.experimental)} file')
+        self.results = dssatUtils.DSSATOutput(self.treatments)
+
+        for treatment in self.treatments:
+            DSSBatchLines = dssatUtils.writeDSSBATCH(
+                crop=crop, wdir=self.wdir, 
+                dssatExe=self.DSSATExe, exp=os.path.basename(self.experimental), treat=treatment
+            )
+            with open(os.path.join(wdir, 'DSSBatch.v47'), 'w') as f:
+                f.writelines(DSSBatchLines)
+            exe_thr = subprocess.Popen([self.DSSATExe, crop, 'B', 'DSSBatch.v47'], stdout=subprocess.PIPE)
+            returncode = exe_thr.wait()
+            # for line in exe_thr.stdout.readlines(): print(line.decode('utf-8'), end='')
+            dssatUtils.printSysOut(exe_thr.stdout)
+            if returncode != 0:
+                self.__wrap_out(treatment)
+                raise OSError(f'DSSAT execution failed')
+            else:
+                self.__wrap_out(treatment)
         os.chdir(self.curdir)
         return
 
