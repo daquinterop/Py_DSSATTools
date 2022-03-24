@@ -1,9 +1,12 @@
+from concurrent.futures.process import BrokenProcessPool
 from distutils.log import warn
+import enum
 from turtle import position
 from attr import has
 import pandas as pd
-from numpy import cumsum
+from numpy import cumsum, isin
 from .exceptions import DSSATInputError
+import os
 
 class outFile(list):
     def __init__(self, out):
@@ -15,7 +18,21 @@ class outFile(list):
 
 
 class DSSATOutput(dict):
+    '''
+    A dict-like class to handle DSSAT Output Files. 
+    Table-like outputs will be saved as a pandas.Dataframe object.
+    Text-like outputs will be storaged as lists of text lines. By applying 
+        print function on text-like outputs it will be pretty printed.
+    ...
+    Attributes
+    ------------------
+    treatments: list
+        List os treaments on the simulation
+    '''
     def __init__(self, treatments):
+        '''
+        
+        '''
         self.treatments = treatments
         super().__init__({treat: {} for treat in treatments})
         return
@@ -59,6 +76,7 @@ def writeDSSBATCH(crop, wdir, dssatExe, exp, treat):
     lines.append(f'{exp}{(filex_len - len(exp) + 4)*" "}{treat}      1      0      1      0')
     return lines
 
+
 def out_wrapper(filename):
     '''
     Takes a file separated by spaces and return a df a list with
@@ -98,8 +116,31 @@ def printSysOut(sysOut):
     print()
     return
 
+
 class CropParser():
+    '''
+    A class to Load, modify and write DSSAT Crop Files (.SPE, .CUL, .ECO). When 
+    reading the files it reads the parameters IN ORDER. If some warn or error states
+    that the parameters were not found, but they are in the crop file, it's likely 
+    because those parameters are on the wrong order.
+    ...
+    Attributes
+    ------------------
+    CROPFILE: str
+        Path to the crop file
+    parameters:
+        Dict of parameters
+    '''
     def __init__(self, crop_file, raise_missing_pars=True):
+        '''
+        Intialize the crop parser by finding the parameters in the crop file.
+        crop_file: str
+            Path to the .SPE crop file
+        raise_missing_pars: bool
+            Wheter to raise an error when some of the parameters are not present on the 
+            crop file. If False, it will show warns when some of the parameters are not
+            found on the crop file.
+        '''
         self.CROPFILE = crop_file
         with open(self.CROPFILE, 'r') as f:
             self._FILELINES = f.readlines()
@@ -111,6 +152,7 @@ class CropParser():
         self.RAISE_MISS = raise_missing_pars
         self.parameters = {}
         self._parsloc = {}
+        self._modified_pars = []
         self.__read_phot()
         self.__read_resp()
         self.__read_plantcomp()
@@ -122,32 +164,72 @@ class CropParser():
         self.__read_canopy()
         self.__read_ET()
         self.__read_dormancy()
-        self.__read_dormancy()
+        self.__read_cul()
+        self.__read_eco()
         return
     
-    def __ignore(self, start_line):
-        for n, line in enumerate(self._FILELINES[start_line:]):
+    def __ignore(self, start_line, filetype='SPE'):
+        '''Iterate over the file until a valid line is found
+        ...
+        Arguments
+        --------------
+        start_line: int
+            Line number to start iterating
+        filetype: str
+            File type, any value in SPE, ECO, CUL
+        '''
+        if filetype == 'ECO':
+            FILELINES = self._ECOLINES
+        elif filetype == 'CUL':
+            FILELINES = self._CULLINES
+        else:
+            FILELINES = self._FILELINES
+        for n, line in enumerate(FILELINES[start_line:]):
             if line[:1] not in ['!', '*'] and len(line.strip()) > 0:
-                return n + start_line + 1, self._FILELINES[n + start_line]
+                return n + start_line + 1, FILELINES[n + start_line]
     
 
-    def __read(self, line, n_pars, lenght, names, curr_line):
+    def __read(self, line, n_pars, lenght, names, curr_line, filetype='SPE'):
+        '''
+        Read the parameters on that line
+        ...
+        Attributes
+        -----------------------
+        line: str
+            Line for the parameters to be read
+        n_pars: int
+            Number of parameters on that line
+        lenght: int or list
+            Lenght of all the parameters on the line (int) or list with the
+            lenghts of the paramters on that line.
+        names: list
+            List with the names of the parameters to be read.
+        curr_line: int
+            Current line on the crop file being read
+        '''
         if not all([name in line for name in names]):
             if self.RAISE_MISS:
-                raise DSSATInputError(f'One or some of {", ".join(names)} parameters were not found at line {curr_line+1} of {self.CROPFILE}')
+                raise DSSATInputError(
+                    f'One or some of {", ".join(names)} parameters were not' +
+                    f' found at line {curr_line+1} of {self.CROPFILE}'
+                )
             else: 
-                warn(f'\033[93mWarn: One or some of {", ".join(names)} parameters were not found at line {curr_line+1} of {self.CROPFILE}')
+                warn(
+                    f'\033[93mWarn: One or some of {", ".join(names)} parameters' +
+                    f' were not found at line {curr_line+1} of {self.CROPFILE}'
+                )
                 return False
         
         parameters = []
         positions = []
+        # When lenghts are variable among the same line
         if not hasattr(lenght, '__iter__'):
             lenght = [lenght]*n_pars
         pos = [0] + list(cumsum(lenght))
         for bottom, upper  in zip(pos[:-1], pos[1:]):
             parameters.append(line[bottom:upper])
             positions.append((curr_line, (bottom, upper))) # (line_of_parameter, (left_pos, right_pos))
-        
+        # For uniform lenghts
         extra_pos = 0
         for n, name in enumerate(names):
             name_plain = name.replace('VALUES', '').replace('1-', '')
@@ -256,6 +338,7 @@ class CropParser():
                 start_line -= 1
         return
 
+
     def __read_leafGrowth(self):
         start_line = self._SEC_START_LINES['!*LEAF G']
         PARS_NAMES_LIST = [
@@ -273,6 +356,7 @@ class CropParser():
                 start_line -= 1
         return
     
+
     def __read_leafSenscence(self):
         start_line = self._SEC_START_LINES['!*LEAF S']
         PARS_NAMES_LIST = [
@@ -287,6 +371,7 @@ class CropParser():
                 start_line -= 1
         return
 
+
     def __read_root(self):
         start_line = self._SEC_START_LINES['!*ROOT P']
         PARS_NAMES_LIST = [
@@ -300,6 +385,7 @@ class CropParser():
             if not read:
                 start_line -= 1
         return
+
 
     def __read_canopy(self):
         start_line = self._SEC_START_LINES['!*CANOPY']
@@ -316,6 +402,7 @@ class CropParser():
                 start_line -= 1
         return
 
+
     def __read_ET(self):
         start_line = self._SEC_START_LINES['!*EVAPOT']
         PARS_NAMES_LIST = [
@@ -329,6 +416,7 @@ class CropParser():
             if not read:
                 start_line -= 1
         return
+
 
     def __read_dormancy(self):
         start_line = self._SEC_START_LINES['!*DORMAN']
@@ -347,4 +435,184 @@ class CropParser():
         return
     
 
+    def __read_cul(self):
+        CUL_PATH = self.CROPFILE[:-3] + 'CUL'
+        if not os.path.exists(CUL_PATH):
+            warn(f'\033[93mWarn: .CUL file not in the same path as {self.CROPFILE}')
+            return
+        self.CULFILE = CUL_PATH
+        with open(self.CULFILE, 'r') as f:
+            self._CULLINES = f.readlines()
+        start_line = 0
+        start_line, line = self.__ignore(start_line, 'CUL')
+        VAR_LOCS = [0, 6, 1, 16, 1, 6] + [6] * 18
+        VAR_LOCS = cumsum(VAR_LOCS)
+        self._cullocs = {}
+        pars = []
+        for bottom, upper in zip(VAR_LOCS[:-1], VAR_LOCS[1:]):
+            parameter = (line[bottom:upper]).strip()
+            if len(parameter.strip()) < 1:
+                continue
+            pars.append(parameter)
+            self._cullocs[parameter] = (bottom, upper)
+            self._parsloc[parameter] = [('CUL', (bottom, upper))]
+            self.parameters[parameter] = []
+        start_line, line = self.__ignore(start_line, 'CUL')
+        # Append one for extraline
+        for parameter in pars:
+            for _ in range(len(self._CULLINES) - start_line):
+                self._parsloc[parameter].append(self._parsloc[parameter][0])
+
+        for line_n in range(start_line - 1, len(self._CULLINES)):
+            line = self._CULLINES[line_n]
+            if len(line.strip()) < 1:
+                break
+            for parameter, (bottom, upper) in self._cullocs.items():
+                self.parameters[parameter].append(line[bottom:upper])
+
+
+    def __read_eco(self):
+        ECO_PATH = self.CROPFILE[:-3] + 'ECO'
+        if not os.path.exists(ECO_PATH):
+            warn(f'\033[93mWarn: .ECO file not in the same path for {self.CROPFILE}')
+            return
+        self.ECOFILE = ECO_PATH
+        with open(self.ECOFILE, 'r') as f:
+            self._ECOLINES = f.readlines()
+        start_line = 0
+        start_line, line = self.__ignore(start_line, 'ECO')
+        VAR_LOCS = [0, 6, 1, 17, 1, 2, 1, 2] + [6] * 23
+        VAR_LOCS = cumsum(VAR_LOCS)
+        self._ecolocs = {}
+        pars = []
+        for bottom, upper in zip(VAR_LOCS[:-1], VAR_LOCS[1:]):
+            parameter = (line[bottom:upper]).strip()
+            if len(parameter.strip()) < 1:
+                continue
+            pars.append(parameter)
+            self._ecolocs[parameter] = (bottom, upper)
+            self._parsloc[parameter] = [('ECO', (bottom, upper))]
+            self.parameters[parameter] = []
+        start_line, line = self.__ignore(start_line, 'ECO')
+        # Append one for extraline
+        for parameter in pars:
+            for _ in range(len(self._CULLINES) - start_line):
+                self._parsloc[parameter].append(self._parsloc[parameter][0])
+
+        for line_n in range(start_line - 1, len(self._ECOLINES)):
+            line = self._ECOLINES[line_n]
+            if len(line.strip()) < 1:
+                break
+            for parameter, (bottom, upper) in self._ecolocs.items():
+                self.parameters[parameter].append(line[bottom:upper])
+
+
+    def print_parameters(self):
+        ''' It prints a list of the parameters obtained by the parser from the crop file'''
+        print(', '.join(self.parameters.keys()))
+
+    def set_parameter(self, parameter:str, value):
+        '''
+        Set the value of a parameter.
+        ....
+        Arguments
+        ---------------------
+        parameter: str
+            Name of the parameter to set
+        value: str, numeric or list
+            Value of the parameter. If the parameter is a list of values then a list
+            must be pased.
+        '''
+        if parameter not in self.parameters.keys():
+            raise KeyError(f'Parameter {parameter} not found')
+        # For list-like values
+        if (hasattr(value, '__iter__') and (not isinstance(value, str))):
+            LOCS = self._parsloc[parameter]
+            for n, (val, (BOTTOM, UPPER)) in enumerate(zip(value, map(lambda x: x[1], LOCS))):
+                VAL_LEN = UPPER - BOTTOM
+                if isinstance(val, float):
+                    if len(str(int(val))) > (VAL_LEN):
+                        raise DSSATInputError(f'Input lenght exceeds parameter lenght ({VAL_LEN})')
+                val = str(val)[:VAL_LEN]
+                val = ' '*(VAL_LEN - len(val)) + val
+                self.parameters[parameter][n] = val
+        else: # For normal values
+            _, (BOTTOM, UPPER) = self._parsloc[parameter]
+            VAL_LEN = UPPER - BOTTOM
+            if isinstance(value, float):
+                if len(str(int(value))) > (VAL_LEN):
+                    raise DSSATInputError(f'Input lenght exceeds parameter lenght ({VAL_LEN})')
+            value = str(value)[:VAL_LEN]
+            value = ' '*(VAL_LEN - len(value)) + value
+            self.parameters[parameter] = value
+        self._modified_pars.append(parameter)
+        return
+
+    def set_parameters(self, pars_dict={}):
+        '''
+        Set the value of several parameters at the same time.
+        ....
+        Arguments
+        ---------------------
+        pars_dict: dict
+            A dict with the parameter name as key assigned to the value. For example: 
+            {"par1": 94, "par2(4)": [1, 2, 3, 4]}
+        '''
+        for parameter, value in pars_dict.items():
+            self.set_parameter(parameter, value)
+
+    def write(self, file_path:str):
+        '''
+        Write the crop file
+        ...
+        Arguments
+        ----------------------
+        file_path: str
+            File to write path. Do not include the extension.
+        '''
+        for parameter in self._modified_pars:
+            value = self.parameters[parameter]
+            if not (hasattr(value, '__iter__') and (not isinstance(value, str))):
+                value = [value]
+            locs = self._parsloc.get(parameter)
+            if isinstance(locs, tuple):
+                locs = [locs]
+            for val, (line_n, (bottom, upper)) in zip(value, locs):
+                if isinstance(line_n, str): # To break for the CUL and ECO files
+                    break
+                line = self._FILELINES[line_n]
+                self._FILELINES[line_n] = line[:bottom] + val + line[upper:]
+        with open(f'{file_path}.SPE', 'w') as f:
+            f.writelines(self._FILELINES)
+
+        # Save .CUL file it was included
+        if hasattr(self, 'CULFILE'):
+            start_line = 0
+            start_line, line = self.__ignore(start_line, 'CUL')
+            PARS_START_LINE, line = self.__ignore(start_line, 'CUL')
+            PARS_START_LINE -= 1
+            for parameter, (bottom, upper) in self._cullocs.items():
+                values = self.parameters[parameter]
+                for n, val in enumerate(values):
+                    line_n = PARS_START_LINE + n 
+                    line = self._CULLINES[line_n]
+                    self._CULLINES[line_n] = line[:bottom] + val + line[upper:]
+            with open(f'{file_path}.CUL', 'w') as f:
+                f.writelines(self._CULLINES)
+        
+        # Save .ECO File
+        if hasattr(self, 'ECOFILE'):
+            start_line = 0
+            start_line, line = self.__ignore(start_line, 'ECO')
+            PARS_START_LINE, line = self.__ignore(start_line, 'ECO')
+            PARS_START_LINE -= 1
+            for parameter, (bottom, upper) in self._ecolocs.items():
+                values = self.parameters[parameter]
+                for n, val in enumerate(values):
+                    line_n = PARS_START_LINE + n 
+                    line = self._ECOLINES[line_n]
+                    self._ECOLINES[line_n] = line[:bottom] + val + line[upper:]
+            with open(f'{file_path}.ECO', 'w') as f:
+                f.writelines(self._ECOLINES)
+        
     

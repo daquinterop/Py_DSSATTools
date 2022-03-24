@@ -12,7 +12,26 @@ import tempfile
 import DSSATTools.dssatUtils as dssatUtils 
 
 class CSM_EXE():
+    '''
+    A class to handle the DSSAT execution
+    ...
+    Attributes
+    ----------------------
+    results: dssatUtils.DSSATOutput object
+        It is a dict-like type object. Upper level key is the treatment, nested keys are
+        the results section (PlantGro, Summary, Etc.)
+    '''
     def __init__(self, DSSATExe='/mnt/c/DSSAT47/DSCSM047.EXE', verbose=False, **kwargs):
+        '''
+        Initialization of the DSSAT environment
+        ...
+        Arguments
+        ---------------------
+        DSSATExe: str
+            Path to the DSSAT Executable file
+        verbose: bool
+            Whether to print the DSSAT execution output or not.
+        '''
         self.verbose = verbose
         self.DSSATExe = DSSATExe    
         self.DSSATFolder = os.path.dirname(DSSATExe)
@@ -70,14 +89,24 @@ class CSM_EXE():
 
     def runDSSAT(self, experimental, crop, treatments=None, wth_folder=None, soil_profile=None, wdir=None):
         '''
-        experimental: str, Path to Exprimental File (.crX)
-        wth_folder: str, Path to weather files (.WTH). If None then the Weather files 
+        Runs DSSAT based on the passed arguments to the function.
+        ...
+        Arguments
+        ---------------------
+        experimental: str
+            Path to Exprimental File (.crX)
+        wth_folder: str
+            Path to weather files (.WTH). If None then the Weather files 
             are expected to be one of the default ones.
-        soil_profile: str, Path to soil file (.SOL). If none a Default soil is expected on 
+        soil_profile: str
+            Path to soil file (.SOL). If none a Default soil is expected on 
             the Experimental File.
-        wdir: str, Path to working directory. If None, then it's current directory.
-        treatements: list, any iterable listing the treatements to run. If None all treatements are run
-        crop: str, two character crop code, defined as follows:
+        wdir: str
+            Path to working directory. If None, then it's current directory.
+        treatements: list
+            Any iterable listing the treatements to run. If None all treatements are run
+        crop: str
+            Two character crop code, defined as follows:
             +----------------+----+----------+----------------------+---------------+-------------+
             |    CROP        |DSSA|  ICASA   | Default Model        | Alt Model 1   | Alt Model 2 |
             +----------------+----+----------+----------------------+---------------+-------------+
