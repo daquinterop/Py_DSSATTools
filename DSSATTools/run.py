@@ -1,3 +1,4 @@
+from sre_parse import Verbose
 import subprocess
 import shutil
 
@@ -87,7 +88,12 @@ class CSM_EXE():
                     treatments.append(line.split()[0])
         raise DSSATInputError(f'Treatments not detected on {os.path.basename(self.experimental)} file')
 
-    def runDSSAT(self, experimental, crop, treatments=None, wth_folder=None, soil_profile=None, wdir=None):
+    # TODO: Return to cwd everytime it stops for whatever reason. I think it is done
+    def runDSSAT(
+        self, experimental, crop, treatments=None, 
+        wth_folder=None, soil_profile=None, wdir=None,
+        crop_file=None
+    ): 
         '''
         Runs DSSAT based on the passed arguments to the function.
         ...
@@ -101,6 +107,9 @@ class CSM_EXE():
         soil_profile: str
             Path to soil file (.SOL). If none a Default soil is expected on 
             the Experimental File.
+        crop_file: str
+            Path to one of the crop files (.SPE, .ECO, .CUL). All of the crop
+            files with that name on the same folder will be taken.
         wdir: str
             Path to working directory. If None, then it's current directory.
         treatements: list
@@ -158,24 +167,50 @@ class CSM_EXE():
             self.wdir = wdir
             if not os.path.exists(self.wdir):
                 os.mkdir(self.wdir)
-
+        
+        # Move crX File
         for f in os.listdir(os.path.dirname(experimental)):
             if os.path.basename(experimental).split('.')[0] in f:
                 self.__put_files(os.path.join(os.path.dirname(experimental), f), type='exp')
+        # Move WTH File
         if not isinstance(wth_folder, type(None)):
             self.__put_files(wth_folder, type='wth')
+        # Move SOL File
         if not isinstance(soil_profile, type(None)):
             self.__put_files(soil_profile, type='sol')
+        # Move SPE, CUL and ECO File
+        if not isinstance(crop_file, type(None)):
+            crop_file = crop_file[:-3]
+            for file_type in ['SPE', 'CUL', 'ECO']:
+                if os.path.exists(crop_file+file_type):
+                    shutil.copy(
+                        os.path.join(self.DSSATFolder, 'Genotype', os.path.basename(crop_file+file_type)),
+                        os.path.join(self.DSSATFolder, 'Genotype', os.path.basename('bk_'+crop_file+file_type))
+                    )
+                    self.__put_files(crop_file+file_type, type='crop')
+        
+        def recover_crop():
+            '''This function moves the original crop Files back to its location'''
+            if not isinstance(crop_file, type(None)):
+                for file_type in ['SPE', 'CUL', 'ECO']:
+                    bk_file = os.path.join(self.DSSATFolder, 'Genotype', os.path.basename('bk_'+crop_file+file_type))
+                    if os.path.exists(bk_file):
+                        shutil.move(
+                            bk_file,
+                            os.path.join(self.DSSATFolder, 'Genotype', os.path.basename(crop_file+file_type)),
+                        )
         
         os.chdir(self.wdir)
         
         if not hasattr(treatments, '__iter__'):
             self.treatments = self.__get_treatments()
         else:
-            self.treatments = treatments
+            self.treatments = list(map(str, treatments))
             treatments_on_file = self.__get_treatments()
             for treatment in self.treatments:
                 if treatment not in treatments_on_file:
+                    recover_crop()
+                    os.chdir(self.curdir)
                     raise DSSATInputError(f'Treatment {treatment} not found in {os.path.basename(self.experimental)} file')
         self.results = dssatUtils.DSSATOutput(self.treatments)
 
@@ -186,20 +221,33 @@ class CSM_EXE():
             )
             with open(os.path.join(wdir, 'DSSBatch.v47'), 'w') as f:
                 f.writelines(DSSBatchLines)
-            exe_thr = subprocess.Popen([self.DSSATExe, crop, 'B', 'DSSBatch.v47'], stdout=subprocess.PIPE)
-            returncode = exe_thr.wait()
-            # for line in exe_thr.stdout.readlines(): print(line.decode('utf-8'), end='')
-            dssatUtils.printSysOut(exe_thr.stdout)
+            # Run the model handling keyboard interruption.
+            try:
+                exe_thr = subprocess.Popen([self.DSSATExe, crop, 'B', 'DSSBatch.v47'], stdout=subprocess.PIPE)
+                returncode = exe_thr.wait()
+            except KeyboardInterrupt: # If it is keyboard interrumpted, then return to curdir
+                recover_crop()
+                os.chdir(self.curdir)
+
+            if self.verbose:
+                dssatUtils.printSysOut(exe_thr.stdout)
             if returncode != 0:
                 self.__wrap_out(treatment)
+                recover_crop()
+                os.chdir(self.curdir)
                 raise OSError(f'DSSAT execution failed')
             else:
                 self.__wrap_out(treatment)
         os.chdir(self.curdir)
+        recover_crop()
+        
         return
+
+    
 
 class CSM_Docker():
     '''
+    This is an implementation of DSSAT_Docker
     -----------------------------------------------------------------------------                                           
     DSSAT COMMAND LINE USAGE:                                                                                               
                                                                                                                             
