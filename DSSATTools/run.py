@@ -1,11 +1,10 @@
-from sre_parse import Verbose
 import subprocess
 import shutil
 
 from numpy import isin
 from .exceptions import DSSATNotFound, DSSATInputError
 import os
-from datetime import datetime
+import time
 import docker
 import sys
 import tarfile
@@ -22,7 +21,7 @@ class CSM_EXE():
         It is a dict-like type object. Upper level key is the treatment, nested keys are
         the results section (PlantGro, Summary, Etc.)
     '''
-    def __init__(self, DSSATExe='/mnt/c/DSSAT47/DSCSM047.EXE', verbose=False, **kwargs):
+    def __init__(self, DSSATExe='/mnt/c/DSSAT47/DSCSM047.EXE', verbose=False):
         '''
         Initialization of the DSSAT environment
         ...
@@ -32,16 +31,37 @@ class CSM_EXE():
             Path to the DSSAT Executable file
         verbose: bool
             Whether to print the DSSAT execution output or not.
+        parallel: bool
+            Is used during parallel runs to avoid permision errors during the reading
+            and writing of files
         '''
         self.verbose = verbose
         self.DSSATExe = DSSATExe    
         self.DSSATFolder = os.path.dirname(DSSATExe)
         self.curdir = os.getcwd()
+        # self.PARALLEL = parallel
         if os.path.exists(DSSATExe):
             print(f'DSSAT Executable at {self.DSSATExe}')
         else:
             raise DSSATNotFound(f'DSSAT Executable was not found on {self.DSSATExe}')
         return
+
+    def __handleCopy(self, source, destination, move=False):
+        '''A function to handle errors when copying files in parallel runs'''
+        max_tries = 20
+        try_n = 0
+        if move:
+            func = shutil.move
+        else:
+            func = shutil.copy
+        while try_n < max_tries: # This forces to complete the operation until no PermissionError is raised
+            try:
+                func(source, destination)
+                return
+            except PermissionError:
+                time.sleep(0.1)
+                try_n += 1
+        raise OSError(f'Something is going wrong when copying to {destination}')
 
 
     def __put_files(self, source_path, type='exp'):
@@ -55,15 +75,19 @@ class CSM_EXE():
             'sol': os.path.join(self.DSSATFolder, 'Soil'),
             'crop': os.path.join(self.DSSATFolder, 'Genotype'), 
         }
-        if os.path.isdir(source_path):
+        
+        if os.path.isdir(source_path): # This basically only for WTH
             files = os.listdir(source_path)
             for f in files:
-                shutil.copy(os.path.join(source_path, f), os.path.join(destinations[type], f))
+                if not os.path.exists(os.path.join(destinations[type], f)):
+                    self.__handleCopy(os.path.join(source_path, f), os.path.join(destinations[type], f))
+                else:
+                    break
             return
         if type == 'sol':
-            shutil.copy(source_path, os.path.join(destinations['sol'], f'{os.path.basename(self.experimental)[:2]}.SOL'))
+            self.__handleCopy(source_path, os.path.join(destinations['sol'], f'{os.path.basename(self.experimental)[:2]}.SOL'))
         else:
-            shutil.copy(source_path, os.path.join(destinations[type], os.path.basename(source_path)))
+            self.__handleCopy(source_path, os.path.join(destinations[type], os.path.basename(source_path)))
 
 
     def __wrap_out(self, treat):
@@ -195,10 +219,14 @@ class CSM_EXE():
                 for file_type in ['SPE', 'CUL', 'ECO']:
                     bk_file = os.path.join(self.DSSATFolder, 'Genotype', os.path.basename('bk_'+crop_file+file_type))
                     if os.path.exists(bk_file):
-                        shutil.move(
-                            bk_file,
-                            os.path.join(self.DSSATFolder, 'Genotype', os.path.basename(crop_file+file_type)),
-                        )
+                        try:
+                            self.__handleCopy(
+                                bk_file,
+                                os.path.join(self.DSSATFolder, 'Genotype', os.path.basename(crop_file+file_type)),
+                                move=True
+                            )
+                        except FileNotFoundError:
+                            continue
         
         os.chdir(self.wdir)
         
@@ -221,13 +249,22 @@ class CSM_EXE():
             )
             with open(os.path.join(wdir, 'DSSBatch.v47'), 'w') as f:
                 f.writelines(DSSBatchLines)
-            # Run the model handling keyboard interruption.
-            try:
-                exe_thr = subprocess.Popen([self.DSSATExe, crop, 'B', 'DSSBatch.v47'], stdout=subprocess.PIPE)
-                returncode = exe_thr.wait()
-            except KeyboardInterrupt: # If it is keyboard interrumpted, then return to curdir
-                recover_crop()
-                os.chdir(self.curdir)
+            # Run the model handling keyboard interruption and errors in Parallel runs
+            max_tries = 20
+            try_n = 0
+            while try_n < max_tries: 
+                try:
+                    exe_thr = subprocess.Popen([self.DSSATExe, crop, 'B', 'DSSBatch.v47'], stdout=subprocess.PIPE)
+                    returncode = exe_thr.wait()
+                except KeyboardInterrupt: # If it is keyboard interrumpted, then return to curdir
+                    recover_crop()
+                    os.chdir(self.curdir)
+                if returncode == 0:
+                    break
+                else:
+                    time.sleep(0.1)
+                    try_n += 1
+            
 
             if self.verbose:
                 dssatUtils.printSysOut(exe_thr.stdout)

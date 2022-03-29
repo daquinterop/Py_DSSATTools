@@ -16,7 +16,7 @@ class outFile(list):
     def __str__(self) -> str:
         return ''.join(self)
 
-
+# TODO: Allow the treatment to be pased as integer
 class DSSATOutput(dict):
     '''
     A dict-like class to handle DSSAT Output Files. 
