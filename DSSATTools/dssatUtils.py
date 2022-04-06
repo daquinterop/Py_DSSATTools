@@ -149,6 +149,11 @@ class CropParser():
             for n, line in enumerate(self._FILELINES)
             if line.strip()[:2] == '!*'
         }
+        if len(self._SEC_START_LINES) == 0:
+            raise DSSATInputError(
+                f'No header sections were found on {self.CROPFILE}' + 
+                'This file probably not valid for CROPGRO model'
+            )
         self.RAISE_MISS = raise_missing_pars
         self.parameters = {}
         self._parsloc = {}
@@ -163,7 +168,10 @@ class CropParser():
         self.__read_root()
         self.__read_canopy()
         self.__read_ET()
-        self.__read_dormancy()
+        try:
+            self.__read_dormancy()
+        except KeyError:
+            warn(f'\033[93mWarn: dormancy section was not found at {self.CROPFILE}')
         self.__read_cul()
         self.__read_eco()
         return
@@ -207,7 +215,7 @@ class CropParser():
         curr_line: int
             Current line on the crop file being read
         '''
-        if not all([name in line for name in names]):
+        if not any([name in line for name in names]):
             if self.RAISE_MISS:
                 raise DSSATInputError(
                     f'One or some of {", ".join(names)} parameters were not' +
