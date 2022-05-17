@@ -2,6 +2,7 @@
 Module for Bayesian Calibration using MCMC with a Metropolis-Hasting step
 '''
 
+from copy import copy, deepcopy
 import numpy as np
 import multiprocessing as mp
 from scipy.stats import (
@@ -13,6 +14,9 @@ import tqdm
 import os
 import shutil
 from .run import CSM_EXE
+import warnings
+import pickle
+import time
 
 def unwrap_self(arg, **kwarg):
     out = MCMC._MCMC__sample_chain(*arg, **kwarg)
@@ -71,7 +75,7 @@ def setup_paralell_env(cores, DSSATFolder, crop):
 
 class MCMC():
     def __init__(self, priors:dict, responses:Callable,
-                 run_function:Callable, responses_mean:dict=None):
+                 responses_mean:dict=None):
         '''
         Parameters
             ----------
@@ -101,10 +105,6 @@ class MCMC():
                     {"RESP1": (mean, sd), "RESP2": (mean, sd), ...}
                 Those values could be obtained from the observations. if None, then it's
                 calculated when sampling from the observations.
-            
-            run_function: function
-                The function that takes a dssattools.MCMC instance and run DSSAT through a 
-                dssattools.CSM_EXE instance.
         '''
         self._PRIORS = priors
         self._RESPONSES = responses
@@ -114,7 +114,7 @@ class MCMC():
             self._RESPONSE_NAMES = list(self._RESPONSES_MEAN.keys())
         else:
             self._RESPONSES_MEAN = None
-        self._RUN = run_function
+        # self._RUN = run_function
         self._N_PARS = len(self._PRIORS)
         self._PARAM_NAMES = list(self._PRIORS.keys())
 
@@ -132,6 +132,8 @@ class MCMC():
         if type(dist) == type(gamma):
             a = mu**2/sigma**2
             scale = sigma**2/mu
+            if a == 0:
+                a = .01
             return (a, 0, scale)
         elif type(dist) == type(invgamma):
             a = mu**2/sigma**2 + 2
@@ -161,7 +163,8 @@ class MCMC():
         
         
     def sample(self, chains:int=4, cores:int=None, burnin:int=1000,
-               n_iter:int=2000, tuning_interval:int=100, observations:dict=None):
+               n_iter:int=2000, tuning_interval:int=100, observations:dict=None,
+               support: dict=None, previous_trace: dict=None):
         '''
         Parameters
             ----------
@@ -185,8 +188,18 @@ class MCMC():
             observations: dict
                 a dict containg the observed data with the next structure:
                     {"PAR1": [value1, value2, ...], "PAR2": [value1, value2, ...], ...}
+
+            support: dict
+                a dict containing the support of the parameters, i.e. the minimum and maximum 
+                value to accept as a sample.
+                    {"PAR1": [min, max], "PAR2": [min, max], ...}
+
+            previous_trace: dict
+                a dict containg previous samples, acceptance and tuning_pars. The sampling
+                will start from this point. You can use the method save_trace to save the trace.
         '''
         self._CHAINS = chains
+        self._SUPPORT = support
         if not isinstance(observations, dict):
             raise TypeError('observations object must be a dict')
         self._OBSERVATIONS = observations
@@ -195,10 +208,10 @@ class MCMC():
         else:
             self._CORES = min(self._CHAINS, cores)
         self._BURNIN = burnin
-        self._N_ITER = n_iter
+        self._N_ITER = n_iter + 1
         self._TUNING_INTERVAL = tuning_interval
-        self._CURR_ITER = np.array([1] * self._CHAINS)
-        
+        self._PREVIOUS_TRACE = previous_trace
+
         self.__setup()
 
         # TODO: Implement parallel for real simulations
@@ -242,13 +255,20 @@ class MCMC():
                         core = 0
                         jobs = []
                         for ch in range((chain + 1) - self._CORES, chain + 1):
-                            self.samples[ch, self._CURR_ITER[ch], :] = np.array(mp_chains[ch][0])
+                            if len(mp_chains[ch][0]) == 0:
+                                self.__sample_chain(ch, core=ch)
+                                return
+                            # If sampling failed at some poing then complete it with prev samples
+                            if len(mp_chains[chain][0]) < self._N_PARS:
+                                prev_samples = self.samples[ch, self._CURR_ITER[ch] - 1, :]
+                                for n in range(len(mp_chains[chain][0]), self._N_PARS):
+                                    mp_chains[chain][0].append(prev_samples[n])
+                                    mp_chains[chain][1].append(0)
+                            self.samples[ch, self._CURR_ITER[ch], :] = np.array(mp_chains[ch][0], dtype=object)
                             self.acceptance[ch, self._CURR_ITER[ch], :] = np.array(mp_chains[ch][1])
                             self._CURR_ITER[ch] += 1
-
-                # pool.close()
-                # pool.join()               
-            
+                if self._CURR_ITER[0] % 20 == 0:
+                    print()
         return
 
     
@@ -280,8 +300,15 @@ class MCMC():
         return
 
     
-    def __standarized_response(self, samples, core):
-        mu = self._RESPONSES(samples, core=core)
+    def __standarized_response(self, samples, **kwargs):
+        samples[:-1] = np.where(samples[:-1] == 0., .001, samples[:-1])
+        # try:
+        mu = self._RESPONSES(samples, **kwargs)
+        # If the simulation fails is probably because the parameters are not correctly defined
+        # then all outputs are set to 0 to decrease the likelihood.
+        # except OSError:
+        #     mu = {key: 0 for key, _ in self._RESPONSES_MEAN.items()}
+        #     warnings.warn(f'DSSAT Simulation failed for next samples: {samples}')
         mu_sd = {
             key: (values - self._RESPONSES_MEAN[key][0]) / self._RESPONSES_MEAN[key][1] 
             for key, values in mu.items()
@@ -294,47 +321,66 @@ class MCMC():
         Samples a single chain
         '''
         prev_samples = self.samples[chain, self._CURR_ITER[chain]-1, :]
-        new_samples = np.zeros_like(prev_samples)
-        # curr_iter = self._CURR_ITER[chain]
-
-        # First generate all the new samples for all of the parameters
+        accept = 1
+        # Sample one parameter at once
         for n, (par, prev_sample, tuning_par) in enumerate(
                 zip(self._PRIORS.keys(), prev_samples, self.tuning_pars[chain])):
-            new_samples[n] = self.__sample_par(par, prev_sample, tuning_par)
-        
-        # Calculate likelihoods since the same will be used for all the variables
-        self._likelihood_new[chain] = self.__likelihood(
-            self.__standarized_response(new_samples, core=core, priors=self._PRIORS), new_samples[-1]
-        )
-        self._likelihood_prev[chain] = self.__likelihood(
-            self.__standarized_response(prev_samples, core=core, priors=self._PRIORS), prev_samples[-1]
-        )
+             
+            prev_sample = prev_samples[n]
+            tuning_par = self.tuning_pars[chain][n]
+            
+            new_samples = deepcopy(prev_samples)
+            new_sample = self.__sample_par(par, prev_sample, tuning_par) 
+            new_samples[n] = new_sample
+            
+            # Calculate likelihood of prev samples only if the sample has changed
+            if par != 'SIGMA':
+                if accept:
+                    self._likelihood_prev[chain] = self.__likelihood(
+                        self.__standarized_response(prev_samples, core=core), prev_samples[-1]
+                    )
+                # Calculate likelihood for new sample
+                try:
+                    self._likelihood_new[chain] = self.__likelihood(
+                        self.__standarized_response(new_samples, core=core), new_samples[-1]
+                    )
+                # If simulation fails, then continue with the previous samples
+                except OSError:
+                    warnings.warn(f'DSSAT Simulation failed for the next sample: {par}={new_sample}')
+                    self._likelihood_new[chain] = self._likelihood_prev[chain]
+                    new_samples = prev_samples
 
-        if not parallel:
-        # Then choose samples
-            for n, (par, prev_sample, new_sample, tuning_par) in enumerate(
-                    zip(self._PRIORS.keys(), prev_samples, new_samples, self.tuning_pars[chain])):
+            
+            if not parallel:
+            # Then choose samples
                 z, accept = self.__choose(prev_sample, new_sample, par, tuning_par, n, chain)
+                prev_samples[n] = z
                 self.samples[chain, self._CURR_ITER[chain], n] = z
                 self.acceptance[chain, self._CURR_ITER[chain], n] = accept
-            self._CURR_ITER[chain] += 1
-        else: # In case it is on parallel
-            for n, (par, prev_sample, new_sample, tuning_par) in enumerate(
-                    zip(self._PRIORS.keys(), prev_samples, new_samples, self.tuning_pars[chain])):
+                self._CURR_ITER[chain] += 1
+            else: # In case it is on parallel
                 z, accept = self.__choose(prev_sample, new_sample, par, tuning_par, n, chain)
+                prev_samples[n] = z
                 mp_chains[chain][0].append(z)
                 mp_chains[chain][1].append(accept)
+        if parallel:
             return mp_chains
-            # self._CURR_ITER[chain] += 1
     
 
 
     def __sample_par(self, par, curr_sample, tuning_par):
-        if par != 'SIGMA':
-            if curr_sample < .001: curr_sample = .001
-            # if tuning_par =+ .001: tuning_par = .001
         pars = self.__moment_match(par, curr_sample, tuning_par)
-        return self._PRIORS[par]['dist'].rvs(*pars)
+        sample = self._PRIORS[par]['dist'].rvs(*pars, random_state=int(str(time.time()).split('.')[-1]))
+        # Check if sample is within the support
+        if (self._SUPPORT is not None) and (par != 'SIGMA'):
+            par_support = self._SUPPORT[par]
+            if (sample < par_support[0]):
+                return curr_sample
+            elif (sample > par_support[1]):
+                return curr_sample
+            else:
+                return sample
+        return sample
 
 
     def __choose(self, x, x_new, par, tuning_par, n_par, chain):
@@ -352,9 +398,12 @@ class MCMC():
             prior.logpdf(x_new, *prior_pars)
         q_ratio = prior.pdf(x, *self.__moment_match(par, x_new, tuning_par)) / \
             prior.pdf(x_new, *self.__moment_match(par, x, tuning_par))
-        R = np.exp(numerator - denominator) * q_ratio
+        R = min(1, np.exp(numerator - denominator) * q_ratio)
         if R > np.random.uniform():
-            return x_new , True
+            if x_new == x:
+                return x, False
+            else:
+                return x_new , True
         else:
             return x, False
 
@@ -391,14 +440,10 @@ class MCMC():
                 key: (np.array(values) - np.array(values).mean())/np.array(values).std()
                 for key, values in self._OBSERVATIONS.items()
             }
-            # cov_matrix = np.cov(np.array([np.array(i) for i in self._STD_OBSERVATIONS.values()]))
             self._PRIORS['SIGMA'] = {
                 'dist': invwishart,
-                # 'pars': (min([len(i) for i in self._OBSERVATIONS.values()]), cov_matrix)
-                # 'pars': (min([len(i) for i in self._OBSERVATIONS.values()]), np.identity(self._N_RESPONSES))
                 'pars': (
-                    self._N_RESPONSES + 1, 
-                    # np.identity(self._N_RESPONSES)
+                    self._N_RESPONSES + 2, 
                     np.identity(self._N_RESPONSES)
                 )
             }
@@ -407,17 +452,50 @@ class MCMC():
         self.samples = np.zeros(shape=(self._CHAINS, self._BURNIN + self._N_ITER, self._N_PARS),
                                 dtype=object)
 
-        # Define init values from priors
-        for n, (_, value) in enumerate(self._PRIORS.items()):
-            for chain in range(self._CHAINS):
-                self.samples[chain, 0, n] = value['dist'].rvs(*value['pars'])
+        
         # Tuning parameters initialized as one
         self.tuning_pars = np.ones(shape=(self._CHAINS, self._N_PARS))
         # Initialize arrays for responses and acceptance
-        self.response_out = np.zeros(shape=(self._CHAINS, self._BURNIN + self._N_ITER, self._N_RESPONSES))
+        # self.response_out = np.zeros(shape=(self._CHAINS, self._BURNIN + self._N_ITER, self._N_RESPONSES))
         self.acceptance = np.ones(shape=(self._CHAINS, self._BURNIN + self._N_ITER, self._N_PARS))
+
+        if isinstance(self._PREVIOUS_TRACE, dict):
+            prev_samples = self._PREVIOUS_TRACE['samples']
+            indexes = list(map(lambda x: hasattr(x, 'shape'), prev_samples[:, :, -1].mean(axis=0)))
+            self._CURR_ITER = np.array([sum(indexes) - 1] * self._CHAINS)
+            
+            prev_samples = prev_samples[:, indexes, :]
+            self.samples = np.concatenate([prev_samples, self.samples], axis=1)
+
+            self.tuning_pars = self._PREVIOUS_TRACE['tuning_pars']
+            
+            prev_acceptance = self._PREVIOUS_TRACE['acceptance']
+            if prev_acceptance.shape[1] > self._PREVIOUS_TRACE['samples'].shape[1]:
+                prev_acceptance = prev_acceptance[:, :self._PREVIOUS_TRACE['samples'].shape[1], :]
+            prev_acceptance[:, indexes, :]
+            self.acceptance = np.concatenate([prev_acceptance, self.acceptance], axis=1)
+        else:
+            # Define init values from priors
+            for n, (_, value) in enumerate(self._PRIORS.items()):
+                for chain in range(self._CHAINS):
+                    self.samples[chain, 0, n] = value['dist'].rvs(*value['pars'])
+            self._CURR_ITER = np.array([1] * self._CHAINS)
+
         self._likelihood_new = np.zeros(shape=(self._CHAINS))
         self._likelihood_prev = np.zeros(shape=(self._CHAINS))
         return
+
+    
+    def save_trace(self, filename='mcmc_trace'):
+        '''
+        Save the trace to be pased to next sampling iterations.
+        '''
+        with open(f'{filename}.pkl', 'wb') as f:
+            previous_trace = {
+                'samples': self.samples,
+                'acceptance': self.acceptance,
+                'tuning_pars': self.tuning_pars
+                }
+            pickle.dump(previous_trace, f)
     
     
