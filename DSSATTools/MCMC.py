@@ -130,10 +130,10 @@ class MCMC():
             SIGMA_pars = self._PRIORS[par]['pars']
         dist = self._PRIORS[par]['dist']
         if type(dist) == type(gamma):
+            mu = max(mu, .001)
             a = mu**2/sigma**2
+            a = max(a, .01)
             scale = sigma**2/mu
-            if a == 0:
-                a = .01
             return (a, 0, scale)
         elif type(dist) == type(invgamma):
             a = mu**2/sigma**2 + 2
@@ -157,7 +157,7 @@ class MCMC():
         elif type(dist) == type(uniform):
             return self._PRIORS[par]['pars']
         elif type(dist) == type(invwishart):
-            return (SIGMA_pars[0], sigma*SIGMA_pars[1])
+            return (SIGMA_pars[0], SIGMA_pars[1])
         else:
             raise TypeError("Distribution doesn't match any of the available: gamma, invgamma, expon, beta, norm, uniform, lognorm")
         
@@ -259,11 +259,11 @@ class MCMC():
                                 self.__sample_chain(ch, core=ch)
                                 return
                             # If sampling failed at some poing then complete it with prev samples
-                            if len(mp_chains[chain][0]) < self._N_PARS:
+                            if len(mp_chains[ch][0]) < self._N_PARS:
                                 prev_samples = self.samples[ch, self._CURR_ITER[ch] - 1, :]
-                                for n in range(len(mp_chains[chain][0]), self._N_PARS):
-                                    mp_chains[chain][0].append(prev_samples[n])
-                                    mp_chains[chain][1].append(0)
+                                for n in range(len(mp_chains[ch][0]), self._N_PARS):
+                                    mp_chains[ch][0].append(prev_samples[n])
+                                    mp_chains[ch][1].append(0)
                             self.samples[ch, self._CURR_ITER[ch], :] = np.array(mp_chains[ch][0], dtype=object)
                             self.acceptance[ch, self._CURR_ITER[ch], :] = np.array(mp_chains[ch][1])
                             self._CURR_ITER[ch] += 1
@@ -313,7 +313,38 @@ class MCMC():
             key: (values - self._RESPONSES_MEAN[key][0]) / self._RESPONSES_MEAN[key][1] 
             for key, values in mu.items()
         }
-        return mu_sd
+        return mu_sd 
+
+
+    def __sample_sigma(self, MUS):
+        '''
+        Sample a random covariance matrix.
+        
+        Arguments:
+        --------------
+            V: np.array
+                covariance matrix (prev)
+            MUS: dict
+                means of the standarized response from the model
+        '''
+        V = np.identity(self._N_RESPONSES)
+        MIN_OBS = self._MIN_OBS
+        MAX_OBS = self._MAX_OBS
+        SIGMA = np.zeros_like(V)
+        for _ in range(MAX_OBS - MIN_OBS + 1):
+            obs = np.array([
+                np.random.choice(value, MIN_OBS, replace=False)
+                for value in self._STD_OBSERVATIONS.values()
+            ]).T
+            mus = np.array([[MUS[key] for key in self._STD_OBSERVATIONS.keys()]])
+            sum_term = np.zeros_like(V)
+            for vec in (obs - mus):
+                sum_term += vec.reshape((self._N_RESPONSES, 1)) @ vec.reshape((1, self._N_RESPONSES))
+            SIGMA += V + sum_term
+
+        SIGMA = SIGMA/(MAX_OBS - MIN_OBS + 1)
+
+        return invwishart.rvs(MIN_OBS+self._N_RESPONSES+2, SIGMA)
 
 
     def __sample_chain(self, chain, parallel=False, mp_chains=None, core=None):
@@ -336,19 +367,27 @@ class MCMC():
             # Calculate likelihood of prev samples only if the sample has changed
             if par != 'SIGMA':
                 if accept:
+                    prev_mu = self.__standarized_response(prev_samples, core=core) 
                     self._likelihood_prev[chain] = self.__likelihood(
-                        self.__standarized_response(prev_samples, core=core), prev_samples[-1]
+                        prev_mu, prev_samples[-1]
                     )
                 # Calculate likelihood for new sample
                 try:
+                    new_mu = self.__standarized_response(new_samples, core=core)
+                    # Likelihood for new sample is calculated using previous SIGMA.
+                    # That's to avoid new sigma to infere in the new sample's likelihood
                     self._likelihood_new[chain] = self.__likelihood(
-                        self.__standarized_response(new_samples, core=core), new_samples[-1]
+                        new_mu, prev_samples[-1]
                     )
                 # If simulation fails, then continue with the previous samples
                 except OSError:
                     warnings.warn(f'DSSAT Simulation failed for the next sample: {par}={new_sample}')
                     self._likelihood_new[chain] = self._likelihood_prev[chain]
                     new_samples = prev_samples
+            else:
+                # Sample sigma
+                MUS = dict(zip(new_mu.keys(), map(np.mean, new_mu.values())))
+                new_sample = self.__sample_sigma(MUS=MUS)
 
             
             if not parallel:
@@ -369,10 +408,12 @@ class MCMC():
 
 
     def __sample_par(self, par, curr_sample, tuning_par):
+        if par == 'SIGMA':
+            return
         pars = self.__moment_match(par, curr_sample, tuning_par)
         sample = self._PRIORS[par]['dist'].rvs(*pars, random_state=int(str(time.time()).split('.')[-1]))
         # Check if sample is within the support
-        if (self._SUPPORT is not None) and (par != 'SIGMA'):
+        if (self._SUPPORT is not None):
             par_support = self._SUPPORT[par]
             if (sample < par_support[0]):
                 return curr_sample
@@ -440,6 +481,8 @@ class MCMC():
                 key: (np.array(values) - np.array(values).mean())/np.array(values).std()
                 for key, values in self._OBSERVATIONS.items()
             }
+            self._MIN_OBS = min(map(len, self._STD_OBSERVATIONS.values()))
+            self._MAX_OBS = max(map(len, self._STD_OBSERVATIONS.values()))
             self._PRIORS['SIGMA'] = {
                 'dist': invwishart,
                 'pars': (
