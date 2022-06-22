@@ -132,7 +132,8 @@ class MCMC():
         if type(dist) == type(gamma):
             mu = max(mu, .001)
             a = mu**2/sigma**2
-            a = max(a, .01)
+            # a = max(a, .01)
+            if np.isclose(sigma, 0): sigma = np.random.uniform(0, 10)
             scale = sigma**2/mu
             return (a, 0, scale)
         elif type(dist) == type(invgamma):
@@ -239,7 +240,7 @@ class MCMC():
                     mp_chains[chain].append(manager.list()) # acceptance
 
                 # Adapt tuning parameters 
-                if ((((iter - 1) % self._TUNING_INTERVAL) == 0) \
+                if ((((iter) % self._TUNING_INTERVAL) == 0) \
                     and iter < self._BURNIN):
                     for chain in range(self._CHAINS):
                         self.__tune(chain)
@@ -274,11 +275,23 @@ class MCMC():
     
     def __tune(self, chain):
         curr_iter = self._CURR_ITER[chain]
-        if curr_iter == 1:
+        #TODO: if the same value, then sample a new starting point
+        if curr_iter == 0:
             return
         acc_rate_pars = self.acceptance[chain, curr_iter - self._TUNING_INTERVAL:curr_iter, :].mean(axis=0)
         for n_par, acc_rate in enumerate(acc_rate_pars):
             scale = self.tuning_pars[chain, n_par]
+            last_samples = self.samples[chain, curr_iter - self._TUNING_INTERVAL:curr_iter, n_par]
+            # If the sample is the same over time, the replace the last sample
+            # with a random draw from the 50% confidence interval
+            if (n_par + 1) == self._N_PARS:
+                return
+            if len(set(last_samples)) < 3:
+                prior = list(self._PRIORS.values())[n_par]
+                self.samples[chain, curr_iter - 1, n_par] = prior['dist'].ppf(np.random.uniform(.25, .75), *prior['pars'])
+                if np.isclose(scale, 0, 0.0001):
+                    scale = np.random.uniform(0.01*int(1/scale), .1*int(1/scale)) * scale
+
             if acc_rate < 0.001:
                 # reduce by 90 percent
                 self.tuning_pars[chain, n_par] = scale * .1
@@ -351,6 +364,8 @@ class MCMC():
         '''
         Samples a single chain
         '''
+        if self._CURR_ITER[chain] == 0:
+            return
         prev_samples = self.samples[chain, self._CURR_ITER[chain]-1, :]
         accept = 1
         # Sample one parameter at once
@@ -367,10 +382,15 @@ class MCMC():
             # Calculate likelihood of prev samples only if the sample has changed
             if par != 'SIGMA':
                 if accept:
+                    # try:
                     prev_mu = self.__standarized_response(prev_samples, core=core) 
                     self._likelihood_prev[chain] = self.__likelihood(
                         prev_mu, prev_samples[-1]
                     )
+                    # except OSError:
+                        # warnings.warn(f'DSSAT Simulation failed for the next sample: {par}={prev_sample}')
+                        # self._likelihood_new[chain] = self._likelihood_prev[chain]
+                        # new_samples = 
                 # Calculate likelihood for new sample
                 try:
                     new_mu = self.__standarized_response(new_samples, core=core)
@@ -383,7 +403,9 @@ class MCMC():
                 except OSError:
                     warnings.warn(f'DSSAT Simulation failed for the next sample: {par}={new_sample}')
                     self._likelihood_new[chain] = self._likelihood_prev[chain]
-                    new_samples = prev_samples
+                    new_sample = prev_sample
+                    new_samples[n] = new_sample
+                    
             else:
                 # Sample sigma
                 MUS = dict(zip(new_mu.keys(), map(np.mean, new_mu.values())))
@@ -441,7 +463,7 @@ class MCMC():
             prior.pdf(x_new, *self.__moment_match(par, x, tuning_par))
         R = min(1, np.exp(numerator - denominator) * q_ratio)
         if R > np.random.uniform():
-            if x_new == x:
+            if np.isclose(x, x_new, rtol=.00001):
                 return x, False
             else:
                 return x_new , True
@@ -505,7 +527,7 @@ class MCMC():
         if isinstance(self._PREVIOUS_TRACE, dict):
             prev_samples = self._PREVIOUS_TRACE['samples']
             indexes = list(map(lambda x: hasattr(x, 'shape'), prev_samples[:, :, -1].mean(axis=0)))
-            self._CURR_ITER = np.array([sum(indexes) - 1] * self._CHAINS)
+            self._CURR_ITER = np.array([sum(indexes)] * self._CHAINS)
             
             prev_samples = prev_samples[:, indexes, :]
             self.samples = np.concatenate([prev_samples, self.samples], axis=1)
@@ -522,7 +544,7 @@ class MCMC():
             for n, (_, value) in enumerate(self._PRIORS.items()):
                 for chain in range(self._CHAINS):
                     self.samples[chain, 0, n] = value['dist'].rvs(*value['pars'])
-            self._CURR_ITER = np.array([1] * self._CHAINS)
+            self._CURR_ITER = np.array([0] * self._CHAINS)
 
         self._likelihood_new = np.zeros(shape=(self._CHAINS))
         self._likelihood_prev = np.zeros(shape=(self._CHAINS))
