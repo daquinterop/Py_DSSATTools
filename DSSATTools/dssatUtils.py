@@ -2,7 +2,7 @@ from concurrent.futures.process import BrokenProcessPool
 from distutils.log import warn
 import enum
 from turtle import position
-from attr import has
+# from attr import has
 import pandas as pd
 from numpy import cumsum, isin
 from .exceptions import DSSATInputError
@@ -54,7 +54,16 @@ class DSSATOutput(dict):
     def getOutput(self, outName, treat):
         '''
         Get the output for the specified OutName and treatment
+        ...
+        Attributes
+        ------------------
+        outName: str
+            Name of the output file. Don't include the .OUT extension
+
+        treat: str
+            Name of the treatment to retrieve
         '''
+        if not isinstance(treat, str): treat = str(treat)
         return self.get(treat).get(outName)
         
 

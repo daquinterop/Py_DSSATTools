@@ -207,11 +207,21 @@ class CSM_EXE():
             crop_file = crop_file[:-3]
             for file_type in ['SPE', 'CUL', 'ECO']:
                 if os.path.exists(crop_file+file_type):
-                    shutil.copy(
-                        os.path.join(self.DSSATFolder, 'Genotype', os.path.basename(crop_file+file_type)),
-                        os.path.join(self.DSSATFolder, 'Genotype', os.path.basename('bk_'+crop_file+file_type))
-                    )
-                    self.__put_files(crop_file+file_type, type='crop')
+                    try:
+                        shutil.copy(
+                            os.path.join(self.DSSATFolder, 'Genotype', os.path.basename(crop_file+file_type)),
+                            os.path.join(self.DSSATFolder, 'Genotype', 'bk_'+os.path.basename(crop_file+file_type)),
+                        )
+                        self.__put_files(crop_file+file_type, type='crop')
+                    except shutil.SameFileError:
+                        os.remove(
+                            os.path.join(self.DSSATFolder, 'Genotype', os.path.basename('bk_'+crop_file+file_type))
+                            )
+                        shutil.copy(
+                            os.path.join(self.DSSATFolder, 'Genotype', os.path.basename(crop_file+file_type)),
+                            os.path.join(self.DSSATFolder, 'Genotype', os.path.basename('bk_'+crop_file+file_type))
+                        )
+                        self.__put_files(crop_file+file_type, type='crop')
         
         def recover_crop():
             '''This function moves the original crop Files back to its location'''
