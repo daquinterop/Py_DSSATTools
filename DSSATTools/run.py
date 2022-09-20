@@ -9,7 +9,128 @@ import docker
 import sys
 import tarfile
 import tempfile    
-import DSSATTools.dssatUtils as dssatUtils 
+import DSSATTools.dssatUtils as dssatUtils
+
+# Libraries for second version
+import DSSATTools
+import random
+import string
+import shutil
+import stat
+
+class Dscsm():
+    # TODO: Class implementation must allow to change Crop, Weather, Experiment(Management) and Soil. So, each of this must be defined as instances, and this class must keep track of those changes, so as to create new files only if the instance has changed.
+
+    # TODO: Each crop model has to have it's own class. So far, I'll implement only CERES-MAIZE.
+
+    # TODO: An option to run without definen input instances has to be implement as well. This will allow to use the class if the model is not implemented yet. For this case, the input will be initialized as a path (str) and not as an instance. 
+
+    def __init__(self):
+        '''
+        
+        '''
+        BASE_PATH = os.path.dirname(DSSATTools.__file__)
+        self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
+        self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
+        self._STD_PATH = os.path.join(self._STATIC_PATH, 'StandardData')
+        self._CRD_PATH = os.path.join(self._STATIC_PATH, 'Genotype')
+        self._SLD_PATH = os.path.join(self._STATIC_PATH, 'Soil')
+
+        self._SETUP = False
+        self._INPUTS = {
+            'crop': None, 'wheater': None, 'soil': None, 'management': None 
+        }
+
+    def setup(self, exp, cwd=None, overwrite=False, **kwargs):
+        '''
+        Setup a simulation environment.
+        Creates a tmp folder to run the simulations and move all the required
+        files to run the model. Some rguments are optional, if those aren't provided,
+        then standard files location will be used.
+
+        Arguments
+        ----------
+        exp: str
+            Path to the experimental file (.CRX)
+        cwd: str
+            Working directory. All the model files would be moved to that directory.
+            If None, then a tmp directory will be created and then removed.
+        bin : str
+            Path to the DSSAT executable file.
+        std : str
+            Path to the DSSAT StandardData folder.
+        crd : str
+            Path to the DSSAT Genotype folder.
+        sld : str
+            Path to the DSSAT Soil folder. It contains all the Soil files.
+        overwrite: bool
+            Whether to overwrite or not the current simulation environment. If
+            true, then a new simulation environment will be created, and all the 
+            outputs and inputs will be reseted.
+        '''
+        #
+        # Create wd if it doesn't exist and move files to it.
+        #
+        # TODO: Check if this instance was already set-up. If it was, then stop, show warning, and ask to run the method with overwrite=True
+        TMP_BASE = tempfile.gettempdir()
+        if cwd:
+            self._RUN_PATH = cwd
+            if not os.path.exists(self._RUN_PATH):
+                os.mkdir(self._RUN_PATH)
+        else:
+            self._RUN_PATH = os.path.join(
+                TMP_BASE, 
+                ''.join(random.choices(string.ascii_lowercase, k=8))
+            )
+            os.mkdir(self._RUN_PATH)
+        
+        # Move files
+        shutil.copyfile(
+            self._BIN_PATH, 
+            os.path.join(self._RUN_PATH, os.path.basename(self._BIN_PATH))
+        )
+        os.chmod(
+            os.path.join(self._RUN_PATH, os.path.basename(self._BIN_PATH)),
+            mode=111
+        )
+        for file in os.listdir(self._STATIC_PATH):
+            if file.endswith('.CDE'):
+                shutil.copyfile(
+                    self._BIN_PATH, 
+                    os.path.join(self._RUN_PATH, file)
+                )
+        # TODO: All the inputs and outputs should be reseted when creating a new setup.
+        
+        def set_inputs(self, crop=None, wheater=None, soil=None, management=None):
+            '''
+            This function defines or overwrites the inputs in the folder.
+
+            Arguments
+            ----------
+            TODO: DSSATTools.base.Input has to be implemented
+            crop, wheater, soil, management: str, DSSATTools.base.Input
+                It can be an input instance, or a string with the path to the input
+                file.
+            '''
+            return
+
+
+        def run(self):
+            '''
+            Start the simulation and runs until the end or failure.
+
+            Arguments
+            ----------
+            '''
+            # TODO: Write all the files.
+            # TODO: Check if the weather, soil and crop instances matches the definitions in the management instance. 
+            # TODO: Check for inputs.
+            # TODO: Check for environment setup.
+            # TODO: Print simulation outcome (Success or Error)
+            return
+        shutil.rmtree(self._RUN_PATH) # TODO: remember to remove this line
+
+
 
 class CSM_EXE():
     '''

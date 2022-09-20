@@ -23,8 +23,19 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages=setuptools.find_packages(),
+    package_dir={"": "."},
+    packages=['DSSATTools', 'DSSATTools.static', 'DSSATTools.static.bin', 'DSSATTools.static.Genotype', 
+        'DSSATTools.static.Pest', 'DSSATTools.static.StandardData', 'DSSATTools.static.Soil'],
     python_requires=">=3.6",
-    licence='MIT',
-    install_requires=requirements
+    license='MIT',
+    install_requires=requirements,
+    package_data = {
+        'DSSATTools.static.Genotype': ['*'],
+        'DSSATTools.static.Pest': ['*'],
+        'DSSATTools.static.StandardData': ['*'],
+        'DSSATTools.static.Soil': ['*'],
+        'DSSATTools.static.bin': ['dscsm048'],
+        'DSSATTools.static': ['*.CDE']
+    },
+    # include_package_data=True
 )
