@@ -7,3 +7,5 @@ class DSSATNotFound(Exception):
 class DSSATInputError(Exception):
     pass
 
+class InputError(Exception):
+    pass

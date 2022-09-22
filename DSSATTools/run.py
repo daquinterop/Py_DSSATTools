@@ -37,11 +37,13 @@ class Dscsm():
         self._SLD_PATH = os.path.join(self._STATIC_PATH, 'Soil')
 
         self._SETUP = False
-        self._INPUTS = {
+        self._input = {
             'crop': None, 'wheater': None, 'soil': None, 'management': None 
         }
 
-    def setup(self, exp, cwd=None, overwrite=False, **kwargs):
+        self.output = None # TODO: Implement an output class.There'll be a basic one, andvariations with models.
+
+    def setup(self, cwd=None, overwrite=False, **kwargs):
         '''
         Setup a simulation environment.
         Creates a tmp folder to run the simulations and move all the required
@@ -50,19 +52,9 @@ class Dscsm():
 
         Arguments
         ----------
-        exp: str
-            Path to the experimental file (.CRX)
         cwd: str
             Working directory. All the model files would be moved to that directory.
             If None, then a tmp directory will be created and then removed.
-        bin : str
-            Path to the DSSAT executable file.
-        std : str
-            Path to the DSSAT StandardData folder.
-        crd : str
-            Path to the DSSAT Genotype folder.
-        sld : str
-            Path to the DSSAT Soil folder. It contains all the Soil files.
         overwrite: bool
             Whether to overwrite or not the current simulation environment. If
             true, then a new simulation environment will be created, and all the 
@@ -99,6 +91,9 @@ class Dscsm():
                     self._BIN_PATH, 
                     os.path.join(self._RUN_PATH, file)
                 )
+
+        #TODO: Function to write DSSAT profile
+        
         # TODO: All the inputs and outputs should be reseted when creating a new setup.
         
         def set_inputs(self, crop=None, wheater=None, soil=None, management=None):
@@ -122,10 +117,15 @@ class Dscsm():
             Arguments
             ----------
             '''
-            # TODO: Write all the files.
-            # TODO: Check if the weather, soil and crop instances matches the definitions in the management instance. 
+            
             # TODO: Check for inputs.
-            # TODO: Check for environment setup.
+            # If inputs are instances:
+            #   1. Check if the weather, soil and crop instances matches the definitions in the
+            #   management instance. Raise error if something is not right.
+            #   2. Write all the files.
+            # If inputs are path strings
+            #   1. Just copy the files in the folder
+            # TODO: Check for environment setup. Raise error if not set-up yet.
             # TODO: Print simulation outcome (Success or Error)
             return
         shutil.rmtree(self._RUN_PATH) # TODO: remember to remove this line
