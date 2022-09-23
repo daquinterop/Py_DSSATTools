@@ -9,7 +9,7 @@ argument.
 
 Example
 -------
-    >>> layer = soil.SoilLayer(
+    >>> layer = SoilLayer(
             base_depth=100, # Soil base depth (cm)
             pars= # layer parameter's dict
             {
@@ -86,11 +86,18 @@ Example
 """
 
 from distutils.command.config import LANG_EXT
+from multiprocessing.sharedctypes import Value
+from re import L
 from pandas import Series, NA, isna
 import fortranformat as ff
-from DSSATTools.exceptions import InputError
-from DSSATTools.format import soil_line_read
+import math
+import os
+import numpy as np
 
+from DSSATTools.exceptions import InputError
+from DSSATTools.format import (
+    soil_line_read, soil_line_write, soil_location_write
+)
 from rosetta import rosetta, SoilData
 
 HEADER = "*Soils: Brazil\n"
@@ -129,7 +136,6 @@ DATA_FMT = {
         2*['F5.2'] + 3*['A5'],
     'location': 2*['A12'] + 2*['F6.3'] + ['A24']
 }
-LAYER_HEAD_FMT = 'A6,16(1X,A5)'
 
 PARS_DESC = {
     'CACO3': 'CaCO3 content, g kg-1',
@@ -198,12 +204,6 @@ PROFILE_SECTIONS = [
     'location', 'profile_lvl_pars',
     'layer_lvl_1_pars', 'layer_lvl_2_pars'
 ]
-SECTIONS_HEADER = {
-    'location': '@SITE        COUNTRY          LAT     LONG SCS FAMILY',
-    'profile_lvl_pars': '@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE',
-    'layer_lvl_1_pars': '@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC',
-    'layer_lvl_2_pars': '@  SLB  SLPX  SLPT  SLPO CACO3  SLAL  SLFE  SLMN  SLBS  SLPA  SLPB  SLKE  SLMG  SLNA  SLSU  SLEC   SLCA'
-}
 
 SOIL_LAB = {
     'BLK': (20, 2, 6), 
@@ -213,6 +213,43 @@ SOIL_LAB = {
     'GRE': (61, 2, 6),
     'YLW': (71, 14, 50)
 }
+
+DEFAULT_PROFILES_IDS = {
+    'S': 'IB00000011',
+    'LS': 'IBMZ910023',  
+    'SL': 'IB00000008', 
+    'L': 'IUBF970211', 
+    'SIL': 'IB00000005', 
+    'SI': 'IBWH980018', 
+    'SCL': 'IBSB910009', 
+    'CL': 'IBSB910009', 
+    'SICL': 'CCPA000030', 
+    'SC': 'IBPT910002', 
+    'SIC': 'IB00000002', 
+    'C': 'CCQU000033', 
+}
+
+def wrap_NA_types(inp):
+    if isna(inp):
+        return inp
+    try:
+        if np.isclose(float(inp), -99, 1):
+            return NA
+        else:
+            return inp
+    except ValueError:
+        return inp
+
+LAYER_DTYPES = {
+    'SLMH': str, 'SLLL': float, 'SDUL': float, 'SSAT': float, 'SRGF': float,
+    'SSKS': float, 'SBDM': float, 'SLOC': float, 'SLCL': float, 'SLSI': float,
+    'SLCF': float, 'SLNI': float, 'SLHW': float, 'SLHB': float, 'SCEC': float,
+    'SADC': float, 'SLPX': float, 'SLPT': float, 'SLPO': float, 'CACO3': float,
+    'SLAL': float, 'SLFE': float, 'SLMN': float, 'SLBS': float, 'SLPA': float,
+    'SLPB': float, 'SLKE': float, 'SLMG': float, 'SLNA': float, 'SLSU': float,
+    'SLEC': float, 'SLCA': float, '@  SLB': int
+}
+
 def list_layer_parameters():
     '''
     Print a list of the soil parameters
@@ -368,13 +405,7 @@ class SoilLayer(Series):
                 self.SBDM = 1.386 - 0.078*self.SLOC + 0.001*self.SLSI + 0.001*self.SLCL
             else:
                 self.SBDM = 1.72 - 0.294*self.SLOC**0.5
-        if isna(self.SRGF): pass # TODO: This has to be recalculated as any new layer is added.
-        #  It's calculated like this:
-        # layer_center = base_depth - 0.5*layer_depth
-        # if (layer_center > 20) and (SoilProfile.n_layers > 1):
-        #     self.SRGF = math.exp(-0.02*layer_center)
-        # else:
-        #     self.SRGF = 1
+        
         if isna(self.SLOC): self.SLOC = color_to_oc(self.SCOM)
 
 
@@ -422,14 +453,14 @@ class SoilProfile():
                  Clay            |  C 
         '''
         self.n_layers = 0
-        self.id = profile
-        self.description = ''
+        self.id = 'SOIL000001'
+        self.description = 'Soil profile'
         self.total_depth = 0
-        self.site = ''
-        self.country = ''
-        self.lat = ''
-        self.lon = ''
-        self.csc_family = ''
+        self.site = 'Huntsville'
+        self.country = 'AL-USA'
+        self.lat = 34.7246
+        self.lon = -86.6451
+        self.csc_family = 'Custom'
         # Set default values
         self.SALB = .12 
         self.SLU1 = 6.
@@ -447,15 +478,43 @@ class SoilProfile():
         if file:
             self._file_initilized = True
             self._file_path = file
+            self.id = profile
+            self._open_file()
+        elif default_class:
+            assert default_class in DEFAULT_PROFILES_IDS.keys(), \
+                f'{default_class} is not a valid default soil profile' 
+            self._file_initilized = True
+            from DSSATTools import __file__ as DSSATToolsPath
+            self._file_path = os.path.join(
+                os.path.dirname(DSSATToolsPath), 'static', 'Soil', 'SOIL.SOL'
+            )
+            self.id = DEFAULT_PROFILES_IDS[default_class]
             self._open_file()
         else:
             self._file_initilized = False
+            for par, value in pars.items():
+                assert self.__dict__.get(par, False), \
+                    f'{par} is not a valid SoilProfile parameter'
+                self.__dict__[par] = value
 
-        
-
-        # TODO: Initialize from a soil file, or default class soil file.
-        # TODO: if default class does not match any of the available, then raise error and print docstring.
-        return
+    def _calculate_SRGF(self):
+        '''
+        It has to be recalculated for all the layers after a layer is added or
+        droped. The calculation method is specified in the DSSAT proceeding 
+        calulations
+        '''
+        for base_depth, lay in self.layers.items():
+            for d in sorted(self.layers.keys(), reverse=True):
+                if d < base_depth:
+                    layer_depth = base_depth - d
+                    break
+                layer_depth = base_depth   
+            layer_center = base_depth - 0.5*layer_depth
+            if (layer_center > 20) and (self.n_layers > 1):
+                lay.SRGF = math.exp(-0.02*layer_center)
+            else:
+                lay.SRGF = 1 
+            
 
     def add_layer(self, layer: SoilLayer):
         '''
@@ -466,18 +525,22 @@ class SoilProfile():
         layer: DSSATTools.soil.SoilLayer
             Soil Layer object
         '''
-        layer_depth = layer['@  SLB']
-        if layer_depth in self.layers.keys():
-            UserWarning(f'Layer at {layer_depth} cm was overwriten')
-        self.layers[layer_depth] = layer
+        base_depth = layer['@  SLB']
+        if base_depth in self.layers.keys():
+            UserWarning(f'Layer at {base_depth} cm was overwriten')
+        layer = layer.map(wrap_NA_types)
+        self.layers[base_depth] = layer
         self.n_layers = len(self.layers)
-        # TODO: if SLB is between an existing one, then show warning.
-        return
-    
+        self.total_depth = max(self.layers.keys())
+        # Calculate SRGF if missing
+        if isna(layer.SRGF): self._calculate_SRGF()
+
     def drop_layer(self, layer: int):
         '''
-        
+        Drop the layer at the specified depth
         '''
+        del self.layers[layer['@  SLB']]
+        self._calculate_SRGF()
         return
 
     def set_parameter(self, parameter, value):
@@ -503,14 +566,13 @@ class SoilProfile():
         filename: str
             Path to the file to write
         '''
-        # TODO: If Instance was initialized from file, then skip
-        if self._file_initilized:
-            return
-        # TODO: raise error if not layers.
-        # TODO: Check if it exists. If it does, then remove and raise overwrite warning.
-        # TODO: Check Soil id. If soil id is empty, then it'll be created from the management instance.
-
-        # TODO: __repr__ method to pretty print the soil layer.
+        assert self.n_layers > 0, 'SoilProfile must have at least one layer'
+        
+        rep = '*SOIL File created with DSSATTools\n\n'
+        rep += self.__repr__()
+        with open(filename, 'w') as f:
+            f.write(rep)
+        
 
     def _open_file(self):
         '''
@@ -538,7 +600,7 @@ class SoilProfile():
                         profile_id = line[1:11]
                         if profile_id != self.id:
                             continue
-                        self.description = line
+                        self.description = line[11:].strip()
                         section_idx = -1
                         FOUND_PROFILE = True
                         self.layers = {}
@@ -574,28 +636,41 @@ class SoilProfile():
                             dict(zip(FST_LVL_PARS, pars[1:]))
                         )
                     )
-                else:
+                else: 
+                    # TODO: This only implements First level parameters so far so remember to implement
+                    # nutrient balance parameters as well
                     pars = soil_line_read(
                         line, DATA_FMT[PROFILE_SECTIONS[section_idx]]
                     )
                     layer_depth = pars[0]
                     for par, value in zip(FST_LVL_PARS, pars[1:]):
                         self.layers[layer_depth][par] = value
+        assert FOUND_PROFILE, f'{self.id} profile was not found at '+\
+            f'{self._file_path}'
     
     def __repr__(self):
-        repr = self.id + '\n'
-        repr += 'Depth(cm) Sand(%) Silt(%) Clay(%)\n'  
+        '''
+        repr of the class defined in the DSSAT profile format. 
+        '''
+        rep = f'*{self.id}  {self.description}\n'
+        rep += '@SITE        COUNTRY          LAT     LONG SCS FAMILY\n'
+        rep += soil_location_write(
+            [self.site, self.country, self.lat, self.lon, self.csc_family]
+        ) + '\n'
+        rep += '@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE\n'
+        rep += soil_line_write(
+            [self.SCOM, self.SALB, self.SLU1, self.SLDR, self.SLRO,
+             self.SLNF, self.SLPF, self.SMHB, self.SMPX, self.SMKE],
+            DATA_FMT['profile_lvl_pars']
+        ) + '\n'
+        rep += '@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC' +\
+            '  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC\n'
         for depth, layer in self.layers.items():
-            try:
-                sa = 100 - layer.SLCL - layer.SLSI
-            except TypeError:
-                repr += self.description
-                repr += '\nNo texture information'
-                return repr
-            cl = layer.SLCL
-            si = layer.SLSI
-            repr += f'{depth:8d} {sa:7.1f} {si:7.1f} {cl:7.1f}\n'
-        return repr
+            rep += soil_line_write(
+                [depth] + list(layer[FST_LVL_PARS]),
+                DATA_FMT['layer_lvl_1_pars']
+            ) + '\n'
+        return rep
     
 '''
 References

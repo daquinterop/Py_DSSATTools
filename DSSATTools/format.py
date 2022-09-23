@@ -1,6 +1,6 @@
 
 import fortranformat as ff
-
+from pandas import isna
 
 
 # Funciton to read a layer (row)
@@ -16,14 +16,24 @@ def soil_line_read(line, format_list):
     return ff.FortranRecordReader(fmt).read(line)
 
 
-# def line_write():
-#     fmt = '1X'
-#     for n, field in enumerate(fields):
-#         if n != 0:
-#             fmt += ',1X'
-#         if isna(field):
-#             fields[n] = '-99'
-#             fmt += ',A5'
-#         else:
-#             fmt += ',' + LAYER_ROW_FMT[n]
-#     return ff.FortranRecordWriter(fmt).write(fields)
+def soil_line_write(fields, line_fmt):
+    fmt = '1X'
+    for n, field in enumerate(fields):
+        if n != 0:
+            fmt += ',1X'
+        if isna(field):
+            fields[n] = '-99'
+            fmt += ',A5'
+        else:
+            fmt += ',' + line_fmt[n]
+    return ff.FortranRecordWriter(fmt).write(fields)
+
+def soil_location_write(fields):
+    fmt = '1X,A12,A12,1X,'
+    for field in fields[2:4]:
+        if not isinstance(field, float):
+            fmt += 'A8,1X,'
+        else:
+            fmt += 'F8.3,1X,'
+    fmt += 'A36'
+    return ff.FortranRecordWriter(fmt).write(fields)
