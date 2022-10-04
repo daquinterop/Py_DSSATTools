@@ -95,26 +95,10 @@ import os
 import numpy as np
 
 from DSSATTools.exceptions import InputError
-from DSSATTools.format import (
+from DSSATTools.formater import (
     soil_line_read, soil_line_write, soil_location_write
 )
 from rosetta import rosetta, SoilData
-
-HEADER = "*Soils: Brazil\n"
-
-TEMPLATE = """
-*SLPR000001  ESALQ       C       150 TERRA ROXA (IRRIGATED)
-@SITE        COUNTRY          LAT     LONG SCS FAMILY
- SiteName    CountryName  -22.430  -47.250 Typic Eutrudox
-
-@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
-     R  0.14   9.1  0.20  83.0  1.00  0.96 IB001 IB001 IB001
-@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC
-    20     A 0.280 0.349 0.530 1.000  0.39  1.23  1.47  65.0  15.0   0.0 0.120   5.0   -99  10.8   -99 
-    40    AA 0.284 0.345 0.530 1.000  0.63  1.13  1.11  65.0  17.0   0.0 0.100   5.5   -99   9.2   -99 
-   120    AB 0.280 0.311 0.530 0.900  1.21  1.08  0.90  62.0  16.0   0.0 0.090   5.5   -99   9.0   -99 
-   150     B 0.280 0.311 0.530 0.100  1.21  1.08  0.90  62.0  16.0   0.0 0.090   5.5   -99   9.0   -99 
-"""
 
 FST_LVL_PARS = [
     'SLMH',  'SLLL',  'SDUL',  'SSAT',  'SRGF',  'SSKS',  'SBDM',  'SLOC',
@@ -240,16 +224,6 @@ def wrap_NA_types(inp):
     except ValueError:
         return inp
 
-LAYER_DTYPES = {
-    'SLMH': str, 'SLLL': float, 'SDUL': float, 'SSAT': float, 'SRGF': float,
-    'SSKS': float, 'SBDM': float, 'SLOC': float, 'SLCL': float, 'SLSI': float,
-    'SLCF': float, 'SLNI': float, 'SLHW': float, 'SLHB': float, 'SCEC': float,
-    'SADC': float, 'SLPX': float, 'SLPT': float, 'SLPO': float, 'CACO3': float,
-    'SLAL': float, 'SLFE': float, 'SLMN': float, 'SLBS': float, 'SLPA': float,
-    'SLPB': float, 'SLKE': float, 'SLMG': float, 'SLNA': float, 'SLSU': float,
-    'SLEC': float, 'SLCA': float, '@  SLB': int
-}
-
 def list_layer_parameters():
     '''
     Print a list of the soil parameters
@@ -338,7 +312,7 @@ class SoilLayer(Series):
         super().__init__(
             {
                 key: NA
-                for key in ['@  SLB'] + FST_LVL_PARS + ['@  SLB'] + SCD_LVL_PARS
+                for key in ['@  SLB'] + LAYER_PARS
             }
         )
         self.SCOM = pars.get('SCOM')

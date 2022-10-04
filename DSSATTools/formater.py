@@ -37,3 +37,22 @@ def soil_location_write(fields):
             fmt += 'F8.3,1X,'
     fmt += 'A36'
     return ff.FortranRecordWriter(fmt).write(fields)
+
+def weather_station(fields):
+    fmt = '2X,A4,2(1X,F8.3),1X,I5'
+    for n, field in enumerate(fields[4:], 4):
+        fmt += ',1X'
+        if isna(field):
+            fields[n] = '-99'
+            fmt += ',A5'
+        else:
+            fmt += ',F5.1'
+    return ff.FortranRecordWriter(fmt).write(fields) + '\n'
+
+def weather_data_header(fields):
+    fmt = f'{len(fields)}(1X,A5)'
+    return '@DATE' + ff.FortranRecordWriter(fmt).write(fields) + '\n'
+
+def weather_data(fields):
+    fmt = f'A5,{len(fields)}(1X,F5.1)'
+    return ff.FortranRecordWriter(fmt).write(fields) + '\n'

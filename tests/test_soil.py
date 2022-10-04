@@ -1,6 +1,5 @@
 from pickletools import pybytes
 import pytest
-from DSSATTools.exceptions import InputError
 from DSSATTools import soil
 import numpy as np
 import os
