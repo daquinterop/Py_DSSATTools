@@ -186,6 +186,11 @@ class WeatherStation():
         '''
         Writes the weather files in the provided folder. The name is defined
         by the dates and the Institute code (INSI).
+
+         Arguments
+        ----------
+        folder: str
+            Path to the folder the files will be saved.
         '''
         if not os.path.exists(folder):
             os.mkdir(folder)

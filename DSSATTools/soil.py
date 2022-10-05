@@ -94,7 +94,6 @@ import math
 import os
 import numpy as np
 
-from DSSATTools.exceptions import InputError
 from DSSATTools.formater import (
     soil_line_read, soil_line_write, soil_location_write
 )
@@ -321,7 +320,7 @@ class SoilLayer(Series):
         TEXTURE_PARS = all([i in pars.keys() for i in MANDATORY_PARS[-2:]])
         HYDR_PARS = all([i in pars.keys() for i in MANDATORY_PARS[:-2]])
 
-        assert any([TEXTURE_PARS, HYDR_PARS]), InputError( 
+        assert any([TEXTURE_PARS, HYDR_PARS]), ( 
             "You must define at least 'SLCL' and 'SLSI' if soil hydraulic properties " + 
             "('SLLL', 'SDUL', 'SSAT', 'SRGF', 'SSKS', 'SBDM', 'SLOC') are not defined."
         )
@@ -359,7 +358,7 @@ class SoilLayer(Series):
         if isna(self.SCOM):
             self.SCOM = 'DBR'
         else:
-            assert self.SCOM in SOIL_LAB.keys(), InputError(
+            assert self.SCOM in SOIL_LAB.keys(), (
             'SCOM is optional, and it must be passed as an string referencing the color,'+
             'or a tupple with CIELAB coordinates (L, a, b). The string can be one of '+
             'these:\n' +
