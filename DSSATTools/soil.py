@@ -94,7 +94,7 @@ import math
 import os
 import numpy as np
 
-from DSSATTools.formater import (
+from DSSATTools.base.formater import (
     soil_line_read, soil_line_write, soil_location_write
 )
 from rosetta import rosetta, SoilData

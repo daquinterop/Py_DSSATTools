@@ -1,6 +1,32 @@
 '''
 Basic crop class. It initializes a crop instances based on the crop name and
 crop file if provided.
+
+`Crop` class is the only needed class to initialize a Crop instance. You need
+to specify the crop name (Those can be checked at DSSATTools.crop.CROPS_MODULES
+object), and you can also specify a .SPE file to initialize the instance. If no
+.SPE file is passed as argument, then default .SPE, .ECO and .CUL are used.
+
+Please, take into account that if you initialize the instance with a custom
+Species file the three files (.SPE, .ECO, .CUL) must be in the same directory 
+as the passed Species file.
+
+The only method implemented is `set_parameter`, that of course is used to set
+the value of any crop parameter. `Crop` class inherits from the `BaseCrop` class
+of the specified crop. `BaseCrop` is composed by sections, each of the included
+in the Species file, and one section for Cultivar and Ecotype respectively.
+
+The usage of the Crop class is explaied by this example. In here we initialize
+a Crop instance, modify a parameter and write the cropfile (All of them).
+Example
+-------
+    >>> crop = Crop('maize')
+    >>> crop.set_parameter(
+            par_name = 'TBASE',
+            par_value = 30.,
+            row_loc = 'IB0002'
+        )
+    >>> crop.write('crop_test')
 '''
 import os
 

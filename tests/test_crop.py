@@ -1,5 +1,5 @@
 import pytest
-from DSSATTools.base.input import Crop
+from DSSATTools.crop import Crop
 import shutil
 import os
 

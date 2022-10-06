@@ -38,7 +38,7 @@ import os
 import pandas as pd
 from pandas import DataFrame
 from pandas import NA, isna
-from DSSATTools.formater import weather_data, weather_data_header, weather_station
+from DSSATTools.base.formater import weather_data, weather_data_header, weather_station
 
 PARS_DESC = {
     # Station parameters
