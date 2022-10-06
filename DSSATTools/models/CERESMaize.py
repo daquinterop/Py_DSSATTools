@@ -4,20 +4,23 @@
 from DSSATTools.base.CERES import Species
 from DSSATTools.base.sections import Cultivar, Ecotype
 import os
+import numpy as np
 # from DSSATTools.base.input import Crop
 
 CROP = 'Maize'
 SPE_FILE = 'MZCER048.SPE'
 
+    
 class CropBase:
     '''
-    gonorrea
+    This class reunites the species, cultivar and ecotype parts of the crop.
     '''
     def __init__(self, spe_file:str):
         self.NAME = CROP
         self.species = Species(spe_file)
         self.cultivar = Cultivar(spe_file, self.NAME)
         self.ecotype = Ecotype(spe_file, self.NAME)
+
     
     def write(self, filepath:str=''):
         cultivar_str = '*MAIZE CULTIVAR COEFFICIENTS: MZCER048 MODEL\n' \
@@ -32,4 +35,4 @@ class CropBase:
         with open(os.path.join(filepath, f'{SPE_FILE[:-3]}CUL'), 'w') as f:
             f.write(cultivar_str)
         with open(os.path.join(filepath, f'{SPE_FILE[:-3]}ECO'), 'w') as f:
-            f.write(ecotype_str) 
+            f.write(ecotype_str)

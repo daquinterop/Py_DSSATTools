@@ -28,11 +28,19 @@ ECOTYPE_ROWS_FMT = {
     'Maize': 'A6,1X,A16,1X,11(1X,F5.1)'
 }
 
-def ecotype_row_write(crop, fields):
+def unpack_keys(section):
+    keys = map(lambda x: x.keys(), section.values())
+    unique_keys = []
+    for k in keys:
+        unique_keys += list(k)
+    unique_keys = set(unique_keys)
+    return list(unique_keys)
+
+def ecotype_row_write(crop, fields, row_fmt):
     # This function is juts in case format strings have to be created 
     # dynamically
     fmt = ''
-    for s in ECOTYPE_ROWS_FMT[crop].split(','):
+    for s in row_fmt[crop].split(','):
         if '(' in s:
             N, X = s.split('(')
         elif ')' in s:
@@ -97,15 +105,16 @@ class Section(dict):
                 row_reader = ff.FortranRecordReader(
                     CULTIVAR_ROWS_FMT[self.crop]
                 )
-                self._row_writer = ff.FortranRecordWriter(
-                    get_cultivar_row_fmt(self.crop) # TODO: Use same row writer as ecotype
-                ).write
+                self._row_writer = lambda x: ecotype_row_write(
+                    self.crop, x, CULTIVAR_ROWS_FMT
+                    )
             else: 
                 self._HEADER_FMT = ECOTYPE_HEADER_FMT[self.crop]
                 row_reader = ff.FortranRecordReader(
                     ECOTYPE_ROWS_FMT[self.crop]
                 )
-                self._row_writer = lambda x: ecotype_row_write(self.crop, x)
+                self._row_writer = lambda x: ecotype_row_write(
+                    self.crop, x, ECOTYPE_ROWS_FMT)
 
             for line in self._file_lines:
                 if line[0] == '*':

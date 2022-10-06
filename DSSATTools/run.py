@@ -2,14 +2,12 @@ import subprocess
 import shutil
 
 from numpy import isin
-from .exceptions import DSSATNotFound, DSSATInputError
 import os
 import time
 import docker
 import sys
 import tarfile
 import tempfile    
-import DSSATTools.dssatUtils as dssatUtils
 
 # Libraries for second version
 import DSSATTools
