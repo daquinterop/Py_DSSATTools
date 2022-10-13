@@ -115,7 +115,10 @@ class Dscsm():
         #
         # Create wd if it doesn't exist and move files to it.
         #
-        # TODO: Check if this instance was already set-up. If it was, then stop, show warning, and ask to run the method with overwrite=True
+        # TODO: Check if this instance was already set-up. If it was, then stop,
+        # show warning, and ask to run the method with overwrite=True
+        # TODO: verbose the setup process.
+
         TMP_BASE = tempfile.gettempdir()
         if cwd:
             self._RUN_PATH = cwd
@@ -146,6 +149,16 @@ class Dscsm():
                     os.path.join(self._STATIC_PATH, file), 
                     os.path.join(self._RUN_PATH, file)
                 )
+        # Copy static path
+        if os.path.exists(os.path.join(self._RUN_PATH, 'static')):
+            shutil.rmtree(os.path.join(self._RUN_PATH, 'static'))
+        shutil.copytree(self._STATIC_PATH, os.path.join(self._RUN_PATH, 'static'))
+        self._STATIC_PATH = os.path.join(self._RUN_PATH, 'static')
+        self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
+        self._STD_PATH = os.path.join(self._STATIC_PATH, 'StandardData')
+        self._CRD_PATH = os.path.join(self._STATIC_PATH, 'Genotype')
+        self._SLD_PATH = os.path.join(self._STATIC_PATH, 'Soil')
+
         self._SETUP = True
 
 

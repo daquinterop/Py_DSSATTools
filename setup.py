@@ -24,8 +24,15 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     package_dir={"": "."},
-    packages=['DSSATTools', 'DSSATTools.static', 'DSSATTools.static.bin', 'DSSATTools.static.Genotype', 
-        'DSSATTools.static.Pest', 'DSSATTools.static.StandardData', 'DSSATTools.static.Soil'],
+    packages=[
+        'DSSATTools', 
+        
+        'DSSATTools.static', 'DSSATTools.static.bin', 
+        'DSSATTools.static.Genotype', 'DSSATTools.static.Pest', 
+        'DSSATTools.static.StandardData', 'DSSATTools.static.Soil', 
+        
+        'DSSATTools.models', 'DSSATTools.base'
+        ],
     python_requires=">=3.6",
     license='MIT',
     install_requires=requirements,

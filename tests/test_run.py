@@ -58,5 +58,5 @@ def test_run_maize():
         soil=soil, weather=wth, crop=crop, management=man,
     )
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
-    dssat.close()
-    assert not os.path.exists(dssat._RUN_PATH)
+    # dssat.close()
+    # assert not os.path.exists(dssat._RUN_PATH)
