@@ -1,11 +1,9 @@
 import pytest
-from DSSATTools import management
 
-from DSSATTools.run import Dscsm
-from DSSATTools.weather import WeatherData, WeatherStation
-from DSSATTools.crop import Crop
-from DSSATTools.soil import SoilProfile
-from DSSATTools.management import Management
+from DSSATTools import (
+    Crop, SoilProfile, WeatherData, WeatherStation,
+    Management, DSSAT
+    )
 
 from datetime import datetime
 import pandas as pd
@@ -54,7 +52,7 @@ def test_run_maize():
     man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
         [DATES[190].strftime('%y%j'), 100]
 
-    dssat = Dscsm()
+    dssat = DSSAT()
     dssat.setup(cwd='/tmp/dssattest')
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,

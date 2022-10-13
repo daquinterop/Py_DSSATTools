@@ -82,7 +82,7 @@ class Dscsm():
 
     def __init__(self):
         '''
-        
+        No arguments, this initializes the class.
         '''
         BASE_PATH = os.path.dirname(DSSATTools.__file__)
         self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
@@ -99,7 +99,7 @@ class Dscsm():
         self.output = {} # TODO: Implement an output class.There'll be a basic one, andvariations with models.
         self.OUTPUT_LIST = OUTPUTS
 
-    def setup(self, cwd=None, overwrite=False, **kwargs):
+    def setup(self, cwd=None):
         '''
         Setup a simulation environment.
         Creates a tmp folder to run the simulations and move all the required
@@ -110,11 +110,7 @@ class Dscsm():
         ----------
         cwd: str
             Working directory. All the model files would be moved to that directory.
-            If None, then a tmp directory will be created and then removed.
-        overwrite: bool
-            Whether to overwrite or not the current simulation environment. If
-            true, then a new simulation environment will be created, and all the 
-            outputs and inputs will be reseted.
+            If None, then a tmp directory will be created.
         '''
         #
         # Create wd if it doesn't exist and move files to it.
