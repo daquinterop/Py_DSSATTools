@@ -56,3 +56,5 @@ def weather_data_header(fields):
 def weather_data(fields):
     fmt = f'A5,{len(fields)}(1X,F5.1)'
     return ff.FortranRecordWriter(fmt).write(fields) + '\n'
+
+

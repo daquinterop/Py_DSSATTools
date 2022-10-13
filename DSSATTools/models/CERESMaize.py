@@ -20,6 +20,8 @@ class CropBase:
         self.species = Species(spe_file)
         self.cultivar = Cultivar(spe_file, self.NAME)
         self.ecotype = Ecotype(spe_file, self.NAME)
+        self.CODE = 'MZ'
+        self.SMODEL = 'MZCER'
 
     
     def write(self, filepath:str=''):

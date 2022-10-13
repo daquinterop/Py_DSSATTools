@@ -54,7 +54,7 @@ BASE_CROPS = [Gonorrea] + BASE_CROPS
 
 class Crop(*BASE_CROPS):
     '''
-    
+
     '''
     def __init__(self, crop_name:str='Maize', spe_file:str=None):
         '''
@@ -91,10 +91,9 @@ class Crop(*BASE_CROPS):
         self.parameters = []
 
         for section in (self.cultivar, self.ecotype):
-            section_name = section.__class__.__name__.lower()
             pars = unpack_keys(section)
             self._pars_section_map.update(
-                dict(zip(pars, len(pars)*[section_name]))
+                dict(zip(pars, len(pars)*[section.name]))
             )
             self.parameters += pars
         
@@ -131,6 +130,7 @@ class Crop(*BASE_CROPS):
             In this case, to define the PRFTC parameter, you should specify one 
             of the columns (TBASE, TOP1, etc.) through the col_loc argument.
         '''
+        # TODO: Modify crop sections for the new section classes
         assert par_name in self.parameters, \
             f'{par_name} is not a valid parameter name'
         section_name = self._pars_section_map[par_name]

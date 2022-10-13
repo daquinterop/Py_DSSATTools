@@ -216,7 +216,7 @@ def wrap_NA_types(inp):
     if isna(inp):
         return inp
     try:
-        if np.isclose(float(inp), -99, 1):
+        if np.isclose(float(inp), -99, atol=1):
             return NA
         else:
             return inp
@@ -541,7 +541,7 @@ class SoilProfile():
         '''
         assert self.n_layers > 0, 'SoilProfile must have at least one layer'
         
-        rep = '*SOIL File created with DSSATTools\n\n'
+        rep = '*SOILS: File created with DSSATTools\n\n'
         rep += self.__repr__()
         with open(filename, 'w') as f:
             f.write(rep)

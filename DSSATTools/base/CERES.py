@@ -24,8 +24,8 @@ class Species:
         with open(spe_file) as f:
             self._file_lines = f.readlines()
 
-    # TODO: Implement some attribute to allocate sections.
     # TODO: Create a __repr__ method to print sections.
+    # TODO: I have to work in the inclusion of the Species file
 
     def write(self):
         return ''.join(self._file_lines)
