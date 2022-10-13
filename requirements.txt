@@ -3,7 +3,7 @@ certifi==2021.10.8
 chardet==4.0.0
 charset-normalizer==2.0.9
 coverage==6.3.2
-docker==5.0.3
+fortranformat==1.2.2
 idna==3.3
 iniconfig==1.1.1
 numpy==1.22.2
@@ -15,11 +15,10 @@ pyparsing==3.0.7
 pytest==7.0.1
 pytest-cov==2.12.1
 python-dateutil==2.8.2
+python-magic==0.4.27
 pytz==2021.3
 requests==2.26.0
+rosetta-soil==0.1.1
 six==1.16.0
 toml==0.10.2
 tomli==2.0.1
-tradssat==0.1.7
-urllib3==1.26.7
-websocket-client==1.2.3

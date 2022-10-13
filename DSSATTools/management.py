@@ -34,7 +34,7 @@ SECTIONS_TITLE = {
 TO_FILL = -999999 # To fill from other instances
 class Management:
     '''
-    
+    Management classs
     '''
     # TODO: Define attributes for basic things such as:
     # - Planting date
