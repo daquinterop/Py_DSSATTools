@@ -1,24 +1,17 @@
 # DSSATTools package
+## Example Notebooks
+You'll find example notebooks in this repo:[https://github.com/daquinterop/DSSATTools_notebooks](https://github.com/daquinterop/DSSATTools_notebooks). I'll keep uploading examples as some new feature is introduced.
 ## Module contents
 
-DSSAT library is a collection of classes that allows the user to create low-code
-scripts to run simulations with DSSAT model. The library structure allows to 
-execute DSSAT model based on four input classes: Crop, SoilProfile,
-WeatherStation and Management.
+DSSAT library is a collection of classes that allows the user to create low-code scripts to run simulations with DSSAT model. The library structure allows to execute DSSAT model based on four input classes: Crop, SoilProfile, WeatherStation and Management.
 
-The simulation environment is represented by the DSSAT Class. There are three
-stages for the simulation to be excecuted: 1. Initialize a DSSAT instance; 2.
-setup the simulation environment by using the DSSAT.setup method; 3. run the
-simulation using the DSSAT.run method.
+The simulation environment is represented by the DSSAT Class. There are three stages for the simulation to be excecuted: 1. Initialize a DSSAT instance; 2. setup the simulation environment by using the DSSAT.setup method; 3. run the simulation using the DSSAT.run method.
 
-During the environment setup (DSSAT.setup) a directory is created and all the
-static files required to run DSSAT are copied in that directory. This directory
-will be removed when the DSSAT.close method is called. After the environment 
-has been set up, the DSSAT.run method can be called as many times as you want.
+During the environment setup (DSSAT.setup) a directory is created and all the static files required to run DSSAT are copied in that directory. This directory will be removed when the DSSAT.close method is called. After the environment has been set up, the DSSAT.run method can be called as many times as you want.
 
-All of the parameters and attributes of the four basic clases have the same name
-you find in the DSSAT files (Take a look at the .CDE files in 
-[https://github.com/DSSAT/dssat-csm-os/tree/develop/Data](https://github.com/DSSAT/dssat-csm-os/tree/develop/Data)).
+All of the parameters and attributes of the four basic clases have the same name you find in the DSSAT files (Take a look at the .CDE files in [https://github.com/DSSAT/dssat-csm-os/tree/develop/Data](https://github.com/DSSAT/dssat-csm-os/tree/develop/Data)).
+
+**At the moment the library can be used only for Maize crop and CERESMaize model. More crops and models will be added later.** If you're interested in contributing to this project, don't hesitate in sending me an email (daquinterop@gmail.com). Of course, if you want to contribute then I'll have to create a Developer's guide to the project.
 
 All the Classes can be imported as:
 ```python
