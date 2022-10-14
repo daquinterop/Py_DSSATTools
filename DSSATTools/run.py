@@ -1,5 +1,5 @@
 '''
-Hosts the Dscsm class. That class is the simulation environment, so per each
+This module hosts the DSSAT class. That class is the simulation environment, so per each
 Dscsm instance there's a directory where all the necesary files to run the model
 are allocated. To run the model there are 3 basic steps:
     1. Create a new Dscsm instance.
@@ -7,8 +7,11 @@ are allocated. To run the model there are 3 basic steps:
     3. Run the model by running the run() method.
 You can close the simulation environment by running the close() method.
 
-Example
--------
+The model outputs are storage in the `outputs` attribute. Up to date the only
+model output parsed into `outputs` is 'PlantGro'.
+
+In the next example all the 4 required objects to run the DSSAT model are
+created, an a simulation is run.
     >>> # Create random weather data
     >>> df = pd.DataFrame(
         {
@@ -61,6 +64,7 @@ import tempfile
 import random
 import string
 import pandas as pd
+import sys 
 
 # Libraries for second version
 import DSSATTools
@@ -69,21 +73,18 @@ from DSSATTools.weather import WeatherStation
 from DSSATTools.crop import Crop
 from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection, RowBasedSection
+from DSSATTools.base.sections import clean_comments
 
 
 OUTPUTS = ['PlantGro', ]
 
-class Dscsm():
-    # TODO: Class implementation must allow to change Crop, Weather, Experiment(Management) and Soil. So, each of this must be defined as instances, and this class must keep track of those changes, so as to create new files only if the instance has changed.
-
-    # TODO: Each crop model has to have it's own class. So far, I'll implement only CERES-MAIZE.
-
-    # TODO: An option to run without definen input instances has to be implement as well. This will allow to use the class if the model is not implemented yet. For this case, the input will be initialized as a path (str) and not as an instance. 
-
+class DSSAT():
+    '''
+    Class that represents the simulation environment. When initializing and 
+    seting up the environment, a new folder is created (usually in the tmp 
+    folder), and all of the necesary files to run the model are copied into it.
+    '''
     def __init__(self):
-        '''
-        No arguments, this initializes the class.
-        '''
         BASE_PATH = os.path.dirname(DSSATTools.__file__)
         self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
         self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
@@ -96,7 +97,7 @@ class Dscsm():
             'crop': None, 'wheater': None, 'soil': None, 'management': None 
         }
 
-        self.output = {} # TODO: Implement an output class.There'll be a basic one, andvariations with models.
+        self.output = {}
         self.OUTPUT_LIST = OUTPUTS
 
     def setup(self, cwd=None):
@@ -112,13 +113,7 @@ class Dscsm():
             Working directory. All the model files would be moved to that directory.
             If None, then a tmp directory will be created.
         '''
-        #
-        # Create wd if it doesn't exist and move files to it.
-        #
-        # TODO: Check if this instance was already set-up. If it was, then stop,
-        # show warning, and ask to run the method with overwrite=True
         # TODO: verbose the setup process.
-
         TMP_BASE = tempfile.gettempdir()
         if cwd:
             self._RUN_PATH = cwd
@@ -130,6 +125,7 @@ class Dscsm():
                 ''.join(random.choices(string.ascii_lowercase, k=8))
             )
             os.mkdir(self._RUN_PATH)
+        sys.stdout.write(f'{self._RUN_PATH} created.\n')
         
         # Move files
         if not os.path.exists(
@@ -153,6 +149,7 @@ class Dscsm():
         if os.path.exists(os.path.join(self._RUN_PATH, 'static')):
             shutil.rmtree(os.path.join(self._RUN_PATH, 'static'))
         shutil.copytree(self._STATIC_PATH, os.path.join(self._RUN_PATH, 'static'))
+        sys.stdout.write(f'Static files copied to {self._RUN_PATH}.\n')
         self._STATIC_PATH = os.path.join(self._RUN_PATH, 'static')
         self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
         self._STD_PATH = os.path.join(self._STATIC_PATH, 'StandardData')
@@ -239,17 +236,17 @@ class Dscsm():
             f.write(f'SLD    {self._SLD_PATH}\n')
             f.write(f'STD    {self._STD_PATH}\n')
 
-        # Run it
         excinfo = subprocess.run(
             [self._BIN_PATH, 'C', os.path.basename(management_filename), '1'], 
-            cwd=self._RUN_PATH
+            cwd=self._RUN_PATH, capture_output=True, text=True
         )
+        for line in clean_comments(excinfo.stdout.split('\n')):
+            sys.stdout.write(line + '\n')
 
         assert excinfo.returncode == 0, 'DSSAT execution Failed, check '\
             + f'{os.path.join(self._RUN_PATH, "ERROR.OUT")} file for a'\
             + ' detailed report'
 
-        # TODO: Read outputs.
         OUTPUT_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] == 'OUT']
         
         for file in self.OUTPUT_LIST:
@@ -269,8 +266,9 @@ class Dscsm():
 
     def close(self):
         '''
-        Remove all the files in the run path.
+        Removes the simulation environment (tmp folder and files).
         '''
         shutil.rmtree(self._RUN_PATH)
+        sys.stdout.write(f'{self._RUN_PATH} and its content has been removed.\n')
     
 

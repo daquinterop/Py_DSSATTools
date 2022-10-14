@@ -8,7 +8,7 @@ with open('/home/diego/Py_DSSATTools/requirements.txt', 'r') as f:
 
 setuptools.setup(
     name="DSSATTools",
-    version="1.0.0",
+    version="2.0.0",
     author="Diego Quintero",
     author_email="daquinterop@gmail.com",
     description="A set of Tools to ease the crop simulation ussing DSSAT",

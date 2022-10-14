@@ -187,23 +187,23 @@ def ecotype_row_write(crop, fields, row_fmt):
     writer = ff.FortranRecordWriter(fmt)
     return writer.write(fields)
 
-class Section(dict):
+            
+class RowBasedSection(dict):
     '''
-    Section class. Reads and writes sections.
-    '''
-    def __init__(self, name:str='', file_lines:list=[], **kwargs):
-        '''
-        Arguments
-        ----------
-        section: str
-            name of the section. Should be one of the section_map keys.
-        '''
-        if kwargs.get('pars', False):
-            super().__init__(kwargs.get('pars'))
-            return
+    Parameter's values are defined in columns, so each item corresponds to a
+    row. The value of a parameter deppends on an ID, Example:
 
-        init_dict = {}
-        if self.__class__.__name__ in ['Cultivar', 'Ecotype']:
+    @ID PAR1 PAR2 PAR3
+    1      2    3   45
+    2      6    7   89
+    '''
+    def __init__(self, name:str, **kwargs):
+        self.name = name
+        self.idcol = kwargs.get('idcol')
+        
+        # When file's lines are passed. Case of CUL and ECO files.
+        if self.__dict__.get('_file_lines', False):
+            init_dict = {}
             self.name = self.__class__.__name__.lower()
             if  self.name == 'cultivar':
                 self._HEADER_FMT = CULTIVAR_HEADER_FMT[self.crop]
@@ -240,87 +240,23 @@ class Section(dict):
                             init_dict[row_id] = {}
                         else:
                             init_dict[row_id][self.PAR_NAMES[n]] = field
-            super().__init__(init_dict)
-            return
+            kwargs['pars'] = init_dict
 
-        self.name = name
-        file_lines = clean_comments(file_lines)
-        subsection_n = -1
-        for line in file_lines:
-            if line[0] == '@':
-                if subsection_n > 0:
-                    HEADER_FMT = SECTIONS_HEADER_FMT[name][subsection_n]
-                    row_reader = ff.FortranRecordReader(
-                        SECTIONS_ROW_FMT[name][subsection_n])
-                else:
-                    HEADER_FMT = SECTIONS_HEADER_FMT[name]
-                    if isinstance(HEADER_FMT, list): 
-                        HEADER_FMT = HEADER_FMT[0]
-                        row_reader = ff.FortranRecordReader(
-                            SECTIONS_ROW_FMT[name][0]
-                        )
-                    else:
-                        row_reader = ff.FortranRecordReader(
-                            SECTIONS_ROW_FMT[name]
-                        )
-                subsection_n += 1
-                self.PAR_NAMES = ff.FortranRecordReader(HEADER_FMT).read(line)
-                if subsection_n > 0:
-                    self.PAR_NAMES += list(map(str.strip, self.PAR_NAMES))
-                else:
-                    self.PAR_NAMES = list(map(str.strip, self.PAR_NAMES))
-            else:
-                row = row_reader.read(line)
-                for n, field in enumerate(row):
-                    if isinstance(field, str):
-                        field = field.strip()
-                    if (n == 0):
-                        row_id = field
-                        if subsection_n <= 0:
-                            init_dict[row_id] = {}
-                    else:
-                        if subsection_n > 0:
-                            curr_pars = self.PAR_NAMES[-len(row):]
-                        else:
-                            curr_pars = self.PAR_NAMES
-                        init_dict[row_id][curr_pars[n]] = field
-        super().__init__(init_dict)
-        
-
-         # TODO: Define FORMATS Depending on section type
-
-    def write(self):
-        '''
-        Ok, this thing basically returns a str for the section to be written.
-        Up today this is only implemented for Cultivar and Ecotype Classes.
-        '''
-        outstr = ff.FortranRecordWriter(self._HEADER_FMT).write(
-            self.PAR_NAMES) + '\n'
-        for row_id, fields in self.items():
-            row = [row_id]
-            for par in self.PAR_NAMES[1:]:
-                row.append(fields[par])
-            outstr += self._row_writer(row) + '\n'
-
-        return outstr
-
-            
-class RowBasedSection(Section):
-    '''
-    Parameter's values are defined in columns, so each item corresponds to a
-    row. The value of a parameter deppends on an ID, Example:
-
-    @ID PAR1 PAR2 PAR3
-    1      2    3   45
-    2      6    7   89
-    '''
-    def __init__(self, name:str, **kwargs):
-        self.name = name
-        self.idcol = kwargs.get('idcol')
-        super().__init__(pars=kwargs.get('pars'))
+        super().__init__(kwargs.get('pars'))
         return
 
     def write(self):
+        if self.name in ['cultivar', 'ecotype']:
+            outstr = ff.FortranRecordWriter(self._HEADER_FMT).write(
+            self.PAR_NAMES) + '\n'
+            for row_id, fields in self.items():
+                row = [row_id]
+                for par in self.PAR_NAMES[1:]:
+                    row.append(fields[par])
+                outstr += self._row_writer(row) + '\n'
+
+            return outstr
+
         outstr = ''
         fmt_header = SECTIONS_HEADER_FMT[self.name]
         fmt_row = SECTIONS_ROW_FMT[self.name]
@@ -355,7 +291,7 @@ class RowBasedSection(Section):
         return outstr
 
 
-class ColumnBasedSection(Section):
+class ColumnBasedSection(dict):
     '''
     Parameter's values are defined in rows. A single parameter can be defined
     as an array, for example. In that case, each of the elements of the array
@@ -387,7 +323,7 @@ class TabularSubsection(DataFrame):
         return
 
 
-class Cultivar(Section):
+class Cultivar(RowBasedSection):
     '''
 
     '''
@@ -397,12 +333,12 @@ class Cultivar(Section):
         with magic_open(cul_file) as f:
             self._file_lines = f.readlines()
         self._file_lines = clean_comments(self._file_lines)
-        super().__init__()
+        super().__init__(name='cultivar')
         print()
 
 
 
-class Ecotype(Section):
+class Ecotype(RowBasedSection):
     '''
     
     '''
@@ -412,4 +348,4 @@ class Ecotype(Section):
         with magic_open(eco_file) as f:
             self._file_lines = f.readlines()
         self._file_lines = clean_comments(self._file_lines)
-        super().__init__()
+        super().__init__(name='ecotype')

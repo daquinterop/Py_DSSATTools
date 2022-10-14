@@ -49,8 +49,6 @@ def test_run_maize():
         cultivar='IB0001',
         planting_date=DATES[10],
     )
-    man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
-        [DATES[190].strftime('%y%j'), 100]
 
     dssat = DSSAT()
     dssat.setup(cwd='/tmp/dssattest')
@@ -58,5 +56,8 @@ def test_run_maize():
         soil=soil, weather=wth, crop=crop, management=man,
     )
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
-    # dssat.close()
-    # assert not os.path.exists(dssat._RUN_PATH)
+    dssat.close()
+    assert not os.path.exists(dssat._RUN_PATH)
+
+if __name__ == '__main__':
+    test_run_maize()

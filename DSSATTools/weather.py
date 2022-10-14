@@ -1,12 +1,12 @@
 '''
-`weather` module includes to basic classes to create a weather station. 
-The `WeatherStation` class is the one that storages all the station info and 
-and the weather data. The `WeatherData` class inherits all the methods of a 
-pandas DataFrame, and it's the one that includes of the weather data.
+This module includes two basic classes to create a weather station. The 
+`WeatherStation` class is the one that storages all the station info and the 
+weather data. The `WeatherData` class inherits all the methods of a 
+`pandas.DataFrame`, and it's the one that includes the weather data.
 
-Example
--------
-    >>> # Create some synthetic data
+In the next example we'll create synthetic data and we'll create a
+`WeatherStation` object.
+
     >>> DATES = pd.date_range('2000-01-01', '2010-12-31')
     >>> df = pd.DataFrame(
             {
@@ -85,23 +85,19 @@ def list_weather_parameters():
 
 class WeatherData(DataFrame):
     '''
-    WeatherData class.
+    Creates a WeatherData instance. That instance is the one that contains
+    the records for the Weather Station.
+
+    Arguments
+    ----------
+    data: pd.Dataframe
+        A DataFrame containg the the weather data.
+    variables: dict
+        A dict to map the columns of the dataframe, to the DSSAT Weather 
+        variables. Use `list_weather_parameters` function to have a detailed
+        description of the DSSAT weather variables.
     '''
     def __init__(self, data:DataFrame, variables:dict={}):
-        '''
-        Creates a WeatherData instance. That instance is the one that contains
-        the records for the Weather Station.
-
-        Arguments
-        ----------
-        data: pd.Dataframe
-            A DataFrame containg the the weather data.
-        variables: dict
-            A dict to map the columns of the dataframe, to the DSSAT Weather 
-            variables. Use `list_weather_parameters` function to have a detailed
-            description of the DSSAT weather variables.
-        '''
-        
         for key, value in variables.items():
             assert value in PARS_DATA, \
                 f'{value} is not a valid variable name'
@@ -140,23 +136,20 @@ class WeatherData(DataFrame):
 
 class WeatherStation():
     '''
-    WeatherStation Class.
+    Initialize a Weather station instance.
+
+    Arguments
+    ----------
+    pars: dict
+        dict with the Weather station parameters. `list_station_parameters`
+        provides a list with the parameters and their description. Only LAT,
+        LON and ELEV parameters are mandatory.
+    description: str
+        An string with the description of the weather station
     '''
     def __init__(
         self, wthdata:WeatherData, pars:dict,
         description='Weather Station'):
-        '''
-        Initialize a Weather station instance.
-
-        Arguments
-        ----------
-        pars: dict
-            dict with the Weather station parameters. `list_station_parameters`
-            provides a list with the parameters and their description. Only LAT,
-            LON and ELEV parameters are mandatory.
-        description: str
-            An string with the description of the weather station
-        '''
         self.description = description
         self.INSI = 'SERV'
         self.LAT = NA

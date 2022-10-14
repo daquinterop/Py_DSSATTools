@@ -18,8 +18,7 @@ in the Species file, and one section for Cultivar and Ecotype respectively.
 
 The usage of the Crop class is explaied by this example. In here we initialize
 a Crop instance, modify a parameter and write the cropfile (All of them).
-Example
--------
+
     >>> crop = Crop('maize')
     >>> crop.set_parameter(
             par_name = 'TBASE',
@@ -44,20 +43,8 @@ CROPS_MODULES = {
 BASE_CROPS = [module.CropBase for module in CROPS_MODULES.values()]
 
 
-class Gonorrea:
-    def __init__(self, spe_file):
-        print('Te equivocastes de clase hijueputa')
-        self.ecotype = 'Ecotype ni que hijueputas'
-        self.cultivar = 'QUISE CULTIVAR UN AMOR Y ME HE QUEDADO SOLOOOOOOOOO'
-BASE_CROPS = [Gonorrea] + BASE_CROPS
-
-
 class Crop(*BASE_CROPS):
     '''
-
-    '''
-    def __init__(self, crop_name:str='Maize', spe_file:str=None):
-        '''
         Initializes a crop instance based on the default DSSAT Crop files, or 
         on a custom crop file provided as a cultivar.
 
@@ -70,6 +57,7 @@ class Crop(*BASE_CROPS):
         spe_file: str
             Optional. Path to the cultivar file to initialize the instance.
         '''
+    def __init__(self, crop_name:str='Maize', spe_file:str=None):
         crop_name = crop_name.title()
         GENOTYPE_PATH = os.path.join(DSSATModulePath, 'static', 'Genotype')
         assert crop_name in CROPS_MODULES.keys(), \
@@ -130,7 +118,6 @@ class Crop(*BASE_CROPS):
             In this case, to define the PRFTC parameter, you should specify one 
             of the columns (TBASE, TOP1, etc.) through the col_loc argument.
         '''
-        # TODO: Modify crop sections for the new section classes
         assert par_name in self.parameters, \
             f'{par_name} is not a valid parameter name'
         section_name = self._pars_section_map[par_name]
