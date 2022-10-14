@@ -6,6 +6,8 @@ git clone https://github.com/daquinterop/Py_DSSATTools
 cd Py_DSSATTools
 pip install .
 ```
+## Documentation
+[https://py-dssattools.readthedocs.io/en/latest/index.html](https://py-dssattools.readthedocs.io/en/latest/index.html)
 ## Example Notebooks
 You'll find example notebooks in this repo:[https://github.com/daquinterop/DSSATTools_notebooks](https://github.com/daquinterop/DSSATTools_notebooks). I'll keep uploading examples as some new feature is introduced.
 ## Module contents
