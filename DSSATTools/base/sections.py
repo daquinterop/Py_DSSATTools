@@ -190,8 +190,7 @@ def ecotype_row_write(crop, fields, row_fmt):
             
 class RowBasedSection(dict):
     '''
-    Parameter's values are defined in columns, so each item corresponds to a
-    row. The value of a parameter deppends on an ID, Example:
+    Parameter's values are defined in columns, so each item corresponds to a row. The value of a parameter deppends on an ID, Example:
 
     @ID PAR1 PAR2 PAR3
     1      2    3   45
@@ -293,9 +292,7 @@ class RowBasedSection(dict):
 
 class ColumnBasedSection(dict):
     '''
-    Parameter's values are defined in rows. A single parameter can be defined
-    as an array, for example. In that case, each of the elements of the array
-    is indexed.
+    Parameter's values are defined in rows. A single parameter can be defined as an array, for example. In that case, each of the elements of the array is indexed.
 
     !       TBASE TOP1  TOP2  TMAX
       PRFTC  6.2  16.5  33.0  44.0     
@@ -307,9 +304,7 @@ class ColumnBasedSection(dict):
 
 class TabularSubsection(DataFrame):
     '''
-    Parameter's values is a series of values. For instance, irrigation schedule
-    or initial conditions for different soil's layers. In that case, this
-    object would be a part of a section. For instance, initial conditions:
+    Parameter's values is a series of values. For instance, irrigation schedule or initial conditions for different soil's layers. In that case, this object would be a part of a section. For instance, initial conditions:
 
     @C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME
      1    MZ 99115   200     0     1     1   -99   -99   -99   -99   -99   -99 -99

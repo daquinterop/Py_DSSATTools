@@ -1,23 +1,13 @@
 '''
-Basic crop class. It initializes a crop instances based on the crop name and
-crop file if provided.
+Basic crop class. It initializes a crop instances based on the crop name and crop file if provided.
 
-`Crop` class is the only needed class to initialize a Crop instance. You need
-to specify the crop name (Those can be checked at DSSATTools.crop.CROPS_MODULES
-object), and you can also specify a .SPE file to initialize the instance. If no
-.SPE file is passed as argument, then default .SPE, .ECO and .CUL are used.
+`Crop` class is the only needed class to initialize a Crop instance. You need to specify the crop name (Those can be checked at DSSATTools.crop.CROPS_MODULES object), and you can also specify a .SPE file to initialize the instance. If no .SPE file is passed as argument, then default .SPE, .ECO and .CUL are used.
 
-Please, take into account that if you initialize the instance with a custom
-Species file the three files (.SPE, .ECO, .CUL) must be in the same directory 
-as the passed Species file.
+Please, take into account that if you initialize the instance with a custom Species file the three files (.SPE, .ECO, .CUL) must be in the same directory as the passed Species file.
 
-The only method implemented is `set_parameter`, that of course is used to set
-the value of any crop parameter. `Crop` class inherits from the `BaseCrop` class
-of the specified crop. `BaseCrop` is composed by sections, each of the included
-in the Species file, and one section for Cultivar and Ecotype respectively.
+The only method implemented is `set_parameter`, that of course is used to set the value of any crop parameter. `Crop` class inherits from the `BaseCrop` class of the specified crop. `BaseCrop` is composed by sections, each of the included in the Species file, and one section for Cultivar and Ecotype respectively.
 
-The usage of the Crop class is explaied by this example. In here we initialize
-a Crop instance, modify a parameter and write the cropfile (All of them).
+The usage of the Crop class is explaied by this example. In here we initialize a Crop instance, modify a parameter and write the cropfile (All of them).
 
     >>> crop = Crop('maize')
     >>> crop.set_parameter(
@@ -45,8 +35,7 @@ BASE_CROPS = [module.CropBase for module in CROPS_MODULES.values()]
 
 class Crop(*BASE_CROPS):
     '''
-        Initializes a crop instance based on the default DSSAT Crop files, or 
-        on a custom crop file provided as a cultivar.
+        Initializes a crop instance based on the default DSSAT Crop files, or on a custom crop file provided as a cultivar.
 
         Arguments
         ----------
@@ -92,31 +81,26 @@ class Crop(*BASE_CROPS):
         Arguments
         ----------
         par_name: str
-            name of the parameter. Parameter's names are in the Crop.parameters 
-            attribute.
+            name of the parameter. Parameter's names are in the Crop.parameters attribute.
         par_value: str, int, float
             Value of the parameter to set.
         row_loc: int, str
-            id for the element to modify. This applies to parameters defined in 
-            cols, such as cultivar or ecotype parameters. For example:
+            id for the element to modify. This applies to parameters defined in cols, such as cultivar or ecotype parameters. For example:
             
-            @ECO#  ECONAME.........  TBASE  TOPT ROPT   P20  
-            IB0001 GENERIC MIDWEST1    8.0 34.0  34.0  12.5 
-            IB0002 GENERIC MIDWEST2    8.0 34.0  34.0  12.5
-            
-            for this set of parameters (ecotype), the column ECO# is the id to
-            be passed as row_loc argument.
+                @ECO#  ECONAME.........  TBASE  TOPT ROPT   P20
+                IB0001 GENERIC MIDWEST1    8.0 34.0  34.0  12.5
+                IB0002 GENERIC MIDWEST2    8.0 34.0  34.0  12.5
+
+            for this set of parameters (ecotype), the column ECO# is the id to be passed as row_loc argument.
         col_loc: int, str
-            same as row_loc, but for parameters defined in rows (array-like).
-            For example:
+            same as row_loc, but for parameters defined in rows (array-like). For example:
 
-            *TEMPERATURE EFFECTS
-            !       TBASE TOP1  TOP2  TMAX
-              PRFTC  6.2  16.5  33.0  44.0     
-              RGFIL  5.5  16.0  27.0  35.0 
+                TEMPERATURE EFFECTS
+                !       TBASE TOP1  TOP2  TMAX
+                PRFTC  6.2  16.5  33.0  44.0     
+                RGFIL  5.5  16.0  27.0  35.0
 
-            In this case, to define the PRFTC parameter, you should specify one 
-            of the columns (TBASE, TOP1, etc.) through the col_loc argument.
+            In this case, to define the PRFTC parameter, you should specify one of the columns (TBASE, TOP1, etc.) through the col_loc argument.
         '''
         assert par_name in self.parameters, \
             f'{par_name} is not a valid parameter name'

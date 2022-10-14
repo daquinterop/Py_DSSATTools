@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-with open('/home/diego/Py_DSSATTools/requirements.txt', 'r') as f:
+with open('requirements.txt', 'r') as f:
     requirements = [i.split('=')[0] for i in f.readlines()]
 
 setuptools.setup(

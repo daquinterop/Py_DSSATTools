@@ -1,60 +1,57 @@
 '''
-This module hosts the DSSAT class. That class is the simulation environment, so per each
-Dscsm instance there's a directory where all the necesary files to run the model
-are allocated. To run the model there are 3 basic steps:
-    1. Create a new Dscsm instance.
-    2. Initialize the environment by running the setup() method.
-    3. Run the model by running the run() method.
+This module hosts the DSSAT class. That class is the simulation environment, so per each DSSAT instance there's a directory where all the necesary files to run the model are allocated. To run the model there are 3 basic steps:
+1. Create a new Dscsm instance.
+2. Initialize the environment by running the setup() method.
+3. Run the model by running the run() method.
 You can close the simulation environment by running the close() method.
 
-The model outputs are storage in the `outputs` attribute. Up to date the only
-model output parsed into `outputs` is 'PlantGro'.
+The model outputs are storage in the `outputs` attribute. Up to date the only model output parsed into `outputs` is 'PlantGro'.
 
-In the next example all the 4 required objects to run the DSSAT model are
-created, an a simulation is run.
-    >>> # Create random weather data
-    >>> df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(10, 1, N),
-        'rad': np.random.gamma(10, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    >>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    >>> # Create a WeatherData instance
-    >>> WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    >>> # Create a WheaterStation instance
-    >>> wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-    >>> # Initialize soil, crop and management instances.
-    >>> soil = SoilProfile(default_class='SIL')
-    >>> crop = Crop('maize')
-    >>> man = Management(
-        cultivar='IB0001',
-        planting_date=DATES[10],
-    )
-    >>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
-        [DATES[190].strftime('%y%j'), 100]
-    >>> # Initialize Dscsm instance and run.
-    >>> dssat = Dscsm()
-    >>> dssat.setup(cwd='/tmp/dssattest')
-    >>> dssat.run(
-        soil=soil, weather=wth, crop=crop, management=man,
-    )
-    >>> # Get output
-    >>> PlantGro = dssat.outputs['PlantGro']
-    >>> dssat.close() # Terminate the simulation environment
+In the next example all the 4 required objects to run the DSSAT model are created, an a simulation is run.
+
+>>> # Create random weather data
+>>> df = pd.DataFrame(
+    {
+    'tn': np.random.gamma(10, 1, N),
+    'rad': np.random.gamma(10, 1.5, N),
+    'prec': np.round(np.random.gamma(.4, 10, N), 1),
+    'rh': 100 * np.random.beta(1.5, 1.15, N),
+    },
+    index=DATES,
+)
+>>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
+>>> # Create a WeatherData instance
+>>> WTH_DATA = WeatherData(
+    df,
+    variables={
+        'tn': 'TMIN', 'TMAX': 'TMAX',
+        'prec': 'RAIN', 'rad': 'SRAD',
+        'rh': 'RHUM'
+    }
+)
+>>> # Create a WheaterStation instance
+>>> wth = WeatherStation(
+    WTH_DATA, 
+    {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
+)
+>>> # Initialize soil, crop and management instances.
+>>> soil = SoilProfile(default_class='SIL')
+>>> crop = Crop('maize')
+>>> man = Management(
+    cultivar='IB0001',
+    planting_date=DATES[10],
+)
+>>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
+    [DATES[190].strftime('%y%j'), 100]
+>>> # Initialize Dscsm instance and run.
+>>> dssat = Dscsm()
+>>> dssat.setup(cwd='/tmp/dssattest')
+>>> dssat.run(
+    soil=soil, weather=wth, crop=crop, management=man,
+)
+>>> # Get output
+>>> PlantGro = dssat.outputs['PlantGro']
+>>> dssat.close() # Terminate the simulation environment
 '''
 
 import subprocess
@@ -80,9 +77,7 @@ OUTPUTS = ['PlantGro', ]
 
 class DSSAT():
     '''
-    Class that represents the simulation environment. When initializing and 
-    seting up the environment, a new folder is created (usually in the tmp 
-    folder), and all of the necesary files to run the model are copied into it.
+    Class that represents the simulation environment. When initializing and seting up the environment, a new folder is created (usually in the tmp folder), and all of the necesary files to run the model are copied into it.
     '''
     def __init__(self):
         BASE_PATH = os.path.dirname(DSSATTools.__file__)
@@ -102,16 +97,12 @@ class DSSAT():
 
     def setup(self, cwd=None):
         '''
-        Setup a simulation environment.
-        Creates a tmp folder to run the simulations and move all the required
-        files to run the model. Some rguments are optional, if those aren't provided,
-        then standard files location will be used.
+        Setup a simulation environment. Creates a tmp folder to run the simulations and move all the required files to run the model. Some rguments are optional, if those aren't provided, then standard files location will be used.
 
         Arguments
         ----------
         cwd: str
-            Working directory. All the model files would be moved to that directory.
-            If None, then a tmp directory will be created.
+            Working directory. All the model files would be moved to that directory. If None, then a tmp directory will be created.
         '''
         # TODO: verbose the setup process.
         TMP_BASE = tempfile.gettempdir()

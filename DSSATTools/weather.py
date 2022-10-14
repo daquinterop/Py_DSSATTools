@@ -1,38 +1,34 @@
 '''
-This module includes two basic classes to create a weather station. The 
-`WeatherStation` class is the one that storages all the station info and the 
-weather data. The `WeatherData` class inherits all the methods of a 
-`pandas.DataFrame`, and it's the one that includes the weather data.
+This module includes two basic classes to create a weather station. The `WeatherStation` class is the one that storages all the station info and the weather data. The `WeatherData` class inherits all the methods of a `pandas.DataFrame`, and it's the one that includes the weather data.
 
-In the next example we'll create synthetic data and we'll create a
-`WeatherStation` object.
+In the next example we'll create synthetic data and we'll create a `WeatherStation` object.
 
-    >>> DATES = pd.date_range('2000-01-01', '2010-12-31')
-    >>> df = pd.DataFrame(
-            {
-            'tn': np.random.gamma(10, 1, N),
-            'rad': np.random.gamma(10, 1.5, N),
-            'prec': np.round(np.random.gamma(.4, 10, N), 1),
-            'rh': 100 * np.random.beta(1.5, 1.15, N),
-            },
-            index=DATES,
-        )
-    >>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    >>> # Create a WeatherData instance
-    >>> WTH_DATA = WeatherData(
-            df,
-            variables={
-                'tn': 'TMIN', 'TMAX': 'TMAX',
-                'prec': 'RAIN', 'rad': 'SRAD',
-                'rh': 'RHUM'
-            }
-        )
-    >>> Create a WheaterStation instance
-    >>> wth = WeatherStation(
-            WTH_DATA, 
-            {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-        )
-    >>> wth.data.head() # To check the data first 5 records
+>>> DATES = pd.date_range('2000-01-01', '2010-12-31')
+>>> df = pd.DataFrame(
+        {
+        'tn': np.random.gamma(10, 1, N),
+        'rad': np.random.gamma(10, 1.5, N),
+        'prec': np.round(np.random.gamma(.4, 10, N), 1),
+        'rh': 100 * np.random.beta(1.5, 1.15, N),
+        },
+        index=DATES,
+    )
+>>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
+>>> # Create a WeatherData instance
+>>> WTH_DATA = WeatherData(
+        df,
+        variables={
+            'tn': 'TMIN', 'TMAX': 'TMAX',
+            'prec': 'RAIN', 'rad': 'SRAD',
+            'rh': 'RHUM'
+        }
+    )
+>>> Create a WheaterStation instance
+>>> wth = WeatherStation(
+        WTH_DATA, 
+        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
+    )
+>>> wth.data.head() # To check the data first 5 records
 '''
 import os
 import pandas as pd
@@ -85,17 +81,14 @@ def list_weather_parameters():
 
 class WeatherData(DataFrame):
     '''
-    Creates a WeatherData instance. That instance is the one that contains
-    the records for the Weather Station.
+    Creates a WeatherData instance. That instance is the one that contains the records for the Weather Station.
 
     Arguments
     ----------
     data: pd.Dataframe
         A DataFrame containg the the weather data.
     variables: dict
-        A dict to map the columns of the dataframe, to the DSSAT Weather 
-        variables. Use `list_weather_parameters` function to have a detailed
-        description of the DSSAT weather variables.
+        A dict to map the columns of the dataframe, to the DSSAT Weather variables. Use `list_weather_parameters` function to have a detailed description of the DSSAT weather variables.
     '''
     def __init__(self, data:DataFrame, variables:dict={}):
         for key, value in variables.items():
@@ -141,9 +134,7 @@ class WeatherStation():
     Arguments
     ----------
     pars: dict
-        dict with the Weather station parameters. `list_station_parameters`
-        provides a list with the parameters and their description. Only LAT,
-        LON and ELEV parameters are mandatory.
+        dict with the Weather station parameters. `list_station_parameters` provides a list with the parameters and their description. Only LAT, LON and ELEV parameters are mandatory.
     description: str
         An string with the description of the weather station
     '''
@@ -177,13 +168,13 @@ class WeatherStation():
 
     def write(self, folder:str=''):
         '''
-        Writes the weather files in the provided folder. The name is defined
-        by the dates and the Institute code (INSI).
+        Writes the weather files in the provided folder. The name is defined by the dates and the Institute code (INSI).
 
-         Arguments
+        Arguments
         ----------
         folder: str
             Path to the folder the files will be saved.
+            
         '''
         if not os.path.exists(folder):
             os.mkdir(folder)

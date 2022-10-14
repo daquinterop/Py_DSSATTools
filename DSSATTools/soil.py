@@ -1,19 +1,10 @@
 """
-`soil` module includes the basic soil class `SoilProfile`. This class contains
-all the soil information necessary to run the DSSAT model. Each of the layers
-of the soil profile is a `SoilLayer` instance. After a `SoilProfile` instance
-is created, a new layer can added by calling the `SoilProfile.add_layer` method
-passing a `SoilLayer` object as argument. You can also use the 
-`SoilProfile.drop_layer` to drop the layer at the specified depth.
+`soil` module includes the basic soil class `SoilProfile`. This class contains all the soil information necessary to run the DSSAT model. Each of the layers of the soil profile is a `SoilLayer` instance. After a `SoilProfile` instance is created, a new layer can added by calling the `SoilProfile.add_layer` method passing a `SoilLayer` object as argument. You can also use the `SoilProfile.drop_layer` to drop the layer at the specified depth.
 
-`SoilLayer` class represents each layer in the soil profile. The layer is 
-initialized by passing the layer base depth and a dict with the parameteters as 
-argument. Clay fraction (SLCL) and Silt fraction (SLSI) are the only mandatory
-parameters when creating a layer, the rest of the parameters are estimated.
+`SoilLayer` class represents each layer in the soil profile. The layer is initialized by passing the layer base depth and a dict with the parameteters as argument. Clay fraction (SLCL) and Silt fraction (SLSI) are the only mandatory parameters when creating a layer, the rest of the parameters are estimated.
 
 There are three basic ways of creating a `SoilProfile object`:
-    1. Specify a .SOL file and Soil id. Of course, the soil id must match one 
-    of the profiles in the .SOL file.
+    1. Specify a .SOL file and Soil id. Of course, the soil id must match one of the profiles in the .SOL file.
 
         >>> soilprofile = SoilProfile(
             file='SOIL.SOL',
@@ -26,10 +17,7 @@ There are three basic ways of creating a `SoilProfile object`:
             default_class='SCL', # Silty Clay Loam
         )
 
-    3. Pasing a dict with the profile parameters (different from the layer 
-    pars). `DSSAT.soil.list_profile_parameters` function prints a detailed list 
-    of the layer parameters. And empty dict can be pased as none of the 
-    parameters is mandatory.
+    3. Pasing a dict with the profile parameters (different from the layer pars). `DSSAT.soil.list_profile_parameters` function prints a detailed list of the layer parameters. And empty dict can be pased as none of the parameters is mandatory.
 
         >>> soilprofile = SoilProfile(
             pars={
@@ -46,18 +34,11 @@ There are three basic ways of creating a `SoilProfile object`:
         ]
         >>> for layer in layers: soilprofile.add_layer(layer)
 
-That layer must be initialized with the texture information ('SLCL' and 'SLSI' 
-parameters), or the hydraulic soil parameters ('SLLL', 'SDUL', 'SSAT', 'SRGF', 
-'SSKS', 'SBDM', 'SLOC'). If a soil hydraulic parameter is not defined, then it's
-estimated from soil texture using Pedo-transfer Functions. The previous
-parameters are the mandatory ones, but all the available parameters can be 
-includedin the pars dict. 
+That layer must be initialized with the texture information ('SLCL' and 'SLSI' parameters), or the hydraulic soil parameters ('SLLL', 'SDUL', 'SSAT', 'SRGF', 'SSKS', 'SBDM', 'SLOC'). If a soil hydraulic parameter is not defined, then it's estimated from soil texture using Pedo-transfer Functions. The previous parameters are the mandatory ones, but all the available parameters can be includedin the pars dict. 
 
-If you want to save your soil profile in .SOL a file, you can use the 
-`SoilProfile.write` method. The only argument of this method is the filename.
+If you want to save your soil profile in .SOL a file, you can use the `SoilProfile.write` method. The only argument of this method is the filename.
 
-For both classes any of the parameters can be modified after the initialization
-as each parameter is also an attribute of the instance.
+For both classes any of the parameters can be modified after the initialization as each parameter is also an attribute of the instance.
 
     >>> soilprofile = SoilProfile(
         pars={
@@ -223,12 +204,17 @@ def list_profile_parameters():
 
 def van_genuchten(theta_r, theta_s, alpha, n, h):
     '''
-    Van Genuchten function for soil water retention. Returns theta 
-    for a given h (kPa)
-        theta_r, residual water content
-        theta_s, saturated water content
-        log10(alpha), van Genuchten 'alpha' parameter (1/cm)
-        log10(n), van Genuchten 'n' parameter
+    Van Genuchten function for soil water retention. Returns theta for a given h (kPa)
+    Arguments
+    ----------
+    theta_r: float
+        residual water content
+    theta_s: float
+        saturated water content
+    log10(alpha): float
+        van Genuchten 'alpha' parameter (1/cm)
+    log10(n): float
+        van Genuchten 'n' parameter
     '''
     alpha = 10**alpha 
     n = 10**n
@@ -238,11 +224,9 @@ def van_genuchten(theta_r, theta_s, alpha, n, h):
 
 def color_to_oc(color=None, L=None, a=None, b=None):
     '''
-    Estimate Organic Carbon from Color as described in Vodyanidskii and Savichev
-    (2017).https://doi.org/10.1016/j.aasci.2017.05.023 
+    Estimate Organic Carbon from Color as described in Vodyanidskii and Savichev (2017).https://doi.org/10.1016/j.aasci.2017.05.023 
     
-    Color definitions and their CIE-L*a*b* equivalents were obtained from 
-    Munsell tables. Color argument's possible values are:
+    Color definitions and their CIE-L*a*b* equivalents were obtained from Munsell tables. Color argument's possible values are:
 
         BLK: Black (10YR 2/1)
         YBR: Yellowish Brown (7.5YR 5/6)
@@ -267,18 +251,8 @@ class SoilLayer(Series):
     base_depth: int
         Depth to the bottom of that layer (cm)
     pars: dict
-        Dict including the parameter values to initialize the instance. Layer
-        parameters include: 
-        'SLMH',  'SLLL',  'SDUL',  'SSAT',  'SRGF',  'SSKS',  'SBDM',  'SLOC',
-        'SLCL',  'SLSI',  'SLCF',  'SLNI',  'SLHW',  'SLHB',  'SCEC',  'SADC'
-        'SLPX',  'SLPT',  'SLPO', 'CACO3',  'SLAL',  'SLFE',  'SLMN',  'SLBS',
-        'SLPA',  'SLPB',  'SLKE',  'SLMG',  'SLNA',  'SLSU',  'SLEC',  'SLCA'
-        Only mandatory parameters are 'SLCL' and 'SLSI'. The rest of the basic
-        parameters can be calculated from the texture.
-        
-        SCOM is optional, and it can be passed as an string referencing the color,
-        or a tupple with CIELAB coordinates (L, a, b). The string can be one of
-        these:
+        Dict including the parameter values to initialize the instance. Layer parameters include: 'SLMH',  'SLLL',  'SDUL',  'SSAT',  'SRGF',  'SSKS',  'SBDM',  'SLOC', 'SLCL',  'SLSI',  'SLCF',  'SLNI',  'SLHW',  'SLHB',  'SCEC',  'SADC', 'SLPX',  'SLPT',  'SLPO', 'CACO3',  'SLAL',  'SLFE',  'SLMN',  'SLBS', 'SLPA',  'SLPB',  'SLKE',  'SLMG',  'SLNA',  'SLSU',  'SLEC',  'SLCA'.Only mandatory parameters are 'SLCL' and 'SLSI'. The rest of the basic parameters can be calculated from the texture. SCOM is optional, and it can be passed as an string referencing the color, or a tupple with CIELAB coordinates (L, a, b). The string can be one of these:
+
             BLK: Black (10YR 2/1)
             YBR: Yellowish Brown (7.5YR 5/6)
             RBR: Redish Brown (10R 4/8)
@@ -363,39 +337,34 @@ class SoilLayer(Series):
 
 class SoilProfile():
     '''
-    Soil Profile class. It can be initialized from an existing file. It also can 
-    be initialized from scratch.  If a file is provided, then the soil is 
-    initialized as the soil profile with the matching profile id in the file.
+    Soil Profile class. It can be initialized from an existing file. It also can be initialized from scratch.  If a file is provided, then the soil is initialized as the soil profile with the matching profile id in the file.
 
     Arguments
     ----------
     file: str
         Optional. Path to the soil file.
     profile: str
-        Optional. Must be passed if file argument is passed. It's the 
-        id of the profile within the file.
+        Optional. Must be passed if file argument is passed. It's the id of the profile within the file.
     pars: dict
         Dict with the non-layer soil parameters. 
     default_class: str
-        Optional. It's a string defining a DSSAT default soil class. If not 
-        None, then the SoilClass instance is initialized with the paremeters 
-        of the specified default_class.
-        default_class must match any of the next codes:
-                -------------------------- 
-                Soil texture    |  Code
-                --------------------------
-                Sand            |  S 
-                Loamy Sand      |  LS  
-                Sandy Loam      |  SL 
-                Loam            |  L 
-                Silty Loam      |  SIL 
-                Silt            |  SI 
-                Sandy Clay Loam |  SCL 
-                Clay Loam       |  CL 
-                Silty Clay Loam |  SICL 
-                Sandy Clay      |  SC 
-                Silty Clay      |  SIC 
-                Clay            |  C 
+        Optional. It's a string defining a DSSAT default soil class. If not None, then the SoilClass instance is initialized with the paremeters of the specified default_class. default_class must match any of the next codes:
+
+            ..Soil texture  | Code
+            Sand            |  S 
+            Loamy Sand      |  LS  
+            Sandy Loam      |  SL 
+            Loam            |  L 
+            Silty Loam      |  SIL 
+            Silt            |  SI 
+            Sandy Clay Loam |  SCL 
+            Clay Loam       |  CL 
+            Silty Clay Loam |  SICL 
+            Sandy Clay      |  SC 
+            Silty Clay      |  SIC 
+            Clay            |  C
+
+    
     '''
     def __init__(
         self, file:str=None, profile:str=None, default_class:str=None,
@@ -448,9 +417,7 @@ class SoilProfile():
 
     def _calculate_SRGF(self):
         '''
-        It has to be recalculated for all the layers after a layer is added or
-        droped. The calculation method is specified in the DSSAT proceeding 
-        calulations
+        It has to be recalculated for all the layers after a layer is added or droped. The calculation method is specified in the DSSAT proceeding calulations
         '''
         for base_depth, lay in self.layers.items():
             for d in sorted(self.layers.keys(), reverse=True):
@@ -499,9 +466,7 @@ class SoilProfile():
         Arguments
         ----------
         parameter: str
-            Parameter name. You can use the DSSATTools.soil.list_parameters 
-            function
-            to have a list of the parameters and their description.
+            Parameter name. You can use the DSSATTools.soil.list_parameters function to have a list of the parameters and their description.
         value: int, float, str
             Value for that parameter
         '''
@@ -525,8 +490,7 @@ class SoilProfile():
 
     def _open_file(self):
         '''
-        Open a file and loads the paramters of the requested profile into
-        the instance attributes.
+        Open a file and loads the paramters of the requested profile into the instance attributes.
         '''
         HEADER = False
         FOUND_PROFILE = False
@@ -624,20 +588,11 @@ class SoilProfile():
 '''
 References
 ----------
-Alexander E B. 1980. Bulk densities of California soils in relation to other
-soil properties. Soil Sci Soc Am J. 44: 689–692.
+Alexander E B. 1980. Bulk densities of California soils in relation to other soil properties. Soil Sci Soc Am J. 44: 689–692.
 
-Men M X, Peng Z P, Xu H, Yu Z R. 2008. Investigation on Pedo-transfer 
-function for estimating soil bulk density in Hebei province. Chinese J Soil 
-Sci (in Chinese). 39: 33–37.
+Men M X, Peng Z P, Xu H, Yu Z R. 2008. Investigation on Pedo-transfer function for estimating soil bulk density in Hebei province. Chinese J Soil Sci (in Chinese). 39: 33–37.
 
-Vodyanitskii, Yu. N., & Savichev, A. T. (2017). The influence of organic 
-matter on soil color using the regression equations of optical parameters in
-the system CIE- L*a*b*. In Annals of Agrarian Science (Vol. 15, Issue 3, 
-pp. 380–385). Elsevier BV. https://doi.org/10.1016/j.aasci.2017.05.023 
+Vodyanitskii, Yu. N., & Savichev, A. T. (2017). The influence of organic matter on soil color using the regression equations of optical parameters in the system CIE- L*a*b*. In Annals of Agrarian Science (Vol. 15, Issue 3, pp. 380–385). Elsevier BV. https://doi.org/10.1016/j.aasci.2017.05.023 
 
-Zhang, Y. and Schaap, M.G. 2017. Weighted recalibration of the Rosetta 
-pedotransfer model with improved estimates of hydraulic parameter 
-distributions and summary statistics (Rosetta3). Journal of Hydrology 
-547:39-53. doi: 10.1016/j.jhydrol.2017.01.004
+Zhang, Y. and Schaap, M.G. 2017. Weighted recalibration of the Rosetta pedotransfer model with improved estimates of hydraulic parameter distributions and summary statistics (Rosetta3). Journal of Hydrology 547:39-53. doi: 10.1016/j.jhydrol.2017.01.004
 '''

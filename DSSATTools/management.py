@@ -1,31 +1,15 @@
 '''
-`Management` class includes all the information related to management. There are
-multiple arguments to initialize a `Management` instance, however, the only 
-mandatory arguments are cultivar (cultivar id, of course it has to be included
-in the cultivars list of the `Crop` object you'll be passing to `DSSAT.run`) and
-planting_date. Simulation start is calculated as the day before the planting 
-date, emergence_date is assumed to 5 days after planting, and the initial soil
-water content is assumed to be 50% of the total available water 
-(PWP + 0.5(FC-PWP))
+`Management` class includes all the information related to management. There are multiple arguments to initialize a `Management` instance, however, the only mandatory arguments are cultivar (cultivar id, of course it has to be included in the cultivars list of the `Crop` object you'll be passing to `DSSAT.run`) and planting_date. Simulation start is calculated as the day before the planting  date, emergence_date is assumed to 5 days after planting, and the initial soil water content is assumed to be 50% of the total available water (PWP + 0.5(FC-PWP)).
 
-`Management` class has one attribute per management section. Up to date not all
-of the sections have been implemented and the next sections are available: 
-fields, cultivars, initial conditions, planting details, irrigation, 
-fertilizers, harvest details, simulation controls, automatic management. All of
-the sections have `dict` object as base, so you can modify the parameters by
-just reassigning the value as you would do it on a `dict`. Some of the sections
-are defined as tables, so you can modify the values of those tabular sections
-the same as you would modify a `pandas.Dataframe`.
+`Management` class has one attribute per management section. Up to date not all of the sections have been implemented and the next sections are available: fields, cultivars, initial conditions, planting details, irrigation, fertilizers, harvest details, simulation controls, automatic management. All of the sections have `dict` object as base, so you can modify the parameters by just reassigning the value as you would do it on a `dict`. Some of the sections are defined as tables, so you can modify the values of those tabular sections the same as you would modify a `pandas.Dataframe`.
 
-In the next example a `Management` object is created, and two of its sections
-are modified. 
+In the next example a `Management` object is created, and two of its sections are modified. 
 
     >>> man = Management(
             cultivar='IB0001',
             planting_date=datetime(2020, 1, 1),
         )
-    >>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
-            [datetime(2020, 7, 1).strftime('%y%j'), 100]
+    >>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = [datetime(2020, 7, 1).strftime('%y%j'), 100]
     >>> man.simulation_controls['IRRIG'] = 'A'
 '''
 from DSSATTools.base.sections import (
@@ -65,19 +49,15 @@ class Management:
     Arguments
     ----------
     cultivar: str
-        Code of the cultivar. That code must match one of the codes in the
-        Crop instance used when runing the model.
+        Code of the cultivar. That code must match one of the codes in the Crop instance used when runing the model.
     planting_date: datetime
         Planting date.
     sim_start: datetime
-        Date for start of the simulation. If None, it'll be calculated as
-        the previous day to the planting date.
+        Date for start of the simulation. If None, it'll be calculated as the previous day to the planting date.
     emergence_date: datetime
-        Emergence date. If None, I'll be calculated as 5 days after 
-        planting.
+        Emergence date. If None, I'll be calculated as 5 days after planting.
     initial_swc: int
-        Fraction of the total available water (FC - PWP) at the start of the 
-        simulation. .5(50%) is the default value.
+        Fraction of the total available water (FC - PWP) at the start of the simulation. .5(50%) is the default value.
     irrigation: str
         Default 'R'. Irrigation management option, options available are:
             A        Automatic when required
@@ -85,21 +65,22 @@ class Management:
             F        Fixed amount automatic
             R        On reported dates
             D        Days after planting
-            P        As reported through last day, 
-                     then automatic to re-fill (A)
-            W        As reported through last day, 
-                     then automatic with fixed amount (F)
+            P        As reported through last day, then automatic to re-fill (A)
+            W        As reported through last day, then automatic with fixed amount (F)
+
     harvest: str
         Default 'M'. Harvest management options. available options are:
             A        Automatic      
             M        At maturity
             R        On reported date(s)
             D        Days after planting
+
     fertilization: str
         Default 'R'. Fertilization management options. available options are:
             N        Not fertilized
             R        On reported dates
             D        Days after planting
+
     '''
 
     def __init__(
