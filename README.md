@@ -87,7 +87,7 @@ on a custom crop file provided as a cultivar.
 ##### Arguments
 ```
 crop: str
-    Crop name, available at the moment:  Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn.
+    Crop name, available at the moment:  Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn, Alfalfa and Bermudagrass
 
 spe_file: str
     Optional. Path to the species file to initialize the instance.
