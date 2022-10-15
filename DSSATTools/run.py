@@ -265,14 +265,23 @@ class DSSAT():
         for file in self.OUTPUT_LIST:
             assert f'{file}.OUT' in OUTPUT_FILES, \
                 f'{file}.OUT does not exist in {self._RUN_PATH}'
+            table_start = -1
+            with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r') as f:
+                while True:
+                    table_start += 1
+                    if '@' in f.readline():
+                        break
+                
             df = pd.read_csv(
                 os.path.join(self._RUN_PATH, f'{file}.OUT'),
-                skiprows=5, sep=' ', skipinitialspace=True
+                skiprows=table_start, sep=' ', skipinitialspace=True
             )
             if all(('@YEAR' in df.columns, 'DOY' in df.columns)):
+                df['DOY'] = df.DOY.astype(int).map(lambda x: f'{x:03d}')
+                df['@YEAR'] = df['@YEAR'].astype(str)
                 df.index = pd.to_datetime(
-                    (df['@YEAR'] + df['DOY']).map(lambda x: f'{x:05d}'),
-                    format='%y%j'
+                    (df['@YEAR'] + df['DOY']),
+                    format='%Y%j'
                 )
             self.output[file] = df
         return
