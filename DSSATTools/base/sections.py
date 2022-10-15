@@ -9,36 +9,44 @@ from pandas import NA, isna, DataFrame
 NA_VALS = (None, '-99', -99, -999999)
 
 CULTIVAR_HEADER_FMT = {
-    'Maize':     'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
-    'Millet':    'A5,1X,1X,A16,1X,A5,1X,A6,9(1X,A5)',
-    'Sugarbeet': 'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
-    'Rice':      'A5,1X,1X,A16,1X,A5,1X,A6,11(1X,A5)',
-    'Sorghum':   'A5,1X,1X,A16,1X,A5,1X,A6,13(1X,A5)',
-    'Sweetcorn': 'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
+    'Maize':        'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
+    'Millet':       'A5,1X,1X,A16,1X,A5,1X,A6,9(1X,A5)',
+    'Sugarbeet':    'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
+    'Rice':         'A5,1X,1X,A16,1X,A5,1X,A6,11(1X,A5)',
+    'Sorghum':      'A5,1X,1X,A16,1X,A5,1X,A6,13(1X,A5)',
+    'Sweetcorn':    'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
+    'Alfalfa':      'A5,1X,1X,A16,1X,A5,1X,A6,18(1X,A5)',
+    'Bermudagrass': 'A5,1X,1X,A16,1X,A5,1X,A6,18(1X,A5)',
 }
 CULTIVAR_ROWS_FMT = {
-    'Maize':     'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),2(1X,F5.2)',
-    'Millet':    'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),4(1X,F5.2),1X,F5.1',
-    'Sugarbeet': 'A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.2',
-    'Rice':      'A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.4,1X,F5.2,4(1X,F5.1)',
-    'Sorghum':   'A6,1X,A16,1X,A5,1X,A6,2(1X,F5.1),1X,F5.2,5(1X,F5.1),1X,F5.2,4(1X,F5.1)',
-    'Sweetcorn': 'A6,1X,A16,1X,A5,1X,A6,1X,F5.1,1X,F5.3,2(1X,F5.1),2(1X,F5.2)',
+    'Maize':        'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),2(1X,F5.2)',
+    'Millet':       'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),4(1X,F5.2),1X,F5.1',
+    'Sugarbeet':    'A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.2',
+    'Rice':         'A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.4,1X,F5.2,4(1X,F5.1)',
+    'Sorghum':      'A6,1X,A16,1X,A5,1X,A6,2(1X,F5.1),1X,F5.2,5(1X,F5.1),1X,F5.2,4(1X,F5.1)',
+    'Sweetcorn':    'A6,1X,A16,1X,A5,1X,A6,1X,F5.1,1X,F5.3,2(1X,F5.1),2(1X,F5.2)',
+    'Alfalfa':      'A6,1X,A16,1X,A5,1X,A6,1X,F5.2,1X,F5.3,3(1X,F5.1),2(1X,F5.2),1X,F5.1,1X,F5.0,1X,F5.1,1X,F5.2,1X,F5.3,1X,F5.1,1X,F5.2,2(1X,F5.1),2(1X,F5.3)',
+    'Bermudagrass': 'A6,1X,A16,1X,A5,1X,A6,1X,F5.2,1X,F5.3,3(1X,F5.1),3(1X,F5.2),1X,F5.0,1X,F5.1,2(1X,F5.2),1X,F5.1,1X,F5.2,2(1X,F5.1),2(1X,F5.3)',
 }
 ECOTYPE_HEADER_FMT = {
-    'Maize':     'A5,1X,1X,A16,1X,11(1X,A5)',
-    'Millet':    'A5,1X,1X,A16,1X,7(1X,A5)',
-    'Sugarbeet': 'A5,1X,1X,A16,1X,11(1X,A5)',
-    'Rice':      '',
-    'Sorghum':   'A5,1X,1X,A16,1X,10(1X,A5)',
-    'Sweetcorn': 'A5,1X,1X,A16,1X,11(1X,A5)',
+    'Maize':        'A5,1X,1X,A16,1X,11(1X,A5)',
+    'Millet':       'A5,1X,1X,A16,1X,7(1X,A5)',
+    'Sugarbeet':    'A5,1X,1X,A16,1X,11(1X,A5)',
+    'Rice':         '',
+    'Sorghum':      'A5,1X,1X,A16,1X,10(1X,A5)',
+    'Sweetcorn':    'A5,1X,1X,A16,1X,11(1X,A5)',
+    'Alfalfa':      'A5,1X,1X,A16,2(1X,A2)20(1X,A5)',
+    'Bermudagrass': 'A5,1X,1X,A16,2(1X,A2)20(1X,A5)',
 }
 ECOTYPE_ROWS_FMT = {
-    'Maize':     'A6,1X,A16,1X,11(1X,F5.1)',
-    'Millet':    'A6,1X,A16,1X,6(1X,F5.1),1X,F5.2',
-    'Sugarbeet': 'A6,1X,A16,1X,8(1X,F5.1),1X,F5.2,2(1X,F5.1)',
-    'Rice':      '',
-    'Sorghum':   'A6,1X,A16,1X,5(1X,F5.1),1X,F5.2,2(1X,F5.3),1X,F5.1,1X,F5.0',
-    'Sweetcorn': 'A6,1X,A16,1X,8(1X,F5.1),1X,F5.2,2(1X,F5.1)',
+    'Maize':        'A6,1X,A16,1X,11(1X,F5.1)',
+    'Millet':       'A6,1X,A16,1X,6(1X,F5.1),1X,F5.2',
+    'Sugarbeet':    'A6,1X,A16,1X,8(1X,F5.1),1X,F5.2,2(1X,F5.1)',
+    'Rice':         '',
+    'Sorghum':      'A6,1X,A16,1X,5(1X,F5.1),1X,F5.2,2(1X,F5.3),1X,F5.1,1X,F5.0',
+    'Sweetcorn':    'A6,1X,A16,1X,8(1X,F5.1),1X,F5.2,2(1X,F5.1)',
+    'Alfalfa':      'A6,1X,A16,2(1X,A2),1X,F5.2,3(1X,F5.1),1X,F5.0,1X,F5.1,1X,F5.2,1X,F5.1,2(1X,F5.0),1X,F5.2,2(1X,F5.1),1X,F5.3,1X,F5.1,5(1X,F5.3)',
+    'Bermudagrass': 'A6,1X,A16,2(1X,A2),1X,F5.2,3(1X,F5.1),1X,F5.0,1X,F5.1,1X,F5.2,1X,F5.1,2(1X,F5.0),1X,F5.2,2(1X,F5.1),1X,F5.3,1X,F5.1,5(1X,F5.3)',
 }
 SECTIONS_HEADER_FMT = {
     'treatments': 'A2,3(1X,A1),1X,A25,13(1X,A2)',
@@ -70,7 +78,9 @@ SECTIONS_HEADER_FMT = {
         'A2,1X,A8,3X,5(1X,A5)',
         'A2,1X,A8,3X,3(1X,A5)',
         'A2,1X,A7,4X,4(1X,A5)'
-    ]
+    ],
+    'mow': [],
+    'mow_table': 'A5,1X,5(1X,A5)'
 }
 SECTIONS_ROW_FMT = {
     'treatments': '4(1X,I1),1X,A25,13(2X,I1)',
@@ -102,7 +112,9 @@ SECTIONS_ROW_FMT = {
         '1X,I1,1X,A2,9X,3(1X,I5),2(1X,A5)',
         '1X,I1,1X,A2,9X,3(1X,I5)',
         '1X,I1,1X,A2,9X,1X,I5,1X,A5,2(1X,I5)'
-    ]
+    ],
+    'mow': [],
+    'mow_table': '1X,A5,1X,A5,3(1X,I5),1X,F5.1'
 }
 
 def unpack_keys(section):

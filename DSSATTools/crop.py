@@ -20,7 +20,7 @@ The usage of the Crop class is explaied by this example. In here we initialize a
 import os
 
 from DSSATTools.models import (
-    CERES
+    CERES, FORAGE
 )
 from DSSATTools import __file__ as DSSATModulePath
 from DSSATTools.base.sections import unpack_keys
@@ -29,11 +29,11 @@ from DSSATTools import VERSION
 DSSATModulePath = os.path.dirname(DSSATModulePath)
 # To add a new crop you have to do the next:
 # 1. Create a new Class for the crop within the model's submodule in models module.
-# 2. Add the fortran format strings in the sections module
-# 3. Add the new model to the CROPS_MODULES and SPE_FILES mapping dict just below.
-# 4. Add the VARNAME item for the crop in the CUL_VARNAME dict in run.py
-# 4. Create a test in test_run.py
-# 5. Run the test and fix the bugs until it works (of course, including all of the previous test as well).
+# 2. Add the new model to the CROPS_MODULES and SPE_FILES mapping dict just below.
+# 3. Add the VARNAME item for the crop in the CUL_VARNAME dict in run.py
+# 4. Add the fortran format strings in the sections module
+# 5. Create a test in test_run.py
+# 6. Run the test and fix the bugs until it works (of course, including all of the previous test as well).
 CROPS_MODULES = {
     'Maize': CERES.Maize,
     'Millet': CERES.Millet,
@@ -41,6 +41,8 @@ CROPS_MODULES = {
     'Rice': CERES.Rice,
     'Sorghum': CERES.Sorghum,
     'Sweetcorn': CERES.Sweetcorn,
+    'Alfalfa': FORAGE.Alfalfa,
+    'Bermudagrass': FORAGE.Bermudagrass
 }
 SPE_FILES = {
     'Maize': f'MZCER{VERSION}.SPE',
@@ -49,6 +51,8 @@ SPE_FILES = {
     'Rice': f'RICER{VERSION}.SPE',
     'Sorghum': f'SGCER{VERSION}.SPE',
     'Sweetcorn': f'SWCER{VERSION}.SPE',
+    'Alfalfa': f'ALFRM{VERSION}.SPE',
+    'Bermudagrass': f'BMFRM{VERSION}.SPE'
 }
 BASE_CROPS = [model for model in CROPS_MODULES.values()]
 
@@ -60,7 +64,7 @@ class Crop(*BASE_CROPS):
         Arguments
         ----------
         crop: str
-            Crop name, available at the moment: Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn.
+            Crop name, available at the moment: Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn, Alfalfa, Bermudagrass
                 - TODO: Implement more crops
         spe_file: str
             Optional. Path to the species file to initialize the instance.

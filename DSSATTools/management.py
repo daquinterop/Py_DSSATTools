@@ -253,6 +253,16 @@ class Management:
                 'HPCNP': 100, 'HPCNR': 0, 														
             }
         )
+        # Mowing schedule for Perennial Forages:
+        self.mow = RowBasedSection(
+            name='mow',
+            idcol='@TRNO',
+            pars={
+                    'table': TabularSubsection({
+                    'DATE': [], 'MOW': [], 'RSPLF': [], 'MVS': [], 'RSHT': []
+                })
+            }
+        )
     
     def write(self, filename='EXP', expname='DEFAULT'):
         outstr = f'*EXP.DETAILS: {basename(filename)} {expname}\n\n'
@@ -276,3 +286,8 @@ class Management:
             f.write(outstr)
         
         return
+
+    def write_mow(self, filename):
+        outstr = self.mow.write()
+        with open(filename, 'w') as f:
+            f.write(outstr)

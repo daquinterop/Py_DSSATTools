@@ -61,7 +61,8 @@ import tempfile
 import random
 import string
 import pandas as pd
-import sys 
+import sys
+import warnings
 
 # Libraries for second version
 from DSSATTools import __file__ as DSSATModulePath
@@ -83,7 +84,10 @@ CUL_VARNAME = {
     'RI': 'VAR-NAME........',
     'SG': 'VAR-NAME........',
     'SW': 'VRNAME..........',
+    'AL': 'VRNAME..........',
+    'BM': 'VRNAME..........'
 }
+PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 
 class DSSAT():
     '''
@@ -224,10 +228,18 @@ class DSSAT():
             + f'.{crop.CODE}X'
         management_filename = os.path.join(self._RUN_PATH, management_filename) 
         management.write(filename=management_filename)
+
+        if crop.NAME in PERENIAL_FORAGES:
+            if len(management.mow['table']) < 1:
+                warnings.warn('No mow was defined. Define it at the Management.mow attribute')
+            management.write_mow(f'{management_filename[:-4]}.MOW')
+
         crop.write(self._RUN_PATH)
         soil.write(os.path.join(self._RUN_PATH, 'SOIL.SOL'))
         wth_path = os.path.join(self._RUN_PATH, 'Weather')
         weather.write(wth_path)
+
+        
 
         with open(os.path.join(self._RUN_PATH, 'DSSATPRO.L48'), 'w') as f:
             f.write(f'WED    {wth_path}\n')

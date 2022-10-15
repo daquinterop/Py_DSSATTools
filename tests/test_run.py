@@ -4,7 +4,7 @@ from DSSATTools import (
     Crop, SoilProfile, WeatherData, WeatherStation,
     Management, DSSAT
     )
-
+from DSSATTools.base.sections import TabularSubsection
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -269,5 +269,95 @@ def test_run_sweetcorn():
     # dssat.close()
     # assert not os.path.exists(dssat._RUN_PATH)
 
+def test_run_alfalfa():
+    df = pd.DataFrame(
+        {
+        'tn': np.random.gamma(24, 1, N),
+        'rad': np.random.gamma(15, 1.5, N),
+        'prec': np.round(np.random.gamma(.4, 10, N), 1),
+        'rh': 100 * np.random.beta(1.5, 1.15, N),
+        },
+        index=DATES,
+    )
+    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
+    # Create a WeatherData instance
+    WTH_DATA = WeatherData(
+        df,
+        variables={
+            'tn': 'TMIN', 'TMAX': 'TMAX',
+            'prec': 'RAIN', 'rad': 'SRAD',
+            'rh': 'RHUM'
+        }
+    )
+    # Create a WheaterStation instance
+    wth = WeatherStation(
+        WTH_DATA, 
+        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
+    )
+
+    soil = SoilProfile(default_class='SIL')
+    crop = Crop('alfalfa')
+    man = Management(
+        cultivar='AL0001',
+        planting_date=DATES[10],
+    )
+    man.mow['table'] = TabularSubsection({
+        'DATE': [DATES[300].strftime('%y%j'), DATES[340].strftime('%y%j')], 
+        'MOW': [1000, 1000], 'RSPLF': [20, 20], 'MVS': [2, 2], 'RSHT': [5, 5]
+    })
+    dssat = DSSAT()
+    dssat.setup(cwd='/tmp/test_al')
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+    # dssat.close()
+    # assert not os.path.exists(dssat._RUN_PATH)
+
+def test_run_bermudagrass():
+    df = pd.DataFrame(
+        {
+        'tn': np.random.gamma(24, 1, N),
+        'rad': np.random.gamma(15, 1.5, N),
+        'prec': np.round(np.random.gamma(.4, 10, N), 1),
+        'rh': 100 * np.random.beta(1.5, 1.15, N),
+        },
+        index=DATES,
+    )
+    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
+    # Create a WeatherData instance
+    WTH_DATA = WeatherData(
+        df,
+        variables={
+            'tn': 'TMIN', 'TMAX': 'TMAX',
+            'prec': 'RAIN', 'rad': 'SRAD',
+            'rh': 'RHUM'
+        }
+    )
+    # Create a WheaterStation instance
+    wth = WeatherStation(
+        WTH_DATA, 
+        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
+    )
+
+    soil = SoilProfile(default_class='SIL')
+    crop = Crop('bermudagrass')
+    man = Management(
+        cultivar='UF0001',
+        planting_date=DATES[10],
+    )
+    man.mow['table'] = TabularSubsection({
+        'DATE': [DATES[300].strftime('%y%j'), DATES[340].strftime('%y%j')], 
+        'MOW': [1000, 1000], 'RSPLF': [20, 20], 'MVS': [2, 2], 'RSHT': [5, 5]
+    })
+    dssat = DSSAT()
+    dssat.setup(cwd='/tmp/test_bm')
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+    # dssat.close()
+    # assert not os.path.exists(dssat._RUN_PATH)
+
 if __name__ == '__main__':
-    test_run_sweetcorn()
+    test_run_alfalfa()
