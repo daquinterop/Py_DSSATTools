@@ -7,6 +7,7 @@ During the environment setup (`DSSAT.setup`) a directory is created and all the 
 
 All of the parameters and attributes of the four basic clases have the same name you find in the DSSAT files (Take a look at the .CDE files in https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
 '''
+VERSION = '048'
 
 from DSSATTools.crop import Crop
 from DSSATTools.soil import SoilProfile, SoilLayer

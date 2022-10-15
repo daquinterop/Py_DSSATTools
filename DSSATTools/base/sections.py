@@ -9,25 +9,37 @@ from pandas import NA, isna, DataFrame
 NA_VALS = (None, '-99', -99, -999999)
 
 CULTIVAR_HEADER_FMT = {
-    'Maize': 'A6,1X,A16,1X,A5,1X,A6,6(1X,A5)'
+    'Maize':     'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
+    'Millet':    'A5,1X,1X,A16,1X,A5,1X,A6,9(1X,A5)',
+    'Sugarbeet': 'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
+    'Rice':      'A5,1X,1X,A16,1X,A5,1X,A6,11(1X,A5)',
+    'Sorghum':   'A5,1X,1X,A16,1X,A5,1X,A6,13(1X,A5)',
+    'Sweetcorn': 'A5,1X,1X,A16,1X,A5,1X,A6,6(1X,A5)',
 }
 CULTIVAR_ROWS_FMT = {
-    'Maize': 'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),2(1X,F5.2)'
+    'Maize':     'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),2(1X,F5.2)',
+    'Millet':    'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),4(1X,F5.2),1X,F5.1',
+    'Sugarbeet': 'A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.2',
+    'Rice':      'A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.4,1X,F5.2,4(1X,F5.1)',
+    'Sorghum':   'A6,1X,A16,1X,A5,1X,A6,2(1X,F5.1),1X,F5.2,5(1X,F5.1),1X,F5.2,4(1X,F5.1)',
+    'Sweetcorn': 'A6,1X,A16,1X,A5,1X,A6,1X,F5.1,1X,F5.3,2(1X,F5.1),2(1X,F5.2)',
 }
-
-def get_cultivar_row_fmt(crop, **kwargs):
-    # This function is juts in case format strings have to be created 
-    # dynamically
-    if crop == 'Maize':
-        return CULTIVAR_ROWS_FMT[crop]
-
 ECOTYPE_HEADER_FMT = {
-    'Maize': 'A6,1X,A16,1X,11(1X,A5)'
+    'Maize':     'A5,1X,1X,A16,1X,11(1X,A5)',
+    'Millet':    'A5,1X,1X,A16,1X,7(1X,A5)',
+    'Sugarbeet': 'A5,1X,1X,A16,1X,11(1X,A5)',
+    'Rice':      '',
+    'Sorghum':   'A5,1X,1X,A16,1X,10(1X,A5)',
+    'Sweetcorn': 'A5,1X,1X,A16,1X,11(1X,A5)',
 }
 ECOTYPE_ROWS_FMT = {
-    'Maize': 'A6,1X,A16,1X,11(1X,F5.1)'
+    'Maize':     'A6,1X,A16,1X,11(1X,F5.1)',
+    'Millet':    'A6,1X,A16,1X,6(1X,F5.1),1X,F5.2',
+    'Sugarbeet': 'A6,1X,A16,1X,8(1X,F5.1),1X,F5.2,2(1X,F5.1)',
+    'Rice':      '',
+    'Sorghum':   'A6,1X,A16,1X,5(1X,F5.1),1X,F5.2,2(1X,F5.3),1X,F5.1,1X,F5.0',
+    'Sweetcorn': 'A6,1X,A16,1X,8(1X,F5.1),1X,F5.2,2(1X,F5.1)',
 }
-
 SECTIONS_HEADER_FMT = {
     'treatments': 'A2,3(1X,A1),1X,A25,13(1X,A2)',
     'cultivars': 'A2,1X,A2,1X,A6,1X,A25',

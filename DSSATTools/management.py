@@ -248,7 +248,9 @@ class Management:
                 'RIPCN': 100, 'RTIME': 1, 'RIDEP': 20, 
                 
                 'HARVEST': 'HA',
-                'HFRST': 0, 'HLAST': 30365, 'HPCNP': 100, 'HPCNR': 0, 														
+                'HFRST': self.planting_date.strftime('%y%j'), 
+                'HLAST': (self.planting_date + timedelta(days=2*365)).strftime('%y%j'),
+                'HPCNP': 100, 'HPCNR': 0, 														
             }
         )
     

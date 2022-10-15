@@ -64,7 +64,8 @@ import pandas as pd
 import sys 
 
 # Libraries for second version
-import DSSATTools
+from DSSATTools import __file__ as DSSATModulePath
+from DSSATTools import VERSION
 from DSSATTools.soil import SoilProfile
 from DSSATTools.weather import WeatherStation
 from DSSATTools.crop import Crop
@@ -75,12 +76,21 @@ from DSSATTools.base.sections import clean_comments
 
 OUTPUTS = ['PlantGro', ]
 
+CUL_VARNAME = {
+    'MZ': 'VRNAME..........',
+    'ML': 'VAR-NAME........',
+    'BS': 'VRNAME..........',
+    'RI': 'VAR-NAME........',
+    'SG': 'VAR-NAME........',
+    'SW': 'VRNAME..........',
+}
+
 class DSSAT():
     '''
     Class that represents the simulation environment. When initializing and seting up the environment, a new folder is created (usually in the tmp folder), and all of the necesary files to run the model are copied into it.
     '''
     def __init__(self):
-        BASE_PATH = os.path.dirname(DSSATTools.__file__)
+        BASE_PATH = os.path.dirname(DSSATModulePath)
         self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
         self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
         self._STD_PATH = os.path.join(self._STATIC_PATH, 'StandardData')
@@ -181,7 +191,7 @@ class DSSAT():
         # Fill Managament fields
         management.cultivars['CR'] = crop.CODE
         management.cultivars['CNAME'] = \
-            crop.cultivar[management.cultivar]['VRNAME..........']
+            crop.cultivar[management.cultivar][CUL_VARNAME[crop.CODE]]
 
         management.fields['WSTA....'] = weather.INSI \
             + management.sim_start.strftime('%y%m')
@@ -221,7 +231,7 @@ class DSSAT():
 
         with open(os.path.join(self._RUN_PATH, 'DSSATPRO.L48'), 'w') as f:
             f.write(f'WED    {wth_path}\n')
-            f.write(f'MMZ    {self._RUN_PATH} dscsm048 MZCER048\n')
+            f.write(f'M{crop.CODE}    {self._RUN_PATH} dscsm048 {crop.SMODEL}{VERSION}\n')
             f.write(f'CRD    {self._CRD_PATH}\n')
             f.write(f'PSD    {os.path.join(self._STATIC_PATH, "Pest")}\n')
             f.write(f'SLD    {self._SLD_PATH}\n')

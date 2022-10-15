@@ -20,17 +20,37 @@ The usage of the Crop class is explaied by this example. In here we initialize a
 import os
 
 from DSSATTools.models import (
-    CERESMaize
+    CERES
 )
 from DSSATTools import __file__ as DSSATModulePath
 from DSSATTools.base.sections import unpack_keys
+from DSSATTools import VERSION
 
 DSSATModulePath = os.path.dirname(DSSATModulePath)
+# To add a new crop you have to do the next:
+# 1. Create a new Class for the crop within the model's submodule in models module.
+# 2. Add the fortran format strings in the sections module
+# 3. Add the new model to the CROPS_MODULES and SPE_FILES mapping dict just below.
+# 4. Add the VARNAME item for the crop in the CUL_VARNAME dict in run.py
+# 4. Create a test in test_run.py
+# 5. Run the test and fix the bugs until it works (of course, including all of the previous test as well).
 CROPS_MODULES = {
-    'Maize': CERESMaize
+    'Maize': CERES.Maize,
+    'Millet': CERES.Millet,
+    'Sugarbeet': CERES.Sugarbeet,
+    'Rice': CERES.Rice,
+    'Sorghum': CERES.Sorghum,
+    'Sweetcorn': CERES.Sweetcorn,
 }
-
-BASE_CROPS = [module.CropBase for module in CROPS_MODULES.values()]
+SPE_FILES = {
+    'Maize': f'MZCER{VERSION}.SPE',
+    'Millet': f'MLCER{VERSION}.SPE',
+    'Sugarbeet': f'BSCER{VERSION}.SPE',
+    'Rice': f'RICER{VERSION}.SPE',
+    'Sorghum': f'SGCER{VERSION}.SPE',
+    'Sweetcorn': f'SWCER{VERSION}.SPE',
+}
+BASE_CROPS = [model for model in CROPS_MODULES.values()]
 
 
 class Crop(*BASE_CROPS):
@@ -40,11 +60,10 @@ class Crop(*BASE_CROPS):
         Arguments
         ----------
         crop: str
-            Crop name, it must be one of these:
-                - Maize
+            Crop name, available at the moment: Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn.
                 - TODO: Implement more crops
         spe_file: str
-            Optional. Path to the cultivar file to initialize the instance.
+            Optional. Path to the species file to initialize the instance.
         '''
     def __init__(self, crop_name:str='Maize', spe_file:str=None):
         crop_name = crop_name.title()
@@ -53,26 +72,32 @@ class Crop(*BASE_CROPS):
             f'{crop_name} is not a valid crop'
 
         self.MODEL = CROPS_MODULES[crop_name]
-
+        SPE_FILE = SPE_FILES[crop_name]
         if not spe_file:
-            spe_file = os.path.join(GENOTYPE_PATH, self.MODEL.SPE_FILE)
+            spe_file = os.path.join(GENOTYPE_PATH, SPE_FILE)
 
         # defining where to start the MRO.
-        MRO_START = self.__class__.__mro__.index(self.MODEL.CropBase)
-        MRO_START = self.__class__.__mro__[MRO_START - 1]
-        super(MRO_START, self).__init__(spe_file)
+        MRO_START = self.__class__.__mro__.index(self.MODEL)
+        self._MRO_START = self.__class__.__mro__[MRO_START - 1]
+        super(self._MRO_START, self).__init__(spe_file)
         # TODO: Ok, I won't be working in this until it's necessary, then,
         # by now I'll only work in the cultivar and ecotype files.
         
         self._pars_section_map = {}
         self.parameters = []
 
-        for section in (self.cultivar, self.ecotype):
+        # Ecotype is called from the class __dict__ since not all crops have ECO files.
+        for section in (self.cultivar, self.__dict__.get('ecotype')):
+            if not section:
+                continue
             pars = unpack_keys(section)
             self._pars_section_map.update(
                 dict(zip(pars, len(pars)*[section.name]))
             )
             self.parameters += pars
+
+    def write(self, *args):
+        super(self._MRO_START, self).write(*args)
         
     def set_parameter(self, par_name:str, par_value, row_loc=0, col_loc=0):
         '''

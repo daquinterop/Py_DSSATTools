@@ -20,7 +20,7 @@ During the environment setup (DSSAT.setup) a directory is created and all the st
 
 All of the parameters and attributes of the four basic clases have the same name you find in the DSSAT files (Take a look at the .CDE files in [https://github.com/DSSAT/dssat-csm-os/tree/develop/Data](https://github.com/DSSAT/dssat-csm-os/tree/develop/Data)).
 
-**At the moment the library can be used only for Maize crop and CERESMaize model. More crops and models will be added later.** If you're interested in contributing to this project, don't hesitate in sending me an email (daquinterop@gmail.com). Of course, if you want to contribute then I'll have to create a Developer's guide to the project.
+**At the moment the library can be used only for CERES model, that includes Maize, Millet, Sugarbeet, Rice, Sorghum and Sweetcorn. More crops and models will be added later.** If you're interested in contributing to this project, don't hesitate in sending me an email (daquinterop@gmail.com). Of course, if you want to contribute then I'll have to create a Developer's guide to the project.
 
 All the Classes can be imported as:
 ```python
@@ -73,11 +73,10 @@ on a custom crop file provided as a cultivar.
 ##### Arguments
 ```
 crop: str
-    Crop name, it must be one of these:
-    * Maize
+    Crop name, available at the moment:  Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn.
 
 spe_file: str
-    Optional. Path to the cultivar file to initialize the instance.
+    Optional. Path to the species file to initialize the instance.
 
 ```
 #### set_parameter(par_name: str, par_value, row_loc=0)
