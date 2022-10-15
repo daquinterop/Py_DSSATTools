@@ -1,10 +1,8 @@
 # DSSATTools package
 ## Installation:
-You can install the library using Python pip. I'll show you one way, but if you don't like that way you can google "pip install from git" [(or just click here).](https://www.google.com/search?client=firefox-b-1-d&q=pip+install+from+git). So to install it first clone or download the repository, then just install:
+You can install the library using Python pip.
 ```
-git clone https://github.com/daquinterop/Py_DSSATTools
-cd Py_DSSATTools
-pip install .
+pip install DSSATTools
 ```
 ## Documentation
 [https://py-dssattools.readthedocs.io/en/latest/index.html](https://py-dssattools.readthedocs.io/en/latest/index.html)
