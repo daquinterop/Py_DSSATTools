@@ -85,7 +85,9 @@ CUL_VARNAME = {
     'SG': 'VAR-NAME........',
     'SW': 'VRNAME..........',
     'AL': 'VRNAME..........',
-    'BM': 'VRNAME..........'
+    'BM': 'VRNAME..........',
+    'SB': 'VAR-NAME........',
+    'CN': 'VRNAME..........'
 }
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 

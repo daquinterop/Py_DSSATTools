@@ -10,40 +10,40 @@ import pandas as pd
 import numpy as np
 import os
 
-DATES = pd.date_range('2000-01-01', '2010-12-31')
+DATES = pd.date_range('2000-01-01', '2002-12-31')
 N = len(DATES)
+df = pd.DataFrame(
+    {
+    'tn': np.random.gamma(24, 1, N),
+    'rad': np.random.gamma(15, 1.5, N),
+    'prec': np.round(np.random.gamma(.4, 10, N), 1),
+    'rh': 100 * np.random.beta(1.5, 1.15, N),
+    },
+    index=DATES,
+)
+df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
+# Create a WeatherData instance
+WTH_DATA = WeatherData(
+    df,
+    variables={
+        'tn': 'TMIN', 'TMAX': 'TMAX',
+        'prec': 'RAIN', 'rad': 'SRAD',
+        'rh': 'RHUM'
+    }
+)
+# Create a WheaterStation instance
+wth = WeatherStation(
+    WTH_DATA, 
+    {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
+)
+
+soil = SoilProfile(default_class='SIL')
 
 def test_no_setup():
     with pytest.raises(AssertionError) as excinfo:
         assert 'setup() method' in str(excinfo.value)
 
 def test_run_maize():
-    df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(10, 1, N),
-        'rad': np.random.gamma(10, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    # Create a WeatherData instance
-    WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    # Create a WheaterStation instance
-    wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-
-    soil = SoilProfile(default_class='SIL')
     crop = Crop('maize')
     man = Management(
         cultivar='IB0001',
@@ -60,31 +60,6 @@ def test_run_maize():
     # assert not os.path.exists(dssat._RUN_PATH)
 
 def test_run_millet():
-    df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(10, 1, N),
-        'rad': np.random.gamma(10, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    # Create a WeatherData instance
-    WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    # Create a WheaterStation instance
-    wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-
     soil = SoilProfile(default_class='SIL')
     crop = Crop('millet')
     man = Management(
@@ -102,32 +77,6 @@ def test_run_millet():
     # assert not os.path.exists(dssat._RUN_PATH)
 
 def test_run_sugarbeet():
-    df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(10, 1, N),
-        'rad': np.random.gamma(10, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    # Create a WeatherData instance
-    WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    # Create a WheaterStation instance
-    wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-
-    soil = SoilProfile(default_class='SIL')
     crop = Crop('sugarbeet')
     man = Management(
         cultivar='CR0001',
@@ -144,32 +93,6 @@ def test_run_sugarbeet():
     # assert not os.path.exists(dssat._RUN_PATH)
 
 def test_run_rice():
-    df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(24, 1, N),
-        'rad': np.random.gamma(15, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    # Create a WeatherData instance
-    WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    # Create a WheaterStation instance
-    wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-
-    soil = SoilProfile(default_class='SIL')
     crop = Crop('rice')
     man = Management(
         cultivar='IB0003',
@@ -186,32 +109,6 @@ def test_run_rice():
     # assert not os.path.exists(dssat._RUN_PATH)
 
 def test_run_sorghum():
-    df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(24, 1, N),
-        'rad': np.random.gamma(15, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    # Create a WeatherData instance
-    WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    # Create a WheaterStation instance
-    wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-
-    soil = SoilProfile(default_class='SIL')
     crop = Crop('sorghum')
     man = Management(
         cultivar='IB0001',
@@ -228,32 +125,6 @@ def test_run_sorghum():
     # assert not os.path.exists(dssat._RUN_PATH)
 
 def test_run_sweetcorn():
-    df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(24, 1, N),
-        'rad': np.random.gamma(15, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    # Create a WeatherData instance
-    WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    # Create a WheaterStation instance
-    wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-
-    soil = SoilProfile(default_class='SIL')
     crop = Crop('sweetcorn')
     man = Management(
         cultivar='SW0001',
@@ -270,32 +141,6 @@ def test_run_sweetcorn():
     # assert not os.path.exists(dssat._RUN_PATH)
 
 def test_run_alfalfa():
-    df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(24, 1, N),
-        'rad': np.random.gamma(15, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    # Create a WeatherData instance
-    WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    # Create a WheaterStation instance
-    wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-
-    soil = SoilProfile(default_class='SIL')
     crop = Crop('alfalfa')
     man = Management(
         cultivar='AL0001',
@@ -315,32 +160,6 @@ def test_run_alfalfa():
     # assert not os.path.exists(dssat._RUN_PATH)
 
 def test_run_bermudagrass():
-    df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(24, 1, N),
-        'rad': np.random.gamma(15, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
-    df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    # Create a WeatherData instance
-    WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
-    # Create a WheaterStation instance
-    wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
-
-    soil = SoilProfile(default_class='SIL')
     crop = Crop('bermudagrass')
     man = Management(
         cultivar='UF0001',
@@ -358,6 +177,37 @@ def test_run_bermudagrass():
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
     # dssat.close()
     # assert not os.path.exists(dssat._RUN_PATH)
+
+def test_run_soybean():
+    crop = Crop('soybean')
+    man = Management(
+        cultivar='IB0011',
+        planting_date=DATES[10],
+    )
+
+    dssat = DSSAT()
+    dssat.setup(cwd='/tmp/test_sb')
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+
+def test_run_canola():
+    crop = Crop('canola')
+    man = Management(
+        cultivar='CA0001',
+        planting_date=DATES[10],
+    )
+
+    dssat = DSSAT()
+    dssat.setup(cwd='/tmp/test_cn')
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+
+
+
 
 if __name__ == '__main__':
     test_run_alfalfa()
