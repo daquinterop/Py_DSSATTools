@@ -206,6 +206,21 @@ def test_run_canola():
     )
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
 
+def test_run_sunflower():
+    crop = Crop('sunflower')
+    man = Management(
+        cultivar='IB0009',
+        planting_date=DATES[10],
+    )
+
+    dssat = DSSAT()
+    dssat.setup(cwd='/tmp/test_su')
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+
+
 
 
 

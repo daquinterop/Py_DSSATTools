@@ -29,6 +29,9 @@ All of the parameters and attributes of the four basic clases have the same name
 | Sweetcorn    | CERES               |
 | Alfalfa      | FORAGE-Alfalfa      |
 | Bermudagrass | FORAGE-Bermudagrass |
+| Soybean      | CROPGRO             |
+| Canola       | CROPGRO             |
+| Sunflower    | CROPGRO             |
 
 More crops and models will be added later.
 
