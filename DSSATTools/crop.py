@@ -44,7 +44,8 @@ CROPS_MODULES = {
     'Alfalfa': FORAGE.Alfalfa,
     'Bermudagrass': FORAGE.Bermudagrass,
     'Soybean': CROPGRO.Soybean,
-    'Canola': CROPGRO.Canola
+    'Canola': CROPGRO.Canola,
+    'Sunflower': CROPGRO.Sunflower
 }
 SPE_FILES = {
     'Maize': f'MZCER{VERSION}.SPE',
@@ -56,7 +57,8 @@ SPE_FILES = {
     'Alfalfa': f'ALFRM{VERSION}.SPE',
     'Bermudagrass': f'BMFRM{VERSION}.SPE',
     'Soybean': f'SBGRO{VERSION}.SPE',
-    'Canola': f'CNGRO{VERSION}.SPE'
+    'Canola': f'CNGRO{VERSION}.SPE',
+    'Sunflower': f'SUGRO{VERSION}.SPE'
 }
 BASE_CROPS = [model for model in CROPS_MODULES.values()]
 

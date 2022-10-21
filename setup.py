@@ -4,9 +4,12 @@ import pdb
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
-pdb.set_trace()
-with open(os.path.abspath('requirements.txt'), 'r') as f:
-    requirements = [i.split('=')[0] for i in f.readlines()]
+if os.path.exists('requirements.txt'):
+    with open('requirements.txt', 'r') as f:
+        requirements = [i.split('=')[0] for i in f.readlines()]
+else:
+    with open(os.path.abspath('requirements.txt'), 'r') as f:
+        requirements = [i.split('=')[0] for i in f.readlines()]
 
 setuptools.setup(
     name="DSSATTools",
@@ -49,4 +52,4 @@ setuptools.setup(
     },
     # include_package_data=True
 )
-#
+#8.0   4.0   9.5  0.80   0.6   1.2  .000   0.0  .000

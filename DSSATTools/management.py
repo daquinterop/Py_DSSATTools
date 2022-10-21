@@ -268,8 +268,8 @@ class Management:
         outstr = f'*EXP.DETAILS: {basename(filename)} {expname}\n\n'
         outstr += '*GENERAL\n'
         outstr += '@PEOPLE\nDSSATTools: A Python Library for DSSAT\n'
-        outstr += '@ADDRESS\nSERVIR-NASA\n'
-        outstr += '@SITE\nNSSTC, Huntsville, AL.\n'
+        outstr += '@ADDRESS\nhttps://github.com/daquinterop/Py_DSSATTools\n'
+        outstr += '@SITE\nhttps://py-dssattools.readthedocs.io\n'
         outstr += '@ PAREA  PRNO  PLEN  PLDR  PLSP  PLAY HAREA  HRNO  HLEN  HARM.........\n'
         outstr += '    -99   -99   -99   -99   -99   -99     1   -99   -99 pping\n\n'
 

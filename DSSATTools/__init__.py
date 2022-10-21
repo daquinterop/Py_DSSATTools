@@ -6,6 +6,25 @@ The simulation environment is represented by the `DSSAT` Class. There are three 
 During the environment setup (`DSSAT.setup`) a directory is created and all the static files required to run DSSAT are copied in that directory. This directory will be removed when the `DSSAT.close` method is called. After the environment has been set up, the `DSSAT.run` method can be called as many times as you want.
 
 All of the parameters and attributes of the four basic clases have the same name you find in the DSSAT files (Take a look at the .CDE files in https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
+
+Up to date next crops and models are included:
+
+==================   =====================
+Crop                 Model
+==================   =====================
+Maize                CERES               
+Millet               CERES               
+Rice                 CERES               
+Sugarbeet            CERES               
+Sorghum              CERES               
+Sweetcorn            CERES               
+Alfalfa              FORAGE-Alfalfa      
+Bermudagrass         FORAGE-Bermudagrass 
+Soybean              CROPGRO             
+Canola               CROPGRO             
+Sunflower            CROPGRO             
+==================   =====================
+
 '''
 VERSION = '048'
 
