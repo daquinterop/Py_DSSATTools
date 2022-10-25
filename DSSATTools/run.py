@@ -130,7 +130,7 @@ class DSSAT():
         else:
             self._RUN_PATH = os.path.join(
                 TMP_BASE, 
-                ''.join(random.choices(string.ascii_lowercase, k=8))
+                'dssat'+''.join(random.choices(string.ascii_lowercase, k=8))
             )
             os.mkdir(self._RUN_PATH)
         sys.stdout.write(f'{self._RUN_PATH} created.\n')

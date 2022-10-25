@@ -371,7 +371,7 @@ class SoilProfile():
         pars:dict={}
         ):
         self.n_layers = 0
-        self.id = 'SOIL000001'
+        self.id = 'IB12345678'
         self.description = 'Soil profile'
         self.total_depth = 0
         self.site = 'Huntsville'
