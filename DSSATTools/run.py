@@ -240,7 +240,7 @@ class DSSAT():
         crop.write(self._RUN_PATH)
         soil.write(os.path.join(self._RUN_PATH, 'SOIL.SOL'))
         wth_path = os.path.join(self._RUN_PATH, 'Weather')
-        weather.write(wth_path)
+        weather.write(wth_path, management=management)
 
         
 
