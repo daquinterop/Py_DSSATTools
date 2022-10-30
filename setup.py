@@ -52,4 +52,3 @@ setuptools.setup(
     },
     # include_package_data=True
 )
-#8.0   4.0   9.5  0.80   0.6   1.2  .000   0.0  .000
