@@ -52,7 +52,7 @@ class TestWeatherStation:
         assert all(wth.data == WTH_DATA)
     
     def test_write(self):
-        folder = '/home/diego/Py_DSSATTools/wth_test'
+        folder = 'C:/Users/daqui/Py_DSSATTools/wth_test'
         if os.path.exists(folder): shutil.rmtree(folder)
         wth = WeatherStation(
             WTH_DATA, 

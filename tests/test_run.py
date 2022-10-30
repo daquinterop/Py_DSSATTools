@@ -9,6 +9,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import os
+import tempfile
 
 DATES = pd.date_range('2000-01-01', '2002-12-31')
 N = len(DATES)
@@ -51,7 +52,7 @@ def test_run_maize():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_mz')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -68,7 +69,7 @@ def test_run_millet():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_ml')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -84,7 +85,7 @@ def test_run_sugarbeet():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_bs')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -100,7 +101,7 @@ def test_run_rice():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_ri')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -116,7 +117,7 @@ def test_run_sorghum():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_sg')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -132,7 +133,7 @@ def test_run_sweetcorn():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_sw')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -151,7 +152,7 @@ def test_run_alfalfa():
         'MOW': [1000, 1000], 'RSPLF': [20, 20], 'MVS': [2, 2], 'RSHT': [5, 5]
     })
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_al')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -170,7 +171,7 @@ def test_run_bermudagrass():
         'MOW': [1000, 1000], 'RSPLF': [20, 20], 'MVS': [2, 2], 'RSHT': [5, 5]
     })
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_bm')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -186,7 +187,7 @@ def test_run_soybean():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_sb')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -200,7 +201,7 @@ def test_run_canola():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_cn')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -214,7 +215,7 @@ def test_run_sunflower():
     )
 
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_su')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
@@ -227,9 +228,10 @@ def test_run_potato():
         cultivar='IB0001',
         planting_date=DATES[10],
     )
-
+    man.planting_details['table']['PLWT'] = 1500
+    man.planting_details['table']['SPRL'] = 2
     dssat = DSSAT()
-    dssat.setup(cwd='/tmp/test_su')
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )

@@ -47,8 +47,8 @@ setuptools.setup(
         'DSSATTools.static.Pest': ['*'],
         'DSSATTools.static.StandardData': ['*'],
         'DSSATTools.static.Soil': ['*'],
-        'DSSATTools.static.bin': ['dscsm048'],
-        'DSSATTools.static': ['*.CDE']
+        'DSSATTools.static.bin': ['dscsm048', 'dscsm048.exe'],
+        'DSSATTools.static': ['*.CDE', 'MODEL.ERR']
     },
     # include_package_data=True
 )

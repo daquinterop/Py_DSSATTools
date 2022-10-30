@@ -186,12 +186,6 @@ def clean_comments(lines):
         clean_lines.append(line)
     return clean_lines
 
-def magic_open(filename):
-    blob = open(filename, 'rb').read()
-    m = magic.Magic(mime_encoding=True)
-    encoding = m.from_buffer(blob)
-    return open(filename, 'r', encoding=encoding)
-
 def ecotype_row_write(crop, fields, row_fmt):
     # This function is juts in case format strings have to be created 
     # dynamically
@@ -364,7 +358,7 @@ class Cultivar(RowBasedSection):
     def __init__(self, spe_file:str, crop:str):
         self.crop = crop
         cul_file = spe_file[:-3] + 'CUL'
-        with magic_open(cul_file) as f:
+        with open(cul_file, 'r') as f:
             self._file_lines = f.readlines()
         self._file_lines = clean_comments(self._file_lines)
         super().__init__(name='cultivar')
@@ -379,7 +373,7 @@ class Ecotype(RowBasedSection):
     def __init__(self, eco_file:str, crop:str):
         self.crop = crop
         eco_file = eco_file[:-3] + 'ECO'
-        with magic_open(eco_file) as f:
+        with open(eco_file, 'r') as f:
             self._file_lines = f.readlines()
         self._file_lines = clean_comments(self._file_lines)
         super().__init__(name='ecotype')
