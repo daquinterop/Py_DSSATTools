@@ -365,7 +365,6 @@ class Cultivar(RowBasedSection):
         print()
 
 
-
 class Ecotype(RowBasedSection):
     '''
     

@@ -231,6 +231,10 @@ class DSSAT():
         table = table.sort_values(by='ICBL').reset_index(drop=True)
         table['SNH4'] = [0.]*len(table)
         table['SNO3'] = [1.] + [0.]*(len(table)-1)
+        if crop.NAME.lower() == 'potato':
+            assert not any(pd.isna(management.planting_details['table'][['PLWT', 'SPRL']]).values[0]), \
+                "PLWT, SPRL transplanting parameters are mandatory for Potato crop, you must "\
+                "define those parameters in management.planting_details['table']"
         management.initial_conditions['table'] = table
 
         management.simulation_controls['SMODEL'] = crop.SMODEL        
@@ -278,7 +282,7 @@ class DSSAT():
             assert f'{file}.OUT' in OUTPUT_FILES, \
                 f'{file}.OUT does not exist in {self._RUN_PATH}'
             table_start = -1
-            with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r') as f:
+            with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
                 while True:
                     table_start += 1
                     if '@' in f.readline():
@@ -289,9 +293,9 @@ class DSSAT():
                     skiprows=table_start, sep=' ', skipinitialspace=True
                 )
             except UnicodeDecodeError:
-                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r') as f:
+                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
                     lines = f.readlines()
-                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'w') as f:
+                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'w', encoding='utf-8') as f:
                     f.writelines(lines[table_start:])
                 df = pd.read_csv(
                     os.path.join(self._RUN_PATH, f'{file}.OUT'),

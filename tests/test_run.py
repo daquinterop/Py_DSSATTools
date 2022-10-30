@@ -237,6 +237,20 @@ def test_run_potato():
     )
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
 
+def test_run_potato_no_transplanting():
+    crop = Crop('potato')
+    man = Management(
+        cultivar='IB0001',
+        planting_date=DATES[10],
+    )
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
+    with pytest.raises(AssertionError) as excinfo:
+        dssat.run(
+            soil=soil, weather=wth, crop=crop, management=man,
+        )
+        assert 'transplanting parameters are mandatory' in str(excinfo.value)
+
 
 if __name__ == '__main__':
     test_run_alfalfa()

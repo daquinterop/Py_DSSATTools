@@ -8,7 +8,7 @@
 ! ECO#        Ecotype code for this cultivar, points to the Ecotype in the
 !             ECO file (currently not used).
 ! P1          Thermal time from seedling emergence to the end of the juvenile
-!             phase (expressed in degree days above a base temperature of 10øC)
+!             phase (expressed in degree days above a base temperature of 10Â°C)
 !             during which the plant is not responsive to changes in
 !             photoperiod.
 ! P2O         Critical photoperiod or the longest day length (in hours) at
@@ -17,7 +17,7 @@
 ! P2R         Extent to which phasic development leading to panicle
 !             initiation (expressed in degree days) is delayed for each hour
 !             increase in photoperiod above P2O.
-! P5          Thermal time (degree days above a base temperature of 10øC)
+! P5          Thermal time (degree days above a base temperature of 10Â°C)
 !             from beginning of grain filling (3-4 days after flowering)
 !             to physiological maturity.
 ! G1          Scaler for relative leaf size.
