@@ -20,7 +20,7 @@ The usage of the Crop class is explaied by this example. In here we initialize a
 import os
 
 from DSSATTools.models import (
-    CERES, FORAGE, CROPGRO
+    CERES, FORAGE, CROPGRO, SUBSTOR
 )
 from DSSATTools import __file__ as DSSATModulePath
 from DSSATTools.base.sections import unpack_keys
@@ -45,7 +45,8 @@ CROPS_MODULES = {
     'Bermudagrass': FORAGE.Bermudagrass,
     'Soybean': CROPGRO.Soybean,
     'Canola': CROPGRO.Canola,
-    'Sunflower': CROPGRO.Sunflower
+    'Sunflower': CROPGRO.Sunflower,
+    'Potato': SUBSTOR.Potato
 }
 SPE_FILES = {
     'Maize': f'MZCER{VERSION}.SPE',
@@ -58,7 +59,8 @@ SPE_FILES = {
     'Bermudagrass': f'BMFRM{VERSION}.SPE',
     'Soybean': f'SBGRO{VERSION}.SPE',
     'Canola': f'CNGRO{VERSION}.SPE',
-    'Sunflower': f'SUGRO{VERSION}.SPE'
+    'Sunflower': f'SUGRO{VERSION}.SPE',
+    'Potato': f'PTSUB{VERSION}.SPE'
 }
 BASE_CROPS = [model for model in CROPS_MODULES.values()]
 
