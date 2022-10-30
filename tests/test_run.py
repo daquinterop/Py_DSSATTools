@@ -221,7 +221,19 @@ def test_run_sunflower():
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
 
 
+def test_run_potato():
+    crop = Crop('potato')
+    man = Management(
+        cultivar='IB0001',
+        planting_date=DATES[10],
+    )
 
+    dssat = DSSAT()
+    dssat.setup(cwd='/tmp/test_su')
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
 
 
 if __name__ == '__main__':

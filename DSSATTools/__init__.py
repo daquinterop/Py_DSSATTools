@@ -23,6 +23,7 @@ Bermudagrass         FORAGE-Bermudagrass
 Soybean              CROPGRO             
 Canola               CROPGRO             
 Sunflower            CROPGRO             
+Potato               SUBSTOR
 ==================   =====================
 
 '''

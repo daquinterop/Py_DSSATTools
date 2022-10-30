@@ -20,7 +20,7 @@ CULTIVAR_HEADER_FMT = {
     'Soybean':      'A5,1X,1X,A16,1X,A5,1X,A6,18(1X,A5)',
     'Canola':       'A5,1X,1X,A16,1X,A5,1X,A6,18(1X,A5)',
     'Sunflower':    'A5,1X,1X,A16,1X,A5,1X,A6,18(1X,A5)',
-    'Potato':       ''
+    'Potato':       'A5,1X,1X,A16,1X,A5,1X,A6,5(1X,A5)'
 }
 CULTIVAR_ROWS_FMT = {
     'Maize':        'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),2(1X,F5.2)',
@@ -34,7 +34,7 @@ CULTIVAR_ROWS_FMT = {
     'Soybean':      'A6,1X,A16,1X,A5,1X,A6,1X,F5.2,1X,F5.3,3(1X,F5.1),2(1X,F5.2),1X,F5.3,1X,F5.0,1X,F5.1,2(1X,F5.2),1X,F5.1,1X,F5.2,2(1X,F5.1),2(1X,F5.3)',
     'Canola':       'A6,1X,A16,1X,A5,1X,A6,1X,F5.2,1X,F5.3,3(1X,F5.1),2(1X,F5.2),1X,F5.3,1X,F5.0,1X,F5.1,1X,F5.2,1X,F5.3,4(1X,F5.1),2(1X,F5.3)',
     'Sunflower':    'A6,1X,A16,1X,A5,1X,A6,1X,F5.2,1X,F5.3,3(1X,F5.1),3(1X,F5.2),1X,F5.0,1X,F5.1,2(1X,F5.2),4(1X,F5.1),2(1X,F5.3)',
-    'Potato':       ''
+    'Potato':       'A6,1X,A16,1X,A5,1X,A6,1X,F5.0,4(1X,F5.1)'
 }
 ECOTYPE_HEADER_FMT = {
     'Maize':        'A5,1X,1X,A16,1X,11(1X,A5)',
@@ -48,7 +48,7 @@ ECOTYPE_HEADER_FMT = {
     'Soybean':      'A5,1X,1X,A16,2(1X,A2)16(1X,A5)',
     'Canola':       'A5,1X,1X,A16,2(1X,A2)16(1X,A5)',
     'Sunflower':    'A5,1X,1X,A17,2(1X,A2)16(1X,A5)',
-    'Potato':       ''
+    'Potato':       'A5,1X,1X,A17,2(1X,A5)'
 }
 ECOTYPE_ROWS_FMT = {
     'Maize':        'A6,1X,A16,1X,11(1X,F5.1)',
@@ -62,7 +62,7 @@ ECOTYPE_ROWS_FMT = {
     'Soybean':      'A6,1X,A16,2(1X,A2),6(1X,F5.1),1X,F5.2,2(1X,F5.1),2(1X,F5.2),2(1X,F5.1),1X,F5.3,1X,F5.1,1X,F5.3',
     'Canola':       'A6,1X,A16,2(1X,A2),6(1X,F5.1),1X,F5.2,2(1X,F5.1),2(1X,F5.2),2(1X,F5.1),1X,F5.3,1X,F5.1,1X,F5.3',
     'Sunflower':    'A6,1X,A17,2(1X,A2),6(1X,F5.1),1X,F5.2,3(1X,F5.1),1X,F5.2,2(1X,F5.1),1X,F5.3,1X,F5.1,1X,F5.3',
-    'Potato':       ''
+    'Potato':       'A6,1X,A17,2(1X,F5.1)'
 }
 SECTIONS_HEADER_FMT = {
     'treatments': 'A2,3(1X,A1),1X,A25,13(1X,A2)',

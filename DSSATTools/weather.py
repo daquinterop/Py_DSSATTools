@@ -106,12 +106,14 @@ class WeatherData(DataFrame):
         # A really quick QC check
         TEMP_QC = all(self.TMIN <= self.TMAX)
         assert TEMP_QC, 'TMAX < TMIN at some point in the series'
-        RHUM_QC = all((self.RHUM >= 0) & (self.RHUM <= 100))
-        assert RHUM_QC, '0 <= RHUM <= 100 must be accomplished'
+        if 'RHUM' in data.columns:
+            RHUM_QC = all((self.RHUM >= 0) & (self.RHUM <= 100))
+            assert RHUM_QC, '0 <= RHUM <= 100 must be accomplished'
         RAIN_QC = all(self.RAIN >= 0)
         assert RAIN_QC, '0 <= RAIN must be accomplished'
-        SRAD_QC = all(self.SRAD >= 0)
-        assert SRAD_QC, '0 <= SRAD must be accomplished'
+        if 'SRAD' in data.columns:
+            SRAD_QC = all(self.SRAD >= 0)
+            assert SRAD_QC, '0 <= SRAD must be accomplished'
 
         # Check date column
         DATE_COL = False
@@ -166,7 +168,7 @@ class WeatherStation():
             'wthdata must be a WeatherData instance'
         self.data = wthdata
 
-    def write(self, folder:str=''):
+    def write(self, folder:str='', **kwargs):
         '''
         Writes the weather files in the provided folder. The name is defined by the dates and the Institute code (INSI).
 
@@ -178,7 +180,11 @@ class WeatherStation():
         '''
         if not os.path.exists(folder):
             os.mkdir(folder)
-        
+        man = kwargs.get('management', False)
+        if man:
+            from datetime import datetime
+            sim_start = datetime(man.sim_start.year, man.sim_start.month, man.sim_start.day)
+            self.data = self.data.loc[self.data.index >= sim_start]
         for year in self.data.index.year.unique():
             df = self.data.loc[self.data.index.year == year]
             month = df.index[0].strftime('%m')

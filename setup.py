@@ -8,12 +8,12 @@ if os.path.exists('requirements.txt'):
     with open('requirements.txt', 'r') as f:
         requirements = [i.split('=')[0] for i in f.readlines()]
 else:
-    with open(os.path.abspath('requirements.txt'), 'r') as f:
+    with open('/home/diego/Py_DSSATTools/requirements.txt', 'r') as f:
         requirements = [i.split('=')[0] for i in f.readlines()]
 
 setuptools.setup(
     name="DSSATTools",
-    version="2.0.0",
+    version="2.0.1",
     author="Diego Quintero",
     author_email="daquinterop@gmail.com",
     description="A DSSAT's Python implementation",
