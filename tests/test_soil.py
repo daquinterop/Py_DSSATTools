@@ -46,7 +46,7 @@ class TestSoilProfile:
             pass
     def test_initialize_file(self):
         soilprofile = soil.SoilProfile(
-            file='/home/diego/dssat-csm-data/Soil/SOIL.SOL',
+            file='C:/Users/daqui/dssat-csm-data/Soil/SOIL.SOL',
             profile='IBBN910030'
         )
         assert np.isclose(soilprofile.layers[65].SLLL, 0.185, .05)
@@ -75,17 +75,17 @@ class TestSoilProfile:
     def test_write_from_file(self):
         self.remove_outs()
         soilprofile = soil.SoilProfile(
-            file='/home/diego/dssat-csm-data/Soil/SOIL.SOL',
+            file='C:/Users/daqui/dssat-csm-data/Soil/SOIL.SOL',
             profile='IBBN910030'
         )
-        soilprofile.write('/tmp/soil.SOL')
-        assert os.path.exists('/tmp/soil.SOL')
+        soilprofile.write('C:/Users/daqui/soil.SOL')
+        assert os.path.exists('C:/Users/daqui/soil.SOL')
 
     def test_write_from_custom(self):
         self.remove_outs()
         soilprofile = soil.SoilProfile(default_class='LS')
-        soilprofile.write('/tmp/soil.SOL')
-        assert os.path.exists('/tmp/soil.SOL')
+        soilprofile.write('C:/Users/daqui/soil.SOL')
+        assert os.path.exists('C:/Users/daqui/soil.SOL')
 
     def test_write_from_scratch(self):
         self.remove_outs()
@@ -103,8 +103,8 @@ class TestSoilProfile:
             soil.SoilLayer(180, {'SLCL': 20, 'SLSI': 30})
         ]
         for layer in layers: soilprofile.add_layer(layer)
-        soilprofile.write('/tmp/soil.SOL')
-        assert os.path.exists('/tmp/soil.SOL')
+        soilprofile.write('C:/Users/daqui/soil.SOL')
+        assert os.path.exists('C:/Users/daqui/soil.SOL')
 
     def test_no_layers(self):
         soilprofile = soil.SoilProfile(
@@ -145,6 +145,6 @@ class TestSoilProfile:
     def test_wrong_profile_id(self):
         with pytest.raises(AssertionError):
             soilprofile = soil.SoilProfile(
-                file='/home/diego/dssat-csm-data/Soil/SOIL.SOL',
+                file='C:/Users/daqui/dssat-csm-data/Soil/SOIL.SOL',
                 profile='sisisperro'
             )

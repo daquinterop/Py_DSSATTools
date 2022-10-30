@@ -63,6 +63,7 @@ import string
 import pandas as pd
 import sys
 import warnings
+import platform
 
 # Libraries for second version
 from DSSATTools import __file__ as DSSATModulePath
@@ -100,11 +101,15 @@ class DSSAT():
     def __init__(self):
         BASE_PATH = os.path.dirname(DSSATModulePath)
         self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
-        self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
+        if 'windows'in platform.system().lower():
+            self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048.exe')
+            self._CONFILE = 'DSSATPRO.V48'
+        else: 
+            self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
+            self._CONFILE = 'DSSATPRO.L48'
         self._STD_PATH = os.path.join(self._STATIC_PATH, 'StandardData')
         self._CRD_PATH = os.path.join(self._STATIC_PATH, 'Genotype')
         self._SLD_PATH = os.path.join(self._STATIC_PATH, 'Soil')
-
         self._SETUP = False
         self._input = {
             'crop': None, 'wheater': None, 'soil': None, 'management': None 
@@ -160,7 +165,10 @@ class DSSAT():
         shutil.copytree(self._STATIC_PATH, os.path.join(self._RUN_PATH, 'static'))
         sys.stdout.write(f'Static files copied to {self._RUN_PATH}.\n')
         self._STATIC_PATH = os.path.join(self._RUN_PATH, 'static')
-        self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
+        if 'windows'in platform.system().lower():
+            self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048.exe')
+        else: 
+            self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
         self._STD_PATH = os.path.join(self._STATIC_PATH, 'StandardData')
         self._CRD_PATH = os.path.join(self._STATIC_PATH, 'Genotype')
         self._SLD_PATH = os.path.join(self._STATIC_PATH, 'Soil')
@@ -245,7 +253,7 @@ class DSSAT():
 
         
 
-        with open(os.path.join(self._RUN_PATH, 'DSSATPRO.L48'), 'w') as f:
+        with open(os.path.join(self._RUN_PATH, self._CONFILE), 'w') as f:
             f.write(f'WED    {wth_path}\n')
             f.write(f'M{crop.CODE}    {self._RUN_PATH} dscsm048 {crop.SMODEL}{VERSION}\n')
             f.write(f'CRD    {self._CRD_PATH}\n')
@@ -253,8 +261,8 @@ class DSSAT():
             f.write(f'SLD    {self._SLD_PATH}\n')
             f.write(f'STD    {self._STD_PATH}\n')
 
-        excinfo = subprocess.run(
-            [self._BIN_PATH, 'C', os.path.basename(management_filename), '1'], 
+        exc_args = [self._BIN_PATH, 'C', os.path.basename(management_filename), '1']
+        excinfo = subprocess.run(exc_args, 
             cwd=self._RUN_PATH, capture_output=True, text=True
         )
         for line in clean_comments(excinfo.stdout.split('\n')):
@@ -275,11 +283,20 @@ class DSSAT():
                     table_start += 1
                     if '@' in f.readline():
                         break
-                
-            df = pd.read_csv(
-                os.path.join(self._RUN_PATH, f'{file}.OUT'),
-                skiprows=table_start, sep=' ', skipinitialspace=True
-            )
+            try:  
+                df = pd.read_csv(
+                    os.path.join(self._RUN_PATH, f'{file}.OUT'),
+                    skiprows=table_start, sep=' ', skipinitialspace=True
+                )
+            except UnicodeDecodeError:
+                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r') as f:
+                    lines = f.readlines()
+                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'w') as f:
+                    f.writelines(lines[table_start:])
+                df = pd.read_csv(
+                    os.path.join(self._RUN_PATH, f'{file}.OUT'),
+                    skiprows=0, sep=' ', skipinitialspace=True
+                )
             if all(('@YEAR' in df.columns, 'DOY' in df.columns)):
                 df['DOY'] = df.DOY.astype(int).map(lambda x: f'{x:03d}')
                 df['@YEAR'] = df['@YEAR'].astype(str)

@@ -36,9 +36,9 @@ class Potato:
     This class reunites the species, cultivar and ecotype parts of the crop.
     '''
     def __init__(self, spe_file:str=None):
-        self.NAME = 'Soybean'
-        self.CODE = 'SB'
-        self.SMODEL = 'CRGRO'
+        self.NAME = 'Potato'
+        self.CODE = 'PT'
+        self.SMODEL = 'PTSUB'
         self.SPE_FILE = f'{self.SMODEL}{VERSION}.SPE'
         if not spe_file:
             spe_file = self.SPE_FILE
