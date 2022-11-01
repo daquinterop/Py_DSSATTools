@@ -90,9 +90,12 @@ CUL_VARNAME = {
     'SB': 'VAR-NAME........',
     'CN': 'VRNAME..........',
     'SU': 'VAR-NAME........',
-    'PT': 'VAR-NAME........'
+    'PT': 'VAR-NAME........',
+    'TM': 'VRNAME..........',
+    'CB': 'VRNAME..........'
 }
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
+ROOTS = ['Potato']
 
 class DSSAT():
     '''
@@ -231,9 +234,9 @@ class DSSAT():
         table = table.sort_values(by='ICBL').reset_index(drop=True)
         table['SNH4'] = [0.]*len(table)
         table['SNO3'] = [1.] + [0.]*(len(table)-1)
-        if crop.NAME.lower() == 'potato':
+        if crop.NAME in ROOTS:
             assert not any(pd.isna(management.planting_details['table'][['PLWT', 'SPRL']]).values[0]), \
-                "PLWT, SPRL transplanting parameters are mandatory for Potato crop, you must "\
+                f"PLWT, SPRL transplanting parameters are mandatory for {crop.NAME} crop, you must "\
                 "define those parameters in management.planting_details['table']"
         management.initial_conditions['table'] = table
 

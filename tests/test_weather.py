@@ -5,6 +5,11 @@ import pandas as pd
 import numpy as np
 import shutil
 import os
+import platform
+if 'windows' in platform.system().lower():
+    BASE_PATH = 'C:/Users/daqui/'
+else:
+    BASE_PATH='/home/diego'
 
 DATES = pd.date_range('2000-01-01', '2010-12-31')
 N = len(DATES)
@@ -52,7 +57,7 @@ class TestWeatherStation:
         assert all(wth.data == WTH_DATA)
     
     def test_write(self):
-        folder = 'C:/Users/daqui/Py_DSSATTools/wth_test'
+        folder = os.path.join(BASE_PATH, 'Py_DSSATTools', 'wth_test')
         if os.path.exists(folder): shutil.rmtree(folder)
         wth = WeatherStation(
             WTH_DATA, 
