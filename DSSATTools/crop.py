@@ -31,9 +31,11 @@ DSSATModulePath = os.path.dirname(DSSATModulePath)
 # 1. Create a new Class for the crop within the model's submodule in models module.
 # 2. Add the new model to the CROPS_MODULES and SPE_FILES mapping dict just below.
 # 3. Add the VARNAME item for the crop in the CUL_VARNAME dict in run.py
+#   3.1. If forage or root, add to the PERENIAL_FORAGES and ROOTS constants
 # 4. Add the fortran format strings in the sections module
 # 5. Create a test in test_run.py
 # 6. Run the test and fix the bugs until it works (of course, including all of the previous test as well).
+# 7. Add crop to the crop.Crop docstirng and README
 CROPS_MODULES = {
     'Maize': CERES.Maize,
     'Millet': CERES.Millet,
@@ -46,7 +48,9 @@ CROPS_MODULES = {
     'Soybean': CROPGRO.Soybean,
     'Canola': CROPGRO.Canola,
     'Sunflower': CROPGRO.Sunflower,
-    'Potato': SUBSTOR.Potato
+    'Potato': SUBSTOR.Potato,
+    'Tomato': CROPGRO.Tomato,
+    'Cabbage': CROPGRO.Cabbage
 }
 SPE_FILES = {
     'Maize': f'MZCER{VERSION}.SPE',
@@ -60,7 +64,9 @@ SPE_FILES = {
     'Soybean': f'SBGRO{VERSION}.SPE',
     'Canola': f'CNGRO{VERSION}.SPE',
     'Sunflower': f'SUGRO{VERSION}.SPE',
-    'Potato': f'PTSUB{VERSION}.SPE'
+    'Potato': f'PTSUB{VERSION}.SPE',
+    'Tomato': f'TMGRO{VERSION}.SPE',
+    'Cabbage': f'CBGRO{VERSION}.SPE'
 }
 BASE_CROPS = [model for model in CROPS_MODULES.values()]
 
@@ -72,8 +78,7 @@ class Crop(*BASE_CROPS):
         Arguments
         ----------
         crop: str
-            Crop name, available at the moment: Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn, Alfalfa, Bermudagrass
-                - TODO: Implement more crops
+            Crop name, available at the moment: Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn, Alfalfa, Bermudagrass, Soybean, Canola, Sunflower, Potato, Tomato, Cabbage.
         spe_file: str
             Optional. Path to the species file to initialize the instance.
         '''

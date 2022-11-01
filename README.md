@@ -32,6 +32,8 @@ All of the parameters and attributes of the four basic clases have the same name
 | Soybean      | CROPGRO             |
 | Canola       | CROPGRO             |
 | Sunflower    | CROPGRO             |
+| Tomato       | CROPGRO             |
+| Cabbage      | CROPGRO             |
 | Potato       | SUBSTOR             |
 
 More crops and models will be added later.

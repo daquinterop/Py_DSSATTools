@@ -3,6 +3,12 @@ import pytest
 from DSSATTools import soil
 import numpy as np
 import os
+import platform
+
+if 'windows' in platform.system().lower():
+    BASE_PATH = 'C:/Users/daqui/'
+else:
+    BASE_PATH='/home/diego'
 
 class TestSoilLayer:
     def test_no_texture_no_hydpars(self):
@@ -46,7 +52,7 @@ class TestSoilProfile:
             pass
     def test_initialize_file(self):
         soilprofile = soil.SoilProfile(
-            file='C:/Users/daqui/dssat-csm-data/Soil/SOIL.SOL',
+            file=os.path.join(BASE_PATH, 'dssat-csm-data', 'Soil', 'SOIL.SOL'),
             profile='IBBN910030'
         )
         assert np.isclose(soilprofile.layers[65].SLLL, 0.185, .05)
@@ -75,17 +81,17 @@ class TestSoilProfile:
     def test_write_from_file(self):
         self.remove_outs()
         soilprofile = soil.SoilProfile(
-            file='C:/Users/daqui/dssat-csm-data/Soil/SOIL.SOL',
+            file=os.path.join(BASE_PATH, 'dssat-csm-data', 'Soil', 'SOIL.SOL'),
             profile='IBBN910030'
         )
-        soilprofile.write('C:/Users/daqui/soil.SOL')
-        assert os.path.exists('C:/Users/daqui/soil.SOL')
+        soilprofile.write(os.path.join(BASE_PATH, 'dssat-csm-data', 'soil.SOL'))
+        assert os.path.exists(os.path.join(BASE_PATH, 'dssat-csm-data', 'soil.SOL'))
 
     def test_write_from_custom(self):
         self.remove_outs()
         soilprofile = soil.SoilProfile(default_class='LS')
-        soilprofile.write('C:/Users/daqui/soil.SOL')
-        assert os.path.exists('C:/Users/daqui/soil.SOL')
+        soilprofile.write(os.path.join(BASE_PATH, 'dssat-csm-data', 'Soil', 'sosol.SOL'))
+        assert os.path.exists(os.path.join(BASE_PATH, 'dssat-csm-data', 'Soil', 'sosol.SOL'))
 
     def test_write_from_scratch(self):
         self.remove_outs()
@@ -103,8 +109,8 @@ class TestSoilProfile:
             soil.SoilLayer(180, {'SLCL': 20, 'SLSI': 30})
         ]
         for layer in layers: soilprofile.add_layer(layer)
-        soilprofile.write('C:/Users/daqui/soil.SOL')
-        assert os.path.exists('C:/Users/daqui/soil.SOL')
+        soilprofile.write(os.path.join(BASE_PATH, 'dssat-csm-data', 'Soil', 'sosol.SOL'))
+        assert os.path.exists(os.path.join(BASE_PATH, 'dssat-csm-data', 'Soil', 'sosol.SOL'))
 
     def test_no_layers(self):
         soilprofile = soil.SoilProfile(
@@ -145,6 +151,6 @@ class TestSoilProfile:
     def test_wrong_profile_id(self):
         with pytest.raises(AssertionError):
             soilprofile = soil.SoilProfile(
-                file='C:/Users/daqui/dssat-csm-data/Soil/SOIL.SOL',
+                file=os.path.join(BASE_PATH, 'dssat-csm-data', 'Soil', 'SOIL.SOL'),
                 profile='sisisperro'
             )

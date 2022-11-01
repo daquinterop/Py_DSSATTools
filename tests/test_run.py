@@ -251,6 +251,31 @@ def test_run_potato_no_transplanting():
         )
         assert 'transplanting parameters are mandatory' in str(excinfo.value)
 
+def test_run_tomato():
+    crop = Crop('tomato')
+    man = Management(
+        cultivar='TM0001',
+        planting_date=DATES[10],
+    )
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+
+def test_run_cabbage():
+    crop = Crop('cabbage')
+    man = Management(
+        cultivar='990001',
+        planting_date=DATES[10],
+    )
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(tempfile.tempdir, 'test_mz'))
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
 
 if __name__ == '__main__':
     test_run_alfalfa()
