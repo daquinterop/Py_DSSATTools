@@ -34,8 +34,9 @@ from DSSATTools.soil import SoilProfile, SoilLayer
 from DSSATTools.weather import WeatherStation, WeatherData
 from DSSATTools.management import Management
 from DSSATTools.run import DSSAT
+from DSSATTools.base.sections import TabularSubsection
 
 __all__ = [
     'Crop', 'SoilProfile', 'SoilLayer', 'WeatherStation', 'WeatherData',
-    'Management', 'DSSAT'
+    'Management', 'DSSAT', 'TabularSubsection'
     ] 
