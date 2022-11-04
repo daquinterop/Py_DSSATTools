@@ -64,6 +64,7 @@ import pandas as pd
 import sys
 import warnings
 import platform
+import errno, stat
 
 # Libraries for second version
 from DSSATTools import __file__ as DSSATModulePath
@@ -75,7 +76,7 @@ from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection, RowBasedSection
 from DSSATTools.base.sections import clean_comments
 
-
+OS = platform.system().lower()
 OUTPUTS = ['PlantGro', ]
 
 CUL_VARNAME = {
@@ -97,6 +98,20 @@ CUL_VARNAME = {
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
 
+# function to handle windows permisions
+if 'windows' in OS:
+    def handleRemoveReadonly(func, path, exc):
+        excvalue = exc[1]
+        if func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
+            os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO) # 0777
+            func(path)
+        else:
+            raise
+    WIN_SHUTIL_KWARGS = {'ignore_errors': False, 'onerror': handleRemoveReadonly}
+    CHMOD_MODE = stat.S_IWRITE
+else:
+    WIN_SHUTIL_KWARGS = {}
+    CHMOD_MODE = 111
 class DSSAT():
     '''
     Class that represents the simulation environment. When initializing and seting up the environment, a new folder is created (usually in the tmp folder), and all of the necesary files to run the model are copied into it.
@@ -104,7 +119,7 @@ class DSSAT():
     def __init__(self):
         BASE_PATH = os.path.dirname(DSSATModulePath)
         self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
-        if 'windows'in platform.system().lower():
+        if 'windows'in OS:
             self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048.exe')
             self._CONFILE = 'DSSATPRO.V48'
         else: 
@@ -154,7 +169,7 @@ class DSSAT():
             )
             os.chmod(
                 os.path.join(self._RUN_PATH, os.path.basename(self._BIN_PATH)),
-                mode=111
+                mode=CHMOD_MODE
             )
         for file in os.listdir(self._STATIC_PATH):
             if file.endswith('.CDE'):
@@ -168,7 +183,7 @@ class DSSAT():
         shutil.copytree(self._STATIC_PATH, os.path.join(self._RUN_PATH, 'static'))
         sys.stdout.write(f'Static files copied to {self._RUN_PATH}.\n')
         self._STATIC_PATH = os.path.join(self._RUN_PATH, 'static')
-        if 'windows'in platform.system().lower():
+        if 'windows'in OS:
             self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048.exe')
         else: 
             self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
@@ -318,7 +333,7 @@ class DSSAT():
         '''
         Removes the simulation environment (tmp folder and files).
         '''
-        shutil.rmtree(self._RUN_PATH)
+        shutil.rmtree(self._RUN_PATH, **WIN_SHUTIL_KWARGS)
         sys.stdout.write(f'{self._RUN_PATH} and its content has been removed.\n')
     
 

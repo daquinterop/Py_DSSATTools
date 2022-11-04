@@ -3,7 +3,6 @@
 '''
 from re import S
 import fortranformat as ff
-import magic #To handle possible encoding compatibility issues
 from pandas import NA, isna, DataFrame
 
 NA_VALS = (None, '-99', -99, -999999)
