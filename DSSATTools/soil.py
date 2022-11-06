@@ -227,13 +227,12 @@ def color_to_oc(color=None, L=None, a=None, b=None):
     Estimate Organic Carbon from Color as described in Vodyanidskii and Savichev (2017).https://doi.org/10.1016/j.aasci.2017.05.023 
     
     Color definitions and their CIE-L*a*b* equivalents were obtained from Munsell tables. Color argument's possible values are:
-
-        BLK: Black (10YR 2/1)
-        YBR: Yellowish Brown (7.5YR 5/6)
-        RBR: Redish Brown (10R 4/8)
-        DBR: Dark Brown (2.5YR 3/4) 
-        GRE: Grey (10YR 6/1)
-        YLW: Yellow (10YR 7/8)
+        BLK: Black (10YR 2/1); 
+        YBR: Yellowish Brown (7.5YR 5/6); 
+        RBR: Redish Brown (10R 4/8); 
+        DBR: Dark Brown (2.5YR 3/4); 
+        GRE: Grey (10YR 6/1); 
+        YLW: Yellow (10YR 7/8); 
 
     L, a and b values can be pased directly too.
     '''
@@ -253,11 +252,11 @@ class SoilLayer(Series):
     pars: dict
         Dict including the parameter values to initialize the instance. Layer parameters include: 'SLMH',  'SLLL',  'SDUL',  'SSAT',  'SRGF',  'SSKS',  'SBDM',  'SLOC', 'SLCL',  'SLSI',  'SLCF',  'SLNI',  'SLHW',  'SLHB',  'SCEC',  'SADC', 'SLPX',  'SLPT',  'SLPO', 'CACO3',  'SLAL',  'SLFE',  'SLMN',  'SLBS', 'SLPA',  'SLPB',  'SLKE',  'SLMG',  'SLNA',  'SLSU',  'SLEC',  'SLCA'.Only mandatory parameters are 'SLCL' and 'SLSI'. The rest of the basic parameters can be calculated from the texture. SCOM is optional, and it can be passed as an string referencing the color, or a tupple with CIELAB coordinates (L, a, b). The string can be one of these:
 
-            BLK: Black (10YR 2/1)
-            YBR: Yellowish Brown (7.5YR 5/6)
-            RBR: Redish Brown (10R 4/8)
-            DBR: Dark Brown (2.5YR 3/4) 
-            GRE: Grey (10YR 6/1)
+            BLK: Black (10YR 2/1); 
+            YBR: Yellowish Brown (7.5YR 5/6); 
+            RBR: Redish Brown (10R 4/8); 
+            DBR: Dark Brown (2.5YR 3/4); 
+            GRE: Grey (10YR 6/1); 
             YLW: Yellow (10YR 7/8)
     '''
     def __init__(self, base_depth:int, pars:dict):
@@ -348,22 +347,7 @@ class SoilProfile():
     pars: dict
         Dict with the non-layer soil parameters. 
     default_class: str
-        Optional. It's a string defining a DSSAT default soil class. If not None, then the SoilClass instance is initialized with the paremeters of the specified default_class. default_class must match any of the next codes:
-
-            ..Soil texture  | Code
-            Sand            |  S 
-            Loamy Sand      |  LS  
-            Sandy Loam      |  SL 
-            Loam            |  L 
-            Silty Loam      |  SIL 
-            Silt            |  SI 
-            Sandy Clay Loam |  SCL 
-            Clay Loam       |  CL 
-            Silty Clay Loam |  SICL 
-            Sandy Clay      |  SC 
-            Silty Clay      |  SIC 
-            Clay            |  C
-
+        Optional. It's a string defining a DSSAT default soil class. If not None, then the SoilClass instance is initialized with the paremeters of the specified default_class. default_class must match any of the next codes: Sand=S; Loamy Sand=LS; Sandy Loam=SL; Loam=L; Silty Loam=SIL; Silt=SI; Sandy Clay Loam=SCL; Clay Loam=CL; Silty Clay Loam=SICL; Sandy Clay=SC; Silty Clay=SIC; Clay=C.
     
     '''
     def __init__(

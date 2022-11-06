@@ -352,6 +352,16 @@ class TabularSubsection(DataFrame):
      1    15  .189     0     1
      1    20  .189     0    .5
      1    50  .228     0     0
+    
+    So, the previous table would be created as a `TabularSubsection` like this:
+
+    >>> init_conditions = TabularSubsection([
+        (15, .189, 0, 1),
+        (20, .189, 0, .5),
+        (50, .228, 0, 0)
+    ], columns=['ICBL', 'SH2O', 'SNH4', 'SNO3'])
+
+    Note that the id column (@C) is not included.
     '''
     def __init__(self, *args):
         super().__init__(args[0])

@@ -5,7 +5,7 @@ Basic crop class. It initializes a crop instances based on the crop name and cro
 
 Please, take into account that if you initialize the instance with a custom Species file the three files (.SPE, .ECO, .CUL) must be in the same directory as the passed Species file.
 
-The only method implemented is `set_parameter`, that of course is used to set the value of any crop parameter. `Crop` class inherits from the `BaseCrop` class of the specified crop. `BaseCrop` is composed by sections, each of the included in the Species file, and one section for Cultivar and Ecotype respectively.
+The only method implemented is `set_parameter`, that of course is used to set the value of any crop parameter. `Crop` class inherits from the `BaseCrop` class of the specified crop. The `BaseCrop` class has only two sections (attributes): cultivar and ecotype. Those sections are defined as a dict with a `{cultivar_code1: {parameter1: value, parameter2: value, ...}, cultivar_code2: ..., ...}` structure. 
 
 The usage of the Crop class is explaied by this example. In here we initialize a Crop instance, modify a parameter and write the cropfile (All of them).
 
@@ -15,6 +15,8 @@ The usage of the Crop class is explaied by this example. In here we initialize a
             par_value = 30.,
             row_loc = 'IB0002'
         )
+    >>> # the next line does the same:
+    >>> crop.ecotype['IB0002']['TBASE'] = 30.0
     >>> crop.write('crop_test')
 '''
 import os

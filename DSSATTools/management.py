@@ -1,16 +1,29 @@
 '''
 `Management` class includes all the information related to management. There are multiple arguments to initialize a `Management` instance, however, the only mandatory arguments are cultivar (cultivar id, of course it has to be included in the cultivars list of the `Crop` object you'll be passing to `DSSAT.run`) and planting_date. Simulation start is calculated as the day before the planting  date, emergence_date is assumed to 5 days after planting, and the initial soil water content is assumed to be 50% of the total available water (PWP + 0.5(FC-PWP)).
 
-`Management` class has one attribute per management section. Up to date not all of the sections have been implemented and the next sections are available: fields, cultivars, initial conditions, planting details, irrigation, fertilizers, harvest details, simulation controls, automatic management. All of the sections have `dict` object as base, so you can modify the parameters by just reassigning the value as you would do it on a `dict`. Some of the sections are defined as tables, so you can modify the values of those tabular sections the same as you would modify a `pandas.Dataframe`.
+`Management` class has one attribute per management section. Up to date not all of the sections have been implemented and the next sections are available: fields, cultivars, initial conditions, planting details, irrigation, fertilizers, harvest details, simulation controls, automatic management. All of the sections have `dict` object as base, so you can modify the parameters by just reassigning the value as you would do it on a `dict`. Some of the sections have a tabular subsection (`TabularSubsection`) that can modify the same as you would modify a `pandas.Dataframe`.
 
-In the next example a `Management` object is created, and two of its sections are modified. 
+`TabularSubsection` class is intended to represent tabular information like irrigation schedules, planting and harvest schedules or Initial condition through the different soil's layers. The `TabularSubsection` can be initialized the same way a pandas.DataFrame. It's important to mention that the columns must have the same names as the DSSAT variables the are representing (See example).
 
-    >>> man = Management(
+In the next example a `Management` object is created, and three of its sections are modified. 
+
+    >>> man = Management( # Initialize instance
             cultivar='IB0001',
             planting_date=datetime(2020, 1, 1),
         )
+    >>> # Modify the harvest parameters
     >>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = [datetime(2020, 7, 1).strftime('%y%j'), 100]
-    >>> man.simulation_controls['IRRIG'] = 'A'
+    >>> man.simulation_controls['IRRIG'] = 'R' # Set irrigation as reported schedule.
+    >>> # Create a irrigation schedule as a pandas.DataFrame
+    >>> schedule = pd.DataFrame([
+            (datetime(2000,1,15), 80),
+            (datetime(2000,1,30), 60),
+            (datetime(2000,2,15), 40),
+            (datetime(2000,3,1),  20)
+        ], columns = ['date', 'IRVAL'])
+    >>> schedule['IDATE'] = schedule.date.dt.strftime('%y%j')
+    >>> schedule['IROP'] = 'IR001' # Code to define the irrigation operation
+    >>> man.irrigation['table'] = TabularSubsection(schedule[['IDATE', 'IROP', 'IRVAL']])
 '''
 from DSSATTools.base.sections import (
     RowBasedSection, ColumnBasedSection, TabularSubsection
