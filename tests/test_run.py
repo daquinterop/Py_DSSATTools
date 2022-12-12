@@ -290,6 +290,7 @@ def test_close():
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
+    assert os.path.exists(os.path.join(TMP, 'test_mz'))
     dssat.close()
     assert not os.path.exists(os.path.join(TMP, 'test_mz'))
 

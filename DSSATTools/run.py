@@ -99,14 +99,11 @@ PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
 
 # function to handle windows permisions
+def handleRemoveReadonly(func, path, excinfo):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 if 'windows' in OS:
-    def handleRemoveReadonly(func, path, exc):
-        excvalue = exc[1]
-        if func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
-            os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO) # 0777
-            func(path)
-        else:
-            raise
     WIN_SHUTIL_KWARGS = {'ignore_errors': False, 'onerror': handleRemoveReadonly}
     CHMOD_MODE = stat.S_IWRITE
 else:
