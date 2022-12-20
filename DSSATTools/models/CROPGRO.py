@@ -39,7 +39,7 @@ class Soybean:
         self.NAME = 'Soybean'
         self.CODE = 'SB'
         self.SMODEL = 'CRGRO'
-        self.SPE_FILE = f'{self.SMODEL}{VERSION}.SPE'
+        self.SPE_FILE = f'{self.CODE}{self.SMODEL[2:]}{VERSION}.SPE'
         if not spe_file:
             spe_file = self.SPE_FILE
         self.species = Species(spe_file)
@@ -70,7 +70,7 @@ class Canola:
         self.NAME = 'Canola'
         self.CODE = 'CN'
         self.SMODEL = 'CRGRO'
-        self.SPE_FILE = f'{self.SMODEL}{VERSION}.SPE'
+        self.SPE_FILE = f'{self.CODE}{self.SMODEL[2:]}{VERSION}.SPE'
         if not spe_file:
             spe_file = self.SPE_FILE
         self.species = Species(spe_file)
@@ -101,7 +101,7 @@ class Sunflower:
         self.NAME = 'Sunflower'
         self.CODE = 'SU'
         self.SMODEL = 'CRGRO'
-        self.SPE_FILE = f'{self.SMODEL}{VERSION}.SPE'
+        self.SPE_FILE = f'{self.CODE}{self.SMODEL[2:]}{VERSION}.SPE'
         if not spe_file:
             spe_file = self.SPE_FILE
         self.species = Species(spe_file)
@@ -132,7 +132,7 @@ class Tomato:
         self.NAME = 'Tomato'
         self.CODE = 'TM'
         self.SMODEL = 'CRGRO'
-        self.SPE_FILE = f'{self.SMODEL}{VERSION}.SPE'
+        self.SPE_FILE = f'{self.CODE}{self.SMODEL[2:]}{VERSION}.SPE'
         if not spe_file:
             spe_file = self.SPE_FILE
         self.species = Species(spe_file)
@@ -163,7 +163,7 @@ class Cabbage:
         self.NAME = 'Cabbage'
         self.CODE = 'CB'
         self.SMODEL = 'CRGRO'
-        self.SPE_FILE = f'{self.SMODEL}{VERSION}.SPE'
+        self.SPE_FILE = f'{self.CODE}{self.SMODEL[2:]}{VERSION}.SPE'
         if not spe_file:
             spe_file = self.SPE_FILE
         self.species = Species(spe_file)

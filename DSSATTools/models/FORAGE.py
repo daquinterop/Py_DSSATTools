@@ -39,7 +39,7 @@ class Alfalfa:
         self.NAME = 'Alfalfa'
         self.CODE = 'AL'
         self.SMODEL = 'PRFRM'
-        self.SPE_FILE = f'{self.SMODEL}{VERSION}.SPE'
+        self.SPE_FILE = f'{self.CODE}{self.SMODEL[2:]}{VERSION}.SPE'
         if not spe_file:
             spe_file = self.SPE_FILE
         self.species = Species(spe_file)
@@ -70,7 +70,7 @@ class Bermudagrass:
         self.NAME = 'Bermudagrass'
         self.CODE = 'BM'
         self.SMODEL = 'PRFRM'
-        self.SPE_FILE = f'{self.SMODEL}{VERSION}.SPE'
+        self.SPE_FILE = f'{self.CODE}{self.SMODEL[2:]}{VERSION}.SPE'
         if not spe_file:
             spe_file = self.SPE_FILE
         self.species = Species(spe_file)

@@ -215,10 +215,12 @@ class DSSAT():
         assert self._SETUP, 'You must initialize the simulation environment by'\
             + ' running the setup() method'
 
-        # Remove previous outputs
+        # Remove previous outputs and inputs
         OUTPUT_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] == 'OUT']
-        for file in OUTPUT_FILES:
+        INP_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] in ['INP', 'INH']]
+        for file in (OUTPUT_FILES + INP_FILES):
             os.remove(os.path.join(self._RUN_PATH, file))
+        
         # Fill Managament fields
         management.cultivars['CR'] = crop.CODE
         management.cultivars['CNAME'] = \
