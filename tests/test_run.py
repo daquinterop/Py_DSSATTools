@@ -294,5 +294,31 @@ def test_close():
     dssat.close()
     assert not os.path.exists(os.path.join(TMP, 'test_mz'))
 
+
+def test_issue_1():
+    # https://github.com/daquinterop/Py_DSSATTools/issues/1
+    crop = Crop('soybean')
+    man = Management(
+        cultivar='IB0011',
+        planting_date=DATES[10],
+        irrigation='A',
+        fertilization='A'
+    )
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
+    assert crop.cultivar['IB0011']['LFMAX'] == 1.020
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+    final_yield = int(dssat.output['PlantGro']['GWAD'].max())
+    crop.cultivar['IB0011']['LFMAX'] = 1.35
+    assert crop.cultivar['IB0011']['LFMAX'] == 1.35
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert dssat.output['PlantGro']['GWAD'].max() != final_yield
+    
+
 if __name__ == '__main__':
     test_run_alfalfa()
