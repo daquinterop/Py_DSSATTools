@@ -187,7 +187,8 @@ class WeatherStation():
             self.data = self.data.loc[self.data.index >= sim_start]
         for year in self.data.index.year.unique():
             df = self.data.loc[self.data.index.year == year]
-            month = df.index[0].strftime('%m')
+            # month = df.index[0].strftime('%m')
+            month = '01'
             filename = f'{self.INSI}{str(year)[2:]}{month}.WTH'
             outstr = f'*WEATHER DATA : {self.description}\n\n'
             outstr += '@ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT\n'

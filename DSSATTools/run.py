@@ -227,7 +227,7 @@ class DSSAT():
             crop.cultivar[management.cultivar][CUL_VARNAME[crop.CODE]]
 
         management.fields['WSTA....'] = weather.INSI \
-            + management.sim_start.strftime('%y%m')
+            + management.sim_start.strftime('%y01')
         management.fields['SLDP'] = soil.total_depth
         management.fields['ID_SOIL'] = soil.id
 
@@ -257,7 +257,7 @@ class DSSAT():
         management.simulation_controls['SMODEL'] = crop.SMODEL        
 
         management_filename = weather.INSI \
-            + management.sim_start.strftime('%y%m') \
+            + management.sim_start.strftime('%y01') \
             + f'.{crop.CODE}X'
         management_filename = os.path.join(self._RUN_PATH, management_filename) 
         management.write(filename=management_filename)
