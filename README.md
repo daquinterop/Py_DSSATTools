@@ -209,7 +209,7 @@ Dscsm instance there’s a directory where all the necesary files to run the mod
 are allocated. To run the model there are 3 basic steps:
 
 > 
-> 1. Create a new Dscsm instance.
+> 1. Create a new DSSAT instance.
 
 
 > 2. Initialize the environment by running the setup() method.
