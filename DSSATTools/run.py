@@ -93,7 +93,8 @@ CUL_VARNAME = {
     'SU': 'VAR-NAME........',
     'PT': 'VAR-NAME........',
     'TM': 'VRNAME..........',
-    'CB': 'VRNAME..........'
+    'CB': 'VRNAME..........',
+    'SC': 'VAR-NAME........'
 }
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
@@ -210,6 +211,8 @@ class DSSAT():
             Crop instance
         managment: DSSATTools.management.Management
             Management instance
+        options: DSSATTools.management.Options
+            To be implemented
         '''
         
         assert self._SETUP, 'You must initialize the simulation environment by'\

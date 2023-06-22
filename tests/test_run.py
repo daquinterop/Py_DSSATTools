@@ -279,6 +279,19 @@ def test_run_cabbage():
     )
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
 
+def test_run_sugarcane():
+    crop = Crop('Sugarcane')
+    man = Management(
+        cultivar='999991',
+        planting_date=DATES[10],
+    )
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(TMP, 'test_sc'))
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+
 def test_close():
     crop = Crop('cabbage')
     man = Management(

@@ -93,16 +93,20 @@ class Management:
             N        Not fertilized
             R        On reported dates
             D        Days after planting
-
+    organic_matter: str
+        Default 'G'. Fertilization management options. available options are:
+            G        Ceres (Godiwn)
+            P        Century (Parton)
     '''
 
     def __init__(
         self, cultivar:str, planting_date:datetime, sim_start:datetime=None,
         emergence_date:datetime=None, initial_swc:float=.5, irrigation='R',
-        fertilization='R', harvest='M'
+        fertilization='R', harvest='M', organic_matter='G'
         ):
         self.irrigaton_option = irrigation
         self.fertization_option = fertilization
+        self.organic_matter_option = organic_matter
         self.harvest_option = harvest
         self.cultivar = cultivar
         self.planting_date = planting_date
@@ -226,7 +230,7 @@ class Management:
                 'METHODS': 'ME', 
                 'WTHER': 'M', 'INCON': 'M', 'LIGHT': 'E', 'EVAPO': 'R', 
                 'INFIL': 'S', 'PHOTO': 'C', 'HYDRO': 'R', 'NSWIT': 1, 
-                'MESOM': 'G', 'MESEV': 'S', 'MESOL': 2, 
+                'MESOM': self.organic_matter_option, 'MESEV': 'S', 'MESOL': 2, 
 
                 'MANAGEMENT': 'MA', 
                 'PLANT': 'R', 'IRRIG': self.irrigaton_option, 
@@ -235,7 +239,7 @@ class Management:
                 
                 'OUTPUTS': 'OU',
                 'FNAME': 'N', 'OVVEW': 'Y', 'SUMRY': 'Y', 'FROPT': 1, 
-                'GROUT': 'Y', 'CAOUT': 'N', 'WAOUT': 'Y', 'NIOUT': 'N', 
+                'GROUT': 'Y', 'CAOUT': 'Y', 'WAOUT': 'Y', 'NIOUT': 'N', 
                 'MIOUT': 'N', 'DIOUT': 'N', 'VBOSE': 'Y', 'CHOUT': 'N', 
                 'OPOUT': 'N', 'FMOPT':'A',
             }
@@ -304,3 +308,33 @@ class Management:
         outstr = self.mow.write()
         with open(filename, 'w') as f:
             f.write(outstr)
+
+
+class Options():
+    '''
+    Initializes a Options instance.
+
+    Arguments
+    ----------
+    cultivar: str
+        Code of the cultivar. That code must match one of the codes in the Crop instance used when runing the model.
+    planting_date: datetime
+        Planting date.
+    sim_start: datetime
+        Date for start of the simulation. If None, it'll be calculated as the previous day to the planting date.
+    emergence_date: datetime
+        Emergence date. If None, I'll be calculated as 5 days after planting.
+    initial_swc: int
+        Fraction of the total available water (FC - PWP) at the start of the simulation. .5(50%) is the default value.
+    irrigation: str
+        Default 'R'. Irrigation management option, options available are:
+            A        Automatic when required
+            N        Not irrigated
+            F        Fixed amount automatic
+            R        On reported dates
+            D        Days after planting
+            P        As reported through last day, then automatic to re-fill (A)
+            W        As reported through last day, then automatic with fixed amount (F)
+    '''
+    def __init__():
+        return

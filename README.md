@@ -35,6 +35,7 @@ All of the parameters and attributes of the four basic clases have the same name
 | Tomato       | CROPGRO             |
 | Cabbage      | CROPGRO             |
 | Potato       | SUBSTOR             |
+| Sugarcane    | CANEGRO             |
 
 More crops and models will be added later.
 

@@ -22,7 +22,7 @@ The usage of the Crop class is explaied by this example. In here we initialize a
 import os
 
 from DSSATTools.models import (
-    CERES, FORAGE, CROPGRO, SUBSTOR
+    CERES, FORAGE, CROPGRO, SUBSTOR, CANEGRO
 )
 from DSSATTools import __file__ as DSSATModulePath
 from DSSATTools.base.sections import unpack_keys
@@ -30,7 +30,7 @@ from DSSATTools import VERSION
 
 DSSATModulePath = os.path.dirname(DSSATModulePath)
 # To add a new crop you have to do the next:
-# 1. Create a new Class for the crop within the model's submodule in models module.
+# 1. Create a new Class for the crop within the model's submodule in the models module.
 # 2. Add the new model to the CROPS_MODULES and SPE_FILES mapping dict just below.
 # 3. Add the VARNAME item for the crop in the CUL_VARNAME dict in run.py
 #   3.1. If forage or root, add to the PERENIAL_FORAGES and ROOTS constants
@@ -52,7 +52,8 @@ CROPS_MODULES = {
     'Sunflower': CROPGRO.Sunflower,
     'Potato': SUBSTOR.Potato,
     'Tomato': CROPGRO.Tomato,
-    'Cabbage': CROPGRO.Cabbage
+    'Cabbage': CROPGRO.Cabbage,
+    'Sugarcane': CANEGRO.Sugarcane
 }
 SPE_FILES = {
     'Maize': f'MZCER{VERSION}.SPE',
@@ -68,7 +69,8 @@ SPE_FILES = {
     'Sunflower': f'SUGRO{VERSION}.SPE',
     'Potato': f'PTSUB{VERSION}.SPE',
     'Tomato': f'TMGRO{VERSION}.SPE',
-    'Cabbage': f'CBGRO{VERSION}.SPE'
+    'Cabbage': f'CBGRO{VERSION}.SPE',
+    'Sugarcane': f'SCCAN{VERSION}.SPE'
 }
 BASE_CROPS = [model for model in CROPS_MODULES.values()]
 
