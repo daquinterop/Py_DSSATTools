@@ -4,6 +4,15 @@ You can install the library using Python pip.
 ```
 pip install DSSATTools
 ```
+## v2.1 Updates
+I'm thinking on implementing the next changes:
+- Everything will be based in the fact that each simulation will include only one treatment. That involves a single option for cultivars, irrigation, fertilizer, field, etc.
+- No new fields or parameters will be allowed in the sections. Same way, the columns of the `TabularSubsection` will be checked for consistency with the section they belong to.
+- Every line or set of defined parameters will be a section. All sections will have four attributes: name, description, and parameters.
+- A `__repr__` method will be implemented for all the important classes. 
+- **Crop changes:** cultivar will be selected when initilizing the crop instance; each crop instance will have a cultivar and ecotype parameters attribute.
+- **Management changes:** All the management options have to be clearly defined when initializing the `Management` instance; as each management parameter rep
+
 ## Documentation
 [https://py-dssattools.readthedocs.io/en/latest/index.html](https://py-dssattools.readthedocs.io/en/latest/index.html)
 ## Example Notebooks

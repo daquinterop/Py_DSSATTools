@@ -4,6 +4,7 @@
 from re import S
 import fortranformat as ff
 from pandas import NA, isna, DataFrame
+from collections import MutableMapping
 
 NA_VALS = (None, '-99', -99, -999999)
 
@@ -233,38 +234,48 @@ def ecotype_row_write(crop, fields, row_fmt):
     return writer.write(fields)
 
             
-class RowBasedSection(dict):
+class Section(MutableMapping):
     '''
-    Parameter's values are defined in columns, so each item corresponds to a row. The value of a parameter deppends on an ID, Example:
+    Each section contains the different parameters that define them. In DSSAT 
+    files each section heading starts with *, and each header line specifying 
+    variables start with @. This class storages the parameters of a section in
+    a dict-like object. So, the next definitions in the PLANTING DETAILS section: 
 
-    @ID PAR1 PAR2 PAR3
-    1      2    3   45
-    2      6    7   89
+    @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE 
+    1 82057   -99   7.2   7.2     S     R    61     0     7   -99   -99 
+
+    would be stored in a Section instance as a dict; something like:
+    {"PDATE": "82057", "EDATE": -99, "PROP": 7.2, ... , "PAGE": -99}
     '''
     def __init__(self, name:str, **kwargs):
         self.name = name
-        self.idcol = kwargs.get('idcol')
-        
+        self.description = None
+        self.__idcol = kwargs.get('idcol')
+        self.__crop = kwargs.get("crop_name")
+        code = kwargs.get("code")
+        file_lines = kwargs.get('file_lines', False)
+        self.__repr_str = f"{self.name.title()} section"
         # When file's lines are passed. Case of CUL and ECO files.
-        if self.__dict__.get('_file_lines', False):
+        if file_lines:
             init_dict = {}
-            if  self.name == 'cultivar':
-                self._HEADER_FMT = CULTIVAR_HEADER_FMT[self.crop]
+            if  'cultivar' in self.name:
+                self._HEADER_FMT = CULTIVAR_HEADER_FMT[self.__crop]
                 row_reader = ff.FortranRecordReader(
-                    CULTIVAR_ROWS_FMT[self.crop]
+                    CULTIVAR_ROWS_FMT[self.__crop]
                 )
                 self._row_writer = lambda x: ecotype_row_write(
-                    self.crop, x, CULTIVAR_ROWS_FMT
-                    )
-            else: 
-                self._HEADER_FMT = ECOTYPE_HEADER_FMT[self.crop]
+                    self.__crop, x, CULTIVAR_ROWS_FMT
+                )
+                self.__repr_str += f"\n  {self.__crop} crop"
+            else: # Ecotype
+                self._HEADER_FMT = ECOTYPE_HEADER_FMT[self.__crop]
                 row_reader = ff.FortranRecordReader(
-                    ECOTYPE_ROWS_FMT[self.crop]
+                    ECOTYPE_ROWS_FMT[self.__crop]
                 )
                 self._row_writer = lambda x: ecotype_row_write(
-                    self.crop, x, ECOTYPE_ROWS_FMT)
+                    self.__crop, x, ECOTYPE_ROWS_FMT)
 
-            for line in self._file_lines:
+            for n, line in enumerate(file_lines):
                 if line[0] == '*':
                     pass
                 elif line[0] == '@':
@@ -275,29 +286,62 @@ class RowBasedSection(dict):
                 elif len(line) < 2:
                     pass
                 else:
-                    for n, field in enumerate(row_reader.read(line)):
-                        if isinstance(field, str):
-                            field = field.strip()
-                        if n == 0:
-                            row_id = field
-                            init_dict[row_id] = {}
-                        else:
-                            init_dict[row_id][self.PAR_NAMES[n]] = field
-            kwargs['pars'] = init_dict
+                    pars_line = row_reader.read(line)
+                    if pars_line[0] == code:
+                        init_dict = dict(zip(self.PAR_NAMES, pars_line))
+                        break
+            # If walked trhough all lines of the file and the cultivar was not found
+            if n == len(file_lines):
+                UserWarning(
+                    f"{code} {self.name} not in file, default parameters will be used"
+                )
+                init_dict = dict(zip(self.PAR_NAMES, pars_line))
 
-        super().__init__(kwargs.get('pars'))
+            kwargs['pars'] = init_dict
+        self.__data = kwargs['pars']
+
         return
+
+    def __len__(self):
+        return len(self.__data)
+
+    def __iter__(self):
+        return iter(self.__data)
+
+    def __setitem__(self, k, v):
+        if k not in self.__data:
+            raise KeyError(k)
+        if "ECO#" in k: 
+            raise Exception(
+                "The ecotype code can't be changed. If any change is to be done in the ecotype modify the ecotype parameters directly"
+            )
+        self.__data[k] = v
+
+    def __delitem__(self, k):
+        raise NotImplementedError
+
+    def __getitem__(self, k):
+        return self.__data[k]
+
+    def __contains__(self, k):
+        return k in self.__data
+    
+    def __repr__(self):
+        out_str = self.__repr_str + "\n  Parameters:" 
+        for key, value in self.__data.items():
+            out_str += f"\n    {key}: {value}"
+        return out_str
+    
+    def parameters(self):
+        return self.__data
+        
 
     def write(self):
         if self.name in ['cultivar', 'ecotype']:
             outstr = ff.FortranRecordWriter(self._HEADER_FMT).write(
             self.PAR_NAMES) + '\n'
-            for row_id, fields in self.items():
-                row = [row_id]
-                for par in self.PAR_NAMES[1:]:
-                    row.append(fields[par])
-                outstr += self._row_writer(row) + '\n'
-
+            row = [self.__getitem__(par) for par in self.PAR_NAMES]
+            outstr += self._row_writer(row) + '\n'
             return outstr
 
         outstr = ''
@@ -315,7 +359,7 @@ class RowBasedSection(dict):
         for n, _ in enumerate(fmt_header):
             end_idx += (len(ff.FortranRecordReader(fmt_row[n]).read('')) - 1)
             outstr += ff.FortranRecordWriter(fmt_header[n]).write(
-                [self.idcol] + headers[start_idx:end_idx]
+                [self.__idcol] + headers[start_idx:end_idx]
             ) + '\n'
             outstr += rowbased_write(
                 [1] + fields[start_idx:end_idx], fmt_row[n]
@@ -325,7 +369,7 @@ class RowBasedSection(dict):
         if fmt_table_header:
             fmt_table_row = SECTIONS_ROW_FMT.get(f'{self.name}_table')
             outstr += ff.FortranRecordWriter(fmt_table_header).write(
-                [self.idcol] + list(self['table'].columns)
+                [self.__idcol] + list(self['table'].columns)
             ) + '\n'
             for _, row in self['table'].iterrows():
                 outstr += rowbased_write(
@@ -333,22 +377,11 @@ class RowBasedSection(dict):
                 ) + '\n'
         return outstr
 
-
-class ColumnBasedSection(dict):
-    '''
-    Parameter's values are defined in rows. A single parameter can be defined as an array, for example. In that case, each of the elements of the array is indexed.
-
-    !       TBASE TOP1  TOP2  TMAX
-      PRFTC  6.2  16.5  33.0  44.0     
-      RGFIL  5.5  16.0  27.0  35.0
-    '''
-    def __init__(name:str, **kwargs):
-
-        return
-
 class TabularSubsection(DataFrame):
     '''
-    Parameter's values is a series of values. For instance, irrigation schedule or initial conditions for different soil's layers. In that case, this object would be a part of a section. For instance, initial conditions:
+    Parameter's values is a series of values. For instance, irrigation schedule 
+    or initial conditions for different soil's layers. In that case, this object
+    would be a part of a section. For instance, initial conditions:
 
     @C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME
      1    MZ 99115   200     0     1     1   -99   -99   -99   -99   -99   -99 -99
@@ -369,27 +402,34 @@ class TabularSubsection(DataFrame):
     '''
     def __init__(self, *args):
         super().__init__(args[0])
+        # TODO: Include a Column check for the different tabular sections. 
         return
 
 
-class Cultivar(RowBasedSection):
-    '''
+# TODO: Take this to the Section definition
+def init_cultivar_section(spe_path, crop_name, cultivar_code):
+    cul_file = spe_path[:-3] + 'CUL'
+    with open(cul_file, 'r') as f:
+        file_lines = f.readlines()
+    file_lines = clean_comments(file_lines)
 
-    '''
-    def __init__(self, spe_file:str, crop:str):
-        self.crop = crop
-        cul_file = spe_file[:-3] + 'CUL'
-        with open(cul_file, 'r') as f:
-            self._file_lines = f.readlines()
-        self._file_lines = clean_comments(self._file_lines)
-        super().__init__(name='cultivar')
-        print()
+    return Section(
+        name="cultivar", file_lines=file_lines, crop_name=crop_name,
+        cultivar_code=cultivar_code
+        )
 
 
-class Ecotype(RowBasedSection):
+def init_ecotype_section(spe_path, crop_name, cultivar_code):
+    cul_file = spe_path[:-3] + 'ECO'
+    with open(cul_file, 'r') as f:
+        file_lines = f.readlines()
+    file_lines = clean_comments(file_lines)
+
+class Ecotype(Section):
     '''
     
     '''
+    # Check if ecotype is here
     def __init__(self, eco_file:str, crop:str):
         self.crop = crop
         eco_file = eco_file[:-3] + 'ECO'

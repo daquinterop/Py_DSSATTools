@@ -330,8 +330,32 @@ def test_issue_1():
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
-    assert dssat.output['PlantGro']['GWAD'].max() != final_yield
+    assert dssat.output['PlantGro']['GWAD'].max() != final_yield    
+
+
+def test_set_crop_parameter_and_run():
+        crop = Crop('maize')
+        assert crop.cultivar['IB0011']['PHINT'] == 38.9
+        crop.set_parameter(
+            par_name = 'PHINT',
+            par_value = 30.,
+            row_loc = 'IB0011'
+        )
+        assert crop.cultivar['IB0011']['PHINT'] == 30.
+
+        man = Management(
+            cultivar='IB0011',
+            planting_date=DATES[10],
+            irrigation='A',
+            fertilization='A'
+        )
+
+        dssat = DSSAT()
+        dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
+        dssat.run(
+            soil=soil, weather=wth, crop=crop, management=man,
+        )
     
 
 if __name__ == '__main__':
-    test_run_alfalfa()
+    test_set_crop_parameter_and_run()

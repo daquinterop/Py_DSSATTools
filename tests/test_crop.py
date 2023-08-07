@@ -21,15 +21,27 @@ class TestCrop:
         assert os.path.exists(os.path.join(filepath, 'MZCER048.ECO'))
         assert os.path.exists(os.path.join(filepath, 'MZCER048.CUL'))
 
-    def test_set_wrong_parameter(self):
-        crop = Crop('maIZe')
-        with pytest.raises(AssertionError) as excinfo:
-            crop.set_parameter(
-                par_name = 'TCACA',
-                par_value = 30.,
-                row_loc = 'IB0002'
-            )
-        assert 'not a valid parameter' in str(excinfo.value)
+    # def test_set_wrong_parameter(self):
+    #     crop = Crop('maIZe')
+    #     with pytest.raises(AssertionError) as excinfo:
+    #         crop.set_parameter(
+    #             par_name = 'TCACA',
+    #             par_value = 30.,
+    #             row_loc = 'IB0002'
+    #         )
+    #     assert 'not a valid parameter' in str(excinfo.value)
+
+    def test_define_only_name():
+        return 
+    
+    def test_define_new_cultivar():
+        return 
+    
+    def test_change_parameter_name():
+        return
+    
+    def test_crop_with_no_ecotype():
+        return
 
     def test_set_parameter(self):
         crop = Crop('maIZe')
@@ -42,3 +54,10 @@ class TestCrop:
         )
         assert crop.ecotype['IB0002']['TBASE'] == 30.
         crop.write(filepath)
+
+def debug_crop():
+    crop = Crop('maIZe')
+    crop.write()
+
+if __name__ == "__main__":
+    debug_crop()

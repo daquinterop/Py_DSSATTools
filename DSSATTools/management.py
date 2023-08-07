@@ -1,19 +1,39 @@
 '''
-`Management` class includes all the information related to management. There are multiple arguments to initialize a `Management` instance, however, the only mandatory arguments are cultivar (cultivar id, of course it has to be included in the cultivars list of the `Crop` object you'll be passing to `DSSAT.run`) and planting_date. Simulation start is calculated as the day before the planting  date, emergence_date is assumed to 5 days after planting, and the initial soil water content is assumed to be 50% of the total available water (PWP + 0.5(FC-PWP)).
+`Management` class includes all the information related to management. There are
+multiple arguments to initialize a `Management` instance, however, the only 
+mandatory arguments are cultivar (cultivar id, of course it has to be included 
+in the cultivars list of the `Crop` object you'll be passing to `DSSAT.run`) and
+planting_date. Simulation start is calculated as the day before the planting  
+date, emergence_date is assumed to 5 days after planting, and the initial soil 
+water content is assumed to be 50% of the total available water 
+(PWP + 0.5(FC-PWP)).
 
-`Management` class has one attribute per management section. Up to date not all of the sections have been implemented and the next sections are available: fields, cultivars, initial conditions, planting details, irrigation, fertilizers, harvest details, simulation controls, automatic management. All of the sections have `dict` object as base, so you can modify the parameters by just reassigning the value as you would do it on a `dict`. Some of the sections have a tabular subsection (`TabularSubsection`) that can modify the same as you would modify a `pandas.Dataframe`.
+`Management` class has one attribute per management section. Up to date not all
+of the sections have been implemented and the next sections are available: 
+fields, cultivars, initial conditions, planting details, irrigation, 
+fertilizers, harvest details, simulation controls, automatic management. All of
+the sections have `dict` object as base, so you can modify the parameters by
+just reassigning the value as you would do it on a `dict`. Some of the sections
+have a tabular subsection (`TabularSubsection`) that can modify the same as you
+would modify a `pandas.Dataframe`.
 
-`TabularSubsection` class is intended to represent tabular information like irrigation schedules, planting and harvest schedules or Initial condition through the different soil's layers. The `TabularSubsection` can be initialized the same way a pandas.DataFrame. It's important to mention that the columns must have the same names as the DSSAT variables the are representing (See example).
+`TabularSubsection` class is intended to represent tabular information like
+irrigation schedules, planting and harvest schedules or Initial condition
+through the different soil's layers. The `TabularSubsection` can be initialized
+the same way a pandas.DataFrame. It's important to mention that the columns must
+have the same names as the DSSAT variables the are representing (See example).
 
-In the next example a `Management` object is created, and three of its sections are modified. 
+In the next example a `Management` object is created, and three of its sections
+are modified. 
 
     >>> man = Management( # Initialize instance
             cultivar='IB0001',
             planting_date=datetime(2020, 1, 1),
         )
     >>> # Modify the harvest parameters
-    >>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = [datetime(2020, 7, 1).strftime('%y%j'), 100]
-    >>> man.simulation_controls['IRRIG'] = 'R' # Set irrigation as reported schedule.
+    >>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
+            [datetime(2020, 7, 1).strftime('%y%j'), 100]
+    >>> man.simulation_controls['IRRIG'] = 'R' 
     >>> # Create a irrigation schedule as a pandas.DataFrame
     >>> schedule = pd.DataFrame([
             (datetime(2000,1,15), 80),
@@ -23,10 +43,12 @@ In the next example a `Management` object is created, and three of its sections 
         ], columns = ['date', 'IRVAL'])
     >>> schedule['IDATE'] = schedule.date.dt.strftime('%y%j')
     >>> schedule['IROP'] = 'IR001' # Code to define the irrigation operation
-    >>> man.irrigation['table'] = TabularSubsection(schedule[['IDATE', 'IROP', 'IRVAL']])
+    >>> man.irrigation['table'] = TabularSubsection(
+            schedule[['IDATE', 'IROP', 'IRVAL']]
+        )
 '''
 from DSSATTools.base.sections import (
-    RowBasedSection, ColumnBasedSection, TabularSubsection
+    Section, TabularSubsection
 )
 from datetime import datetime, timedelta
 from os.path import basename
@@ -62,15 +84,18 @@ class Management:
     Arguments
     ----------
     cultivar: str
-        Code of the cultivar. That code must match one of the codes in the Crop instance used when runing the model.
+        Code of the cultivar. That code must match one of the codes in the Crop
+        instance used when runing the model.
     planting_date: datetime
         Planting date.
     sim_start: datetime
-        Date for start of the simulation. If None, it'll be calculated as the previous day to the planting date.
+        Date for start of the simulation. If None, it'll be calculated as the
+        previous day to the planting date.
     emergence_date: datetime
         Emergence date. If None, I'll be calculated as 5 days after planting.
     initial_swc: int
-        Fraction of the total available water (FC - PWP) at the start of the simulation. .5(50%) is the default value.
+        Fraction of the total available water (FC - PWP) at the start of the
+        simulation. .5(50%) is the default value.
     irrigation: str
         Default 'R'. Irrigation management option, options available are:
             A        Automatic when required
@@ -79,15 +104,14 @@ class Management:
             R        On reported dates
             D        Days after planting
             P        As reported through last day, then automatic to re-fill (A)
-            W        As reported through last day, then automatic with fixed amount (F)
-
+            W        As reported through last day, then automatic with fixed
+                     amount (F)
     harvest: str
         Default 'M'. Harvest management options. available options are:
             A        Automatic      
             M        At maturity
             R        On reported date(s)
             D        Days after planting
-
     fertilization: str
         Default 'R'. Fertilization management options. available options are:
             N        Not fertilized
@@ -100,10 +124,10 @@ class Management:
     '''
 
     def __init__(
-        self, cultivar:str, planting_date:datetime, sim_start:datetime=None,
-        emergence_date:datetime=None, initial_swc:float=.5, irrigation='R',
-        fertilization='R', harvest='M', organic_matter='G'
-        ):
+            self, cultivar:str, planting_date:datetime, 
+            sim_start:datetime=None, emergence_date:datetime=None, 
+            initial_swc:float=.5, irrigation='R',fertilization='R', 
+            harvest='M', organic_matter='G'):
         self.irrigaton_option = irrigation
         self.fertization_option = fertilization
         self.organic_matter_option = organic_matter
@@ -119,12 +143,12 @@ class Management:
             self.emergence_date = emergence_date
         else:
             self.emergence_date = self.planting_date + timedelta(days=5)
-        self.cultivars = RowBasedSection(
+        self.cultivars = Section(
             pars={'CR': TO_FILL, 'INGENO': self.cultivar, 'CNAME': TO_FILL},
             idcol='@C', # Fill from Crop instance
             name='cultivars',
         )
-        self.fields = RowBasedSection(
+        self.fields = Section(
             pars={
                 'ID_FIELD': 'DFTF0001', 'WSTA....': TO_FILL, 'FLSA': None, 
                 'FLOB': 0, 'FLDT': 'DR000', 'FLDD': 0, 'FLDS': 0,
@@ -137,10 +161,10 @@ class Management:
             idcol='@L',
             name='fields',
         )
-        # self.soil_analysis = RowBasedSection(
+        # self.soil_analysis = Section(
         #     # Tabular
         # )
-        self.initial_conditions = RowBasedSection(
+        self.initial_conditions = Section(
             name='initial conditions',
             idcol='@C',
             pars={ 
@@ -156,7 +180,7 @@ class Management:
                 })
             } # Fill from crp instance and set in 
         )
-        self.planting_details = RowBasedSection(
+        self.planting_details = Section(
             name='planting details',
             idcol='@P',
             pars={
@@ -170,7 +194,7 @@ class Management:
                 })
             }
         )
-        self.irrigation = RowBasedSection(
+        self.irrigation = Section(
             name='irrigation',
             idcol='@I',
             pars={
@@ -183,7 +207,7 @@ class Management:
                 })														
             }
         )
-        self.fertilizers = RowBasedSection(
+        self.fertilizers = Section(
             name='fertilizers',
             idcol='@F',
             pars={
@@ -196,13 +220,13 @@ class Management:
                 })
             }
         )
-        # self.tillage_and_rotations = RowBasedSection(
+        # self.tillage_and_rotations = Section(
         #     # Tabular
         # )
-        # self.environment_modifications = RowBasedSection(
+        # self.environment_modifications = Section(
         #     # Tabular
         # )
-        self.harvest_details = RowBasedSection(
+        self.harvest_details = Section(
             name='harvest details',
             idcol='@H',
             pars={
@@ -213,10 +237,10 @@ class Management:
                 })
             }
         )
-        self.simulation_controls = RowBasedSection(
+        self.simulation_controls = Section(
             name='simulation controls',
             idcol='@N',
-            pars={
+            pars={ # TODO: SMODEL has to be changed
                 'GENERAL': 'GE', 
                 'NYERS': 1, 'NREPS': 1, 'START': 'S', 
                 'SDATE': self.sim_start.strftime('%y%j'), 'RSEED': 2409, 
@@ -244,7 +268,7 @@ class Management:
                 'OPOUT': 'N', 'FMOPT':'A',
             }
         )
-        self.automatic_management = RowBasedSection(
+        self.automatic_management = Section(
             name='automatic management',
             idcol='@N',
             pars={
@@ -271,7 +295,7 @@ class Management:
             }
         )
         # Mowing schedule for Perennial Forages:
-        self.mow = RowBasedSection(
+        self.mow = Section(
             name='mow',
             idcol='@TRNO',
             pars={

@@ -67,13 +67,13 @@ import platform
 import errno, stat
 
 # Libraries for second version
-from DSSATTools import __file__ as DSSATModulePath
+from DSSATTools import __file__ as module_path
 from DSSATTools import VERSION
 from DSSATTools.soil import SoilProfile
 from DSSATTools.weather import WeatherStation
 from DSSATTools.crop import Crop
 from DSSATTools.management import Management
-from DSSATTools.base.sections import TabularSubsection, RowBasedSection
+from DSSATTools.base.sections import TabularSubsection
 from DSSATTools.base.sections import clean_comments
 
 OS = platform.system().lower()
@@ -115,7 +115,7 @@ class DSSAT():
     Class that represents the simulation environment. When initializing and seting up the environment, a new folder is created (usually in the tmp folder), and all of the necesary files to run the model are copied into it.
     '''
     def __init__(self):
-        BASE_PATH = os.path.dirname(DSSATModulePath)
+        BASE_PATH = os.path.dirname(module_path)
         self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
         if 'windows'in OS:
             self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048.exe')
@@ -225,16 +225,16 @@ class DSSAT():
             os.remove(os.path.join(self._RUN_PATH, file))
         
         # Fill Managament fields
-        management.cultivars['CR'] = crop.CODE
+        management.cultivars['CR'] = crop._CODE
         management.cultivars['CNAME'] = \
-            crop.cultivar[management.cultivar][CUL_VARNAME[crop.CODE]]
+            crop.cultivar[CUL_VARNAME[crop._CODE]]
 
         management.fields['WSTA....'] = weather.INSI \
             + management.sim_start.strftime('%y01')
         management.fields['SLDP'] = soil.total_depth
         management.fields['ID_SOIL'] = soil.id
 
-        management.initial_conditions['PCR'] = crop.CODE
+        management.initial_conditions['PCR'] = crop._CODE
         if not management.initial_conditions['ICDAT']:
             management.initial_conditions['ICDAT'] = \
                 management.sim_start.strftime('%y%j')
@@ -251,21 +251,21 @@ class DSSAT():
         table = table.sort_values(by='ICBL').reset_index(drop=True)
         table['SNH4'] = [0.]*len(table)
         table['SNO3'] = [1.] + [0.]*(len(table)-1)
-        if crop.NAME in ROOTS:
+        if crop.crop_name in ROOTS:
             assert not any(pd.isna(management.planting_details['table'][['PLWT', 'SPRL']]).values[0]), \
-                f"PLWT, SPRL transplanting parameters are mandatory for {crop.NAME} crop, you must "\
+                f"PLWT, SPRL transplanting parameters are mandatory for {crop.crop_name} crop, you must "\
                 "define those parameters in management.planting_details['table']"
         management.initial_conditions['table'] = table
 
-        management.simulation_controls['SMODEL'] = crop.SMODEL        
+        management.simulation_controls['SMODEL'] = crop._SMODEL        
 
         management_filename = weather.INSI \
             + management.sim_start.strftime('%y01') \
-            + f'.{crop.CODE}X'
+            + f'.{crop._CODE}X'
         management_filename = os.path.join(self._RUN_PATH, management_filename) 
         management.write(filename=management_filename)
 
-        if crop.NAME in PERENIAL_FORAGES:
+        if crop.crop_name in PERENIAL_FORAGES:
             if len(management.mow['table']) < 1:
                 warnings.warn('No mow was defined. Define it at the Management.mow attribute')
             management.write_mow(f'{management_filename[:-4]}.MOW')
@@ -279,7 +279,7 @@ class DSSAT():
 
         with open(os.path.join(self._RUN_PATH, self._CONFILE), 'w') as f:
             f.write(f'WED    {wth_path}\n')
-            f.write(f'M{crop.CODE}    {self._RUN_PATH} dscsm048 {crop.SMODEL}{VERSION}\n')
+            f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
             f.write(f'CRD    {self._CRD_PATH}\n')
             f.write(f'PSD    {os.path.join(self._STATIC_PATH, "Pest")}\n')
             f.write(f'SLD    {self._SLD_PATH}\n')
