@@ -1,10 +1,7 @@
-'''
-
-'''
-from re import S
 import fortranformat as ff
-from pandas import NA, isna, DataFrame
+from pandas import isna, DataFrame
 from collections import MutableMapping
+import warnings 
 
 NA_VALS = (None, '-99', -99, -999999)
 
@@ -79,20 +76,20 @@ ECOTYPE_ROWS_FMT = {
 SECTIONS_HEADER_FMT = {
     'treatments': 'A2,3(1X,A1),1X,A25,13(1X,A2)',
     'cultivars': 'A2,1X,A2,1X,A6,1X,A25',
-    'fields': [
+    'field': [
         'A2,1X,A8,1X,A8,6(1X,A5),1X,A4,1X,A5,1X,A8,1X,A9', 
         'A2,2(1X,A15),1X,A9,1X,A17,5(1X,A5)'
     ],
     'initial conditions': 'A2,12(1X,A5),1X,A6',
     'initial conditions_table': 'A2,4(1X,A5)',
-    'planting details': [],
-    'planting details_table': 'A2,14(1X,A5),1X,A29',
+    'planting details': 'A2,14(1X,A5),1X,A29',
+    # 'planting details_table': 'A2,14(1X,A5),1X,A29',
     'irrigation': 'A2,7(1X,A5),1X,A6',
     'irrigation_table': 'A2,3(1X,A5)',
     'fertilizers': [],
     'fertilizers_table': 'A2,10(1X,A5),1X,A6',
-    'harvest details': [],
-    'harvest details_table': 'A2,7(1X,A5)',
+    'harvest details': 'A2,7(1X,A5)',
+    # 'harvest details_table': 'A2,7(1X,A5)',
     'simulation controls':[
         'A2,1X,A7,4X,5(1X,A5),1X,A25,1X,A6',
         'A2,1X,A7,4X,9(1X,A5)',
@@ -113,20 +110,20 @@ SECTIONS_HEADER_FMT = {
 SECTIONS_ROW_FMT = {
     'treatments': '4(1X,I1),1X,A25,13(2X,I1)',
     'cultivars': '1X,I1,1X,A2,1X,A6,1X,A25',
-    'fields': [
+    'field': [
         '1X,I1,1X,A8,1X,A8,1X,A5,1X,I5,1X,A5,2(1X,I5),1X,A5,1X,A4,1X,I5,2X,A10,A36',
         '1X,I1,2(1X,A15),1X,I9,1X,I17,5(1X,A5)'
     ],
     'initial conditions': '1X,I1,1X,A5,1X,A5,2(1X,I5),2(1X,F5.2),6(1X,I5),1X,A6',
     'initial conditions_table': '1X,I1,1X,I5,1X,F5.2,2(1X,F5.1)',
-    'planting details': [],
-    'planting details_table': '1X,I1,2(1X,A5),2(1X,I5),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
+    'planting details': '1X,I1,2(1X,A5),2(1X,I5),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
+    # 'planting details_table': '1X,I1,2(1X,A5),2(1X,I5),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
     'irrigation': '1X,I1,4(1X,I5),2(1X,A5),1X,I5,1X,A6',
     'irrigation_table': '1X,I1,2(1X,A5),1X,I5',
     'fertilizers': [],
     'fertilizers_table': '1X,I1,3(1X,A5),6(1X,I5),1X,A5,1X,A6',
-    'harvest details': [],
-    'harvest details_table': '1X,I1,4(1X,A5),2(1X,I5),1X,A5',
+    'harvest details': '1X,I1,4(1X,A5),2(1X,I5),1X,A5',
+    # 'harvest details_table': '1X,I1,4(1X,A5),2(1X,I5),1X,A5',
     'simulation controls':[  
         '1X,I1,1X,A2,9X,2(1X,I5),2(1X,A5),1X,I5,1X,A25,1X,A6',
         '1X,I1,1X,A2,9X,9(1X,A5)',
@@ -291,8 +288,8 @@ class Section(MutableMapping):
                         init_dict = dict(zip(self.PAR_NAMES, pars_line))
                         break
             # If walked trhough all lines of the file and the cultivar was not found
-            if n == len(file_lines):
-                UserWarning(
+            if (n + 1) == len(file_lines):
+                warnings.warn(
                     f"{code} {self.name} not in file, default parameters will be used"
                 )
                 init_dict = dict(zip(self.PAR_NAMES, pars_line))

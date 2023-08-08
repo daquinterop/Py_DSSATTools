@@ -1,3 +1,5 @@
+# TODO: There are different ET methods, so this should be included here, I mean,
+# the minimum data requirement must deppend on the ET method.
 '''
 This module includes two basic classes to create a weather station. The `WeatherStation` class is the one that storages all the station info and the weather data. The `WeatherData` class inherits all the methods of a `pandas.DataFrame`, and it's the one that includes the weather data.
 
@@ -77,21 +79,39 @@ def list_weather_parameters():
     for key, value in PARS_DESC.items():
         if key in PARS_DATA:
             print(key + ': ' + value)
-        
 
-class WeatherData(DataFrame):
-    '''
-    Creates a WeatherData instance. That instance is the one that contains the records for the Weather Station.
 
-    Arguments
-    ----------
-    data: pd.Dataframe
-        A DataFrame containg the the weather data.
-    variables: dict
-        A dict to map the columns of the dataframe, to the DSSAT Weather variables. Use `list_weather_parameters` function to have a detailed description of the DSSAT weather variables.
-    '''
-    def __init__(self, data:DataFrame, variables:dict={}):
-        for key, value in variables.items():
+class Weather():
+    
+    def __init__(self, data:DataFrame, pars:dict, lat:float, lon:float, elev:float):
+        '''
+        Initialize a Weather instance. This instance contains the weather data, as 
+        well as the parameters that define the weather station that the data represents,
+        such as the latitude, longitude and elevation.
+
+        Arguments
+        ----------
+        data: DataFrame
+            pandas DataFrame with the weather data. The index of the dataframe must
+            be datetime. A simple quality control check is performed for these data. 
+        pars: dict
+            A dictionary mapping the data columns to the Weather variables required 
+            by DSSAT. Use `weather.list_weather_parameters` function to have a 
+            detailed description of the DSSAT weather variables.
+        lat, lon, elev: float
+            Latitude, longitude and elevation of the weather station
+        '''
+        self.description = "Weather station"
+        self.INSI = 'WSTA'
+        self.LAT = lat
+        self.LON = lon
+        self.ELEV = elev 
+        self.TAV = 17 
+        self.AMP = 10 
+        self.REFHT = 2
+        self.WNDHT = 10
+
+        for key, value in pars.items():
             assert value in PARS_DATA, \
                 f'{value} is not a valid variable name'
             if (value in PARS_DATA) and (key not in PARS_DATA):
@@ -101,72 +121,35 @@ class WeatherData(DataFrame):
         assert all(map(lambda x: x in data.columns, MANDATORY_DATA)), \
             f'Data must contain at least {", ".join(MANDATORY_DATA)} variables'
 
-        super().__init__(data)
-
         # A really quick QC check
-        TEMP_QC = all(self.TMIN <= self.TMAX)
+        TEMP_QC = all(data.TMIN <= data.TMAX)
         assert TEMP_QC, 'TMAX < TMIN at some point in the series'
         if 'RHUM' in data.columns:
-            RHUM_QC = all((self.RHUM >= 0) & (self.RHUM <= 100))
+            RHUM_QC = all((data.RHUM >= 0) & (data.RHUM <= 100))
             assert RHUM_QC, '0 <= RHUM <= 100 must be accomplished'
-        RAIN_QC = all(self.RAIN >= 0)
+        RAIN_QC = all(data.RAIN >= 0)
         assert RAIN_QC, '0 <= RAIN must be accomplished'
         if 'SRAD' in data.columns:
-            SRAD_QC = all(self.SRAD >= 0)
+            SRAD_QC = all(data.SRAD >= 0)
             assert SRAD_QC, '0 <= SRAD must be accomplished'
 
         # Check date column
         DATE_COL = False
-        for col in self.columns:
-            if pd.api.types.is_datetime64_any_dtype(self[col]):
+        for col in data.columns:
+            if pd.api.types.is_datetime64_any_dtype(data[col]):
                 DATE_COL = col
-        if pd.api.types.is_datetime64_any_dtype(self.index):
+        if pd.api.types.is_datetime64_any_dtype(data.index):
             DATE_COL = True
         assert DATE_COL, 'At least one of the data columns must be a date'
 
         if isinstance(DATE_COL, str):
-            self.set_index(DATE_COL, inplace=True)
-            
-        
-
-class WeatherStation():
-    '''
-    Initialize a Weather station instance.
-
-    Arguments
-    ----------
-    pars: dict
-        dict with the Weather station parameters. `list_station_parameters` provides a list with the parameters and their description. Only LAT, LON and ELEV parameters are mandatory.
-    description: str
-        An string with the description of the weather station
-    '''
-    def __init__(
-        self, wthdata:WeatherData, pars:dict,
-        description='Weather Station'):
-        self.description = description
-        self.INSI = 'SERV'
-        self.LAT = NA
-        self.LON = NA
-        self.ELEV = NA 
-        self.TAV = 17 
-        self.AMP = 10 
-        self.REFHT = 2
-        self.WNDHT = 10
-
-        self.start_date = None
-        self.end_date = None
-        for par, value in pars.items():
-            assert par in self.__dict__.keys(),\
-                f'{par} is not a valid attribute for a WeatherStation class'
-            self.__dict__[par] = value
+            data.set_index(DATE_COL, inplace=True)
         
         self.INSI = self.INSI[:4].upper()
-        assert not any((isna(self.LAT), isna(self.LON), isna(self.ELEV))), \
-            'LAT, LON and ELEV parameters are mandatory'
 
-        assert isinstance(wthdata, WeatherData), \
-            'wthdata must be a WeatherData instance'
-        self.data = wthdata
+        assert isinstance(data, DataFrame), \
+            'wthdata must be a DataFrame instance'
+        self.data = data
 
     def write(self, folder:str='', **kwargs):
         '''
@@ -204,4 +187,11 @@ class WeatherStation():
             
             with open(os.path.join(folder, filename), 'w') as f:
                 f.write(outstr)
+
+    def __repr__(self):
+        repr_str = f"Weather data at {self.LON:.3f}°, {self.LAT:.3f}°\n"
+        repr_str += f"  Date start: {self.data.index.min().strftime('%Y-%m-%d')}\n"
+        repr_str += f"  Date end: {self.data.index.max().strftime('%Y-%m-%d')}\n"
+        repr_str += "Average values:\n" + self.data.mean().__repr__()
+        return repr_str
         

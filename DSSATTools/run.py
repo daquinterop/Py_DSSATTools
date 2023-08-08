@@ -70,8 +70,8 @@ import errno, stat
 from DSSATTools import __file__ as module_path
 from DSSATTools import VERSION
 from DSSATTools.soil import SoilProfile
-from DSSATTools.weather import WeatherStation
-from DSSATTools.crop import Crop
+from DSSATTools.weather import Weather
+from DSSATTools.crop import Crop, CUL_VARNAME
 from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection
 from DSSATTools.base.sections import clean_comments
@@ -79,23 +79,6 @@ from DSSATTools.base.sections import clean_comments
 OS = platform.system().lower()
 OUTPUTS = ['PlantGro', ]
 
-CUL_VARNAME = {
-    'MZ': 'VRNAME..........',
-    'ML': 'VAR-NAME........',
-    'BS': 'VRNAME..........',
-    'RI': 'VAR-NAME........',
-    'SG': 'VAR-NAME........',
-    'SW': 'VRNAME..........',
-    'AL': 'VRNAME..........',
-    'BM': 'VRNAME..........',
-    'SB': 'VAR-NAME........',
-    'CN': 'VRNAME..........',
-    'SU': 'VAR-NAME........',
-    'PT': 'VAR-NAME........',
-    'TM': 'VRNAME..........',
-    'CB': 'VRNAME..........',
-    'SC': 'VAR-NAME........'
-}
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
 
@@ -194,7 +177,7 @@ class DSSAT():
 
     def run(self, 
             soil:SoilProfile,
-            weather:WeatherStation,
+            weather:Weather,
             crop:Crop,
             management:Management,
         ):
@@ -211,8 +194,6 @@ class DSSAT():
             Crop instance
         managment: DSSATTools.management.Management
             Management instance
-        options: DSSATTools.management.Options
-            To be implemented
         '''
         
         assert self._SETUP, 'You must initialize the simulation environment by'\
@@ -225,14 +206,21 @@ class DSSAT():
             os.remove(os.path.join(self._RUN_PATH, file))
         
         # Fill Managament fields
-        management.cultivars['CR'] = crop._CODE
-        management.cultivars['CNAME'] = \
+        management._Management__cultivars['CR'] = crop._CODE
+        management._Management__cultivars['INGENO'] = crop._cultivar_code
+        management._Management__cultivars['CNAME'] = \
             crop.cultivar[CUL_VARNAME[crop._CODE]]
 
-        management.fields['WSTA....'] = weather.INSI \
+        management.field['WSTA....'] = weather.INSI \
             + management.sim_start.strftime('%y01')
-        management.fields['SLDP'] = soil.total_depth
-        management.fields['ID_SOIL'] = soil.id
+        management.field['SLDP'] = soil.total_depth
+        management.field['ID_SOIL'] = soil.id
+        if management.field["...........XCRD"] is None:
+            management.field["...........XCRD"] = weather.LON
+        if management.field["...........YCRD"] is None:
+            management.field["...........YCRD"] = weather.LAT
+        if management.field[".....ELEV"] is None:
+            management.field[".....ELEV"] = weather.ELEV
 
         management.initial_conditions['PCR'] = crop._CODE
         if not management.initial_conditions['ICDAT']:
@@ -252,9 +240,9 @@ class DSSAT():
         table['SNH4'] = [0.]*len(table)
         table['SNO3'] = [1.] + [0.]*(len(table)-1)
         if crop.crop_name in ROOTS:
-            assert not any(pd.isna(management.planting_details['table'][['PLWT', 'SPRL']]).values[0]), \
+            assert not any(pd.isna([management.planting_details['PLWT'], management.planting_details['SPRL']])), \
                 f"PLWT, SPRL transplanting parameters are mandatory for {crop.crop_name} crop, you must "\
-                "define those parameters in management.planting_details['table']"
+                "define those parameters in management.planting_details"
         management.initial_conditions['table'] = table
 
         management.simulation_controls['SMODEL'] = crop._SMODEL        

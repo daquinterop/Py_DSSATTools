@@ -10,7 +10,7 @@ water content is assumed to be 50% of the total available water
 
 `Management` class has one attribute per management section. Up to date not all
 of the sections have been implemented and the next sections are available: 
-fields, cultivars, initial conditions, planting details, irrigation, 
+field, cultivar, initial conditions, planting details, irrigation, 
 fertilizers, harvest details, simulation controls, automatic management. All of
 the sections have `dict` object as base, so you can modify the parameters by
 just reassigning the value as you would do it on a `dict`. Some of the sections
@@ -54,7 +54,7 @@ from datetime import datetime, timedelta
 from os.path import basename
 
 SECTIONS = [
-    'fields', 'cultivars', 'initial conditions', 'planting details', 'irrigation', 
+    'field', '_Management__cultivars', 'initial conditions', 'planting details', 'irrigation', 
     'fertilizers', 'harvest details', 'simulation controls',
     'automatic management'
 ]
@@ -65,7 +65,8 @@ IMPLEMENTED_SECTIONS = {
 }
 
 SECTIONS_TITLE = {
-    'cultivars': '*CULTIVARS', 'fields': '*FIELDS',
+    '_Management__cultivars': '*CULTIVARS', 
+    'field': '*FIELDS',
     'initial conditions': '*INITIAL CONDITIONS',
     'planting details': '*PLANTING DETAILS',
     'irrigation': '*IRRIGATION AND WATER MANAGEMENT',
@@ -124,7 +125,7 @@ class Management:
     '''
 
     def __init__(
-            self, cultivar:str, planting_date:datetime, 
+            self, planting_date:datetime, 
             sim_start:datetime=None, emergence_date:datetime=None, 
             initial_swc:float=.5, irrigation='R',fertilization='R', 
             harvest='M', organic_matter='G'):
@@ -132,7 +133,6 @@ class Management:
         self.fertization_option = fertilization
         self.organic_matter_option = organic_matter
         self.harvest_option = harvest
-        self.cultivar = cultivar
         self.planting_date = planting_date
         self.initial_swc = initial_swc
         if sim_start:
@@ -143,12 +143,12 @@ class Management:
             self.emergence_date = emergence_date
         else:
             self.emergence_date = self.planting_date + timedelta(days=5)
-        self.cultivars = Section(
-            pars={'CR': TO_FILL, 'INGENO': self.cultivar, 'CNAME': TO_FILL},
+        self.__cultivars = Section(
+            pars={'CR': TO_FILL, 'INGENO': None, 'CNAME': TO_FILL},
             idcol='@C', # Fill from Crop instance
             name='cultivars',
         )
-        self.fields = Section(
+        self.field = Section(
             pars={
                 'ID_FIELD': 'DFTF0001', 'WSTA....': TO_FILL, 'FLSA': None, 
                 'FLOB': 0, 'FLDT': 'DR000', 'FLDD': 0, 'FLDS': 0,
@@ -159,7 +159,7 @@ class Management:
                 '.FLWR': None, '.SLAS': None, 'FLHST': None, 'FHDUR': None
             }, # Fill from Weather and Soil Instance
             idcol='@L',
-            name='fields',
+            name='field',
         )
         # self.soil_analysis = Section(
         #     # Tabular
@@ -184,14 +184,12 @@ class Management:
             name='planting details',
             idcol='@P',
             pars={
-                'table': TabularSubsection({
-                    'PDATE': [self.planting_date.strftime('%y%j')], 
-                    'EDATE': [self.emergence_date.strftime('%y%j')],
-                    'PPOP': [16], 'PPOE': [15], 'PLME': ['S'], 'PLDS': ['R'], 
-                    'PLRS': [35], 'PLRD': [None], 'PLDP': [4], 'PLWT': [None], 
-                    'PAGE': [None], 'PENV': [None], 'PLPH': [None], 
-                    'SPRL': [None], 'PLNAME': [None]
-                })
+                'PDATE': self.planting_date.strftime('%y%j'), 
+                'EDATE': self.emergence_date.strftime('%y%j'),
+                'PPOP': 16, 'PPOE': 15, 'PLME': 'S', 'PLDS': 'R', 
+                'PLRS': 35, 'PLRD': None, 'PLDP': 4, 'PLWT': None, 
+                'PAGE': None, 'PENV': None, 'PLPH': None, 
+                'SPRL': None, 'PLNAME': None
             }
         )
         self.irrigation = Section(
@@ -230,11 +228,9 @@ class Management:
             name='harvest details',
             idcol='@H',
             pars={
-                'table': TabularSubsection({
-                    'HDATE': [(self.planting_date + timedelta(days=180)).strftime('%y%j'), ], 
-                    'HSTG': [None, ], 'HCOM': [None, ], 'HSIZE': [None, ], 
-                    'HPC': [None, ], 'HBPC': [None, ], 'HNAME': ['DEFAULT', ],						
-                })
+                'HDATE': (self.planting_date + timedelta(days=180)).strftime('%y%j'), 
+                'HSTG': None, 'HCOM': None, 'HSIZE': None, 
+                'HPC': None, 'HBPC': None, 'HNAME': 'DEFAULT',						
             }
         )
         self.simulation_controls = Section(
@@ -244,7 +240,7 @@ class Management:
                 'GENERAL': 'GE', 
                 'NYERS': 1, 'NREPS': 1, 'START': 'S', 
                 'SDATE': self.sim_start.strftime('%y%j'), 'RSEED': 2409, 
-                'SNAME....................': 'DEFAULT', 'SMODEL': 'MZCER', 
+                'SNAME....................': 'DEFAULT', 'SMODEL': TO_FILL, 
                 
                 'OPTIONS': 'OP', 
                 'WATER': 'Y', 'NITRO': 'N', 'SYMBI': 'N', 'PHOSP': 'N', 
@@ -332,6 +328,13 @@ class Management:
         outstr = self.mow.write()
         with open(filename, 'w') as f:
             f.write(outstr)
+
+
+    def __repr__(self):
+        repr_str = f"Management\n"
+        repr_str += f"  Simulation start: {datetime.strptime(self.simulation_controls['SDATE'], '%y%j').date()}\n"
+        repr_str += f"  Planting date: {datetime.strptime(self.planting_details['PDATE'], '%y%j').date()}"
+        return repr_str
 
 
 class Options():
