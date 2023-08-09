@@ -6,11 +6,11 @@ pip install DSSATTools
 ```
 ## v2.1 Updates
 For the latest version the next changes were implemented:
-- Everything will be based in the fact that each simulation will include only one treatment. That involves a single option for cultivars, irrigation, fertilizer, field, etc. 
-- Every set of defined crop or management parameters will be a section. Each section is an attribute of the Crop or Management class. Sections won't be created by the user. The user can only modify the value of the parameters of the section, they can't create or add new parameters.
-- The weather is now managed in a single `Weather` class.
-- A `__repr__` method will be implemented for the four basic classes (`Crop`, `Management`, `Weather` and `SoilProfile`), and the `Section` class. 
-- The cultivar is selected when initializing the crop instance.
+- Everything is based in the fact that each simulation includes only one treatment. That involves a single option for cultivars, irrigation, fertilizer, field, etc. 
+- Every set of defined crop or management parameters is a section. Each section is an attribute of the `Crop` or `Management` class. Sections won't be created by the user. The user can only modify the value of the parameters of the section, they can't create or add new parameters.
+- The weather is now managed by a single `Weather` class.
+- A `__repr__` method was implemented for the four basic classes (`Crop`, `Management`, `Weather` and `SoilProfile`), and the `Section` class. 
+- The cultivar is selected when initializing the crop instance. Thus, the crop instance contains parameters only for that cultivar.
 
 ## Documentation
 [https://py-dssattools.readthedocs.io/en/latest/index.html](https://py-dssattools.readthedocs.io/en/latest/index.html)
@@ -73,10 +73,7 @@ If you're interested in contributing to this project, don't hesitate in sending 
 
 All the Classes can be imported as:
 ```python
-from DSSATTools import (
-    Crop, SoilProfile, WeatherData, WeatherStation,
-    Management, DSSAT
-)
+from DSSATTools import (Crop, SoilProfile, Weather, Management, DSSAT)
 ```
 or 
 ```python
