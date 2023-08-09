@@ -332,6 +332,21 @@ def test_issue_1():
     )
     assert dssat.output['PlantGro']['GWAD'].max() != final_yield
     
+def test_issue_11():
+    crop = Crop('maize')
+    man = Management(
+        cultivar='IB0001',
+        planting_date=DATES[10],
+    )
+    crop.cultivar['IB0001']['P5'] = 1100.
+    crop.cultivar['IB0001']['G2'] = 1050.
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))    
+
 
 if __name__ == '__main__':
     test_run_alfalfa()
