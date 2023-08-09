@@ -5,13 +5,12 @@ You can install the library using Python pip.
 pip install DSSATTools
 ```
 ## v2.1 Updates
-I'm thinking on implementing the next changes:
-- Everything will be based in the fact that each simulation will include only one treatment. That involves a single option for cultivars, irrigation, fertilizer, field, etc.
-- No new fields or parameters will be allowed in the sections. Same way, the columns of the `TabularSubsection` will be checked for consistency with the section they belong to.
-- Every line or set of defined parameters will be a section. All sections will have four attributes: name, description, and parameters.
-- A `__repr__` method will be implemented for all the important classes. 
-- **Crop changes:** cultivar will be selected when initilizing the crop instance; each crop instance will have a cultivar and ecotype parameters attribute.
-- **Management changes:** All the management options have to be clearly defined when initializing the `Management` instance; as each management parameter rep
+For the latest version the next changes were implemented:
+- Everything will be based in the fact that each simulation will include only one treatment. That involves a single option for cultivars, irrigation, fertilizer, field, etc. 
+- Every set of defined crop or management parameters will be a section. Each section is an attribute of the Crop or Management class. Sections won't be created by the user. The user can only modify the value of the parameters of the section, they can't create or add new parameters.
+- The weather is now managed in a single `Weather` class.
+- A `__repr__` method will be implemented for the four basic classes (`Crop`, `Management`, `Weather` and `SoilProfile`), and the `Section` class. 
+- The cultivar is selected when initializing the crop instance.
 
 ## Documentation
 [https://py-dssattools.readthedocs.io/en/latest/index.html](https://py-dssattools.readthedocs.io/en/latest/index.html)
@@ -19,13 +18,35 @@ I'm thinking on implementing the next changes:
 You'll find example notebooks in this repo:[https://github.com/daquinterop/DSSATTools_notebooks](https://github.com/daquinterop/DSSATTools_notebooks). I'll keep uploading examples as some new feature is introduced.
 ## Module contents
 
-DSSAT library is a collection of classes that allows the user to create low-code scripts to run simulations with DSSAT model. The library structure allows to execute DSSAT model based on four input classes: Crop, SoilProfile, WeatherStation and Management.
+DSSATTools library allows the user to create low-code scripts to run simulations using the DSSAT modeling framework. The library structure allows to executes DSSAT based on four input classes: `Crop`, `SoilProfile`, `Weather` and `Management`.The simulation environment is managed by the `DSSAT` Class. There are three stages for the simulation to be performed: 
 
-The simulation environment is represented by the DSSAT Class. There are three stages for the simulation to be excecuted: 1. Initialize a DSSAT instance; 2. setup the simulation environment by using the DSSAT.setup method; 3. run the simulation using the DSSAT.run method.
+1. Initialize a `DSSAT` instance. 
+2. setup the simulation environment by using the `DSSAT.setup` method. When that method is called a new directory is created in the provided location (a tmp directory is default) and all the files that are necessary to run the model are copied in that folder.
+3. run the simulation using the `DSSAT.run` method. That method needs three parameters to be pased, each one indicating the crop, soil, weather, and management. This step can be performed as many times as one wants.
+4. close the environment using `DSSAT.close`. This removes the directory and the files created during the environment setup.
 
-During the environment setup (DSSAT.setup) a directory is created and all the static files required to run DSSAT are copied in that directory. This directory will be removed when the DSSAT.close method is called. After the environment has been set up, the DSSAT.run method can be called as many times as you want.
+The next simple example illustrates how to run a simulation using the five aforementioned classes:
 
-All of the parameters and attributes of the four basic clases have the same name you find in the DSSAT files (Take a look at the .CDE files in [https://github.com/DSSAT/dssat-csm-os/tree/develop/Data](https://github.com/DSSAT/dssat-csm-os/tree/develop/Data)).
+```python
+>>> crop = Crop('maize')
+>>> weather = Weather(
+        df, # Weather data with a datetime index
+        {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", "rh": "RHUM", "TMAX": "TMAX"},
+        4.54, -75.1, 1800
+    )
+>>> soil = SoilProfile(default_class='SIL')
+>>> man = Management(planting_date=datetime(12, 3, 2020))
+>>> dssat = DSSAT()
+>>> dssat.setup()
+>>> dssat.run(soil, wth, crop, man)
+>>> growth = dssat.output["PlantGro"] 
+>>> dssat.close() # Terminate the simulation environment
+```
+
+The parameters for ecach class are described later. It is very important to note that this library will allow the user to run one treatment at a time. If the user is familiar with DSSAT, they must know that DSSAT allows to define multiple treatments in the same experimental file.
+
+All of the parameters and attributes of the four basic clases have the same name you find in the DSSAT files (Take a look at the .CDE files in 
+https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
 
 **At the moment Only the next crops and models are implemented:**
 | Crop         | Model               |
@@ -63,262 +84,108 @@ from DSSATTools import *
 ```
 ## DSSATTools.crop module
 
-Basic crop class. It initializes a crop instances based on the crop name and
-crop file if provided.
+`Crop` is the only implemented class in the crop module. DSSAT's crop parameters
+are grouped in three different files: ecotype (.ECO), cultivar (.CUL) and 
+species (.SPE). Not all crops have the ecotype file though. DSSATTools uses the 
+default .SPE, .ECO, and .CUL files. The ecotype and cultivar parameters are
+defined as attributes of the `Crop` instance. Each parameter is accessible and can
+be modified using the key, value syntax, e.g.
+`crop.cultivar["PARAMETER"] = VALUE`. 
 
-Crop class is the only needed class to initialize a Crop instance. You need
-to specify the crop name (Those can be checked at DSSATTools.crop.CROPS_MODULES
-object), and you can also specify a .SPE file to initialize the instance. If no
-.SPE file is passed as argument, then default .SPE, .ECO and .CUL are used.
+It is well known that for a species there can be multiple cultivars. Therefore, 
+when initializing a `Crop` instance, two parameters must be provided: the crop 
+name (species), and the cultivar code. The cultivar codes are defined in the .CUL
+file. If an unknown cultivar is passed, then the last cultivar in the .CUL file is
+used and a warning is shown. To get a list of the available cultivars for a crop
+the user can use the `DSSATTools.crop.available_cultivars` function passing the 
+crop name as only argument.
 
-Please, take into account that if you initialize the instance with a custom
-Species file the three files (.SPE, .ECO, .CUL) must be in the same directory 
-as the passed Species file.
+If the user wants to modify the cultivar or ecotype parameters they can be through
+the `Crop.cultivar` and `Crop.ecotype` attributes respectively. In these two
+attributes both the cultivar and ecotype parameters are defined as a `Section`
+class (DSSATTools.sections.Section). `Section` class simply maps the parameter's
+name to a value; it can be treated as a python dictionary. Each of the different
+sections of the `Management` class are defined in the same way.
 
-The only method implemented is set_parameter, that of course is used to set
-the value of any crop parameter. Crop class inherits from the BaseCrop class
-of the specified crop. BaseCrop is composed by sections, each of the included
-in the Species file, and one section for Cultivar and Ecotype respectively.
-
-The usage of the Crop class is explaied by this example. In here we initialize
-a Crop instance, modify a parameter and write the cropfile (All of them).
-
+The next example shows how to define the crop and modify one cultivar and ecotype
+parameter.
 ```python
 >>> crop = Crop('maize')
->>> crop.set_parameter(
-        par_name = 'TBASE',
-        par_value = 30.,
-        row_loc = 'IB0002'
-    )
->>> crop.write('crop_test')
-```
-
-
-### _class_ DSSATTools.crop.Crop(crop_name: str = 'Maize', spe_file: Optional[str] = None)
-Initializes a crop instance based on the default DSSAT Crop files, or 
-on a custom crop file provided as a cultivar.
-
-##### Arguments
-```
-crop: str
-    Crop name, available at the moment:  Maize, Millet, Sugarbeet, Rice, Sorghum, Sweetcorn, Alfalfa and Bermudagrass
-
-spe_file: str
-    Optional. Path to the species file to initialize the instance.
-
-```
-#### set_parameter(par_name: str, par_value, row_loc=0)
-Set the value of one parameter in the Crop class.
-##### Arguments
-```
-par_name: str
-    name of the parameter. Parameter’s names are in the Crop.parameters 
-    attribute.
-
-par_value: str, int, float
-    Value of the parameter to set.
-
-row_loc: int, str
-    id for the element to modify. This applies to parameters defined in 
-    cols, such as cultivar or ecotype parameters. For example:
-
-    @ECO#  ECONAME………  TBASE  TOPT ROPT   P20  
-    IB0001 GENERIC MIDWEST1    8.0 34.0  34.0  12.5 
-    IB0002 GENERIC MIDWEST2    8.0 34.0  34.0  12.5
-
-    for this set of parameters (ecotype), the column ECO# is the id to
-    be passed as row_loc argument.
+>>> crop.cultivar["P1"] = 240
+>>> crop.ecotype["P20"] = 13.
 ```
 
 ## DSSATTools.management module
 
-Management class includes all the information related to management. There are
-multiple arguments to initialize a Management instance, however, the only 
-mandatory arguments are cultivar (cultivar id, of course it has to be included
-in the cultivars list of the Crop object you’ll be passing to DSSAT.run) and
-planting_date. Simulation start is calculated as the day before the planting 
-date, emergence_date is assumed to 5 days after planting, and the initial soil
-water content is assumed to be 50% of the total available water 
-(PWP + 0.5(FC-PWP))
+This module hosts the `Management` class, which includes all the information 
+related to management. There are multiple arguments to initialize a `Management`
+instance, however, the only  mandatory argument is planting_date. If not provided, 
+simulation start is calculated as the day before the planting date, emergence date
+is assumed to 5 days after planting, and the initial soil water content is assumed
+to be 50% of the total available water (PWP + 0.5(FC-PWP)).
 
-Management class has one attribute per management section. Up to date not all
-of the sections have been implemented and the next sections are available: 
-fields, cultivars, initial conditions, planting details, irrigation, 
-fertilizers, harvest details, simulation controls, automatic management. All of
-the sections have dict object as base, so you can modify the parameters by
-just reassigning the value as you would do it on a dict. Some of the sections
-are defined as tables, so you can modify the values of those tabular sections
-the same as you would modify a pandas.Dataframe.
+`Management` class has one attribute per management section. Up to date not all
+of the sections have been implemented and the next sections are available for the
+user to modify: field, initial conditions, planting details, irrigation, fertilizers, 
+harvest details, simulation controls, automatic management. All the sections are a
+`DSSATTools.section.Sections` object. The options that are not defined when
+initializing the `Management` instance can be defined by modifying the value of
+the parameters in each of the sections. An example will be set. If the user is
+not familiar to the different sections of the DSSAT experimental file then
+reviewing the DSSAT documentation is suggested.
 
-In the next example a Management object is created, and two of its sections
-are modified.
+`DSSATTools.section.TabularSubsection` class is intended to represent tabular
+information like irrigation schedules, fertilizer applications, or initial
+condition through the different soil's layers. The `TabularSubsection` can be
+initialized the same way a pandas.DataFrame. It's important to mention that the
+columns must have the same names as the DSSAT variables the are representing
+(See example).
+
+In the next example a `Management` object is created, defining the irrigation
+method option as non-irrigated; then the location of the field is defined in the
+field section. 
 
 ```python
->>> man = Management(
-        cultivar='IB0001',
+>>> man = Management( # Initialize instance
         planting_date=datetime(2020, 1, 1),
+        irrigation="N",
     )
->>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
-        [datetime(2020, 7, 1).strftime('%y%j'), 100]
->>> man.simulation_controls['IRRIG'] = 'A'
+>>> # Modify the location of the field
+>>> man.field["...........XCRD"] = 35.32
+>>> man.field["...........YCRD"] = -3.21
 ```
+Even though the irrigation method was defined when the object was created, it can
+still be modified:
 
-### _class_ DSSATTools.management.Management(cultivar: str, planting_date: datetime, sim_start: Optional[datetime] = None, emergence_date: Optional[datetime] = None, initial_swc: float = 0.5, irrigation='R', fertilization='R', harvest='M')
-Initializes a management instance.
-
-##### Arguments
-```
-cultivar: str
-    Code of the cultivar. That code must match one of the codes in the
-    Crop instance used when runing the model.
-
-planting_date: datetime
-    Planting date.
-
-sim_start: datetime
-    Date for start of the simulation. If None, it’ll be calculated as
-    the previous day to the planting date.
-
-emergence_date: datetime
-    Emergence date. If None, I’ll be calculated as 5 days after 
-    planting.
-
-initial_swc: int
-    Fraction of the total available water (FC - PWP) at the start of the 
-    simulation. .5(50%) is the default value.
-
-irrigation: str
-    Default ‘R’. Irrigation management option, options available are:
-
-        A        Automatic when required
-        N        Not irrigated
-        F        Fixed amount automatic
-        R        On reported dates
-        D        Days after planting
-        P        As reported through last day, then automatic to re-fill (A)
-        W        As reported through last day, then automatic with fixed amount (F)
-
-harvest: str
-    Default ‘M’. Harvest management options. available options are:
-        A        Automatic      
-        M        At maturity
-        R        On reported date(s)
-        D        Days after planting
-
-fertilization: str
-    Default ‘R’. Fertilization management options. available options are:
-        N        Not fertilized
-        R        On reported dates
-        D        Days after planting
+```python
+>>> man.simulation_controls["IRRIG"] = "R"
+>>> # Create a irrigation schedule as a pandas.DataFrame
+>>> schedule = pd.DataFrame([
+        (datetime(2000,1,15), 80),
+        (datetime(2000,1,30), 60),
+        (datetime(2000,2,15), 40),
+        (datetime(2000,3,1),  20)
+    ], columns = ['date', 'IRVAL'])
+>>> schedule['IDATE'] = schedule.date.dt.strftime('%y%j')
+>>> schedule['IROP'] = 'IR001' # irrigation operation code
+>>> man.irrigation['table'] = TabularSubsection(
+        schedule[['IDATE', 'IROP', 'IRVAL']]
+    )
 ```
 
 ## DSSATTools.run module
 
-This module hosts the DSSAT class. That class is the simulation environment, so per each
-Dscsm instance there’s a directory where all the necesary files to run the model
-are allocated. To run the model there are 3 basic steps:
+This module hosts the DSSAT class. That class is the simulation environment, 
+so per each DSSAT instance there's a directory where all the necesary files to 
+run the model are allocated. To run the model there are 3 basic steps:
 
-> 
-> 1. Create a new DSSAT instance.
+1. Create a new Dscsm instance.
+2. Initialize the environment by calling the setup() method.
+3. Run the model by calling the run() method.
+You can close the simulation environment by calling the close() method.
 
-
-> 2. Initialize the environment by running the setup() method.
-
-
-> 3. Run the model by running the run() method.
-
-You can close the simulation environment by running the close() method.
-
-The model outputs are storage in the outputs attribute. Up to date the only
-model output parsed into outputs is ‘PlantGro’.
-
-In the next example all the 4 required objects to run the DSSAT model are
-created, an a simulation is run.
-
-```python
->>> # Create random weather data
->>> df = pd.DataFrame(
-    {
-    'tn': np.random.gamma(10, 1, N),
-    'rad': np.random.gamma(10, 1.5, N),
-    'prec': np.round(np.random.gamma(.4, 10, N), 1),
-    'rh': 100 * np.random.beta(1.5, 1.15, N),
-    },
-    index=DATES,
-)
->>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
->>> # Create a WeatherData instance
->>> WTH_DATA = WeatherData(
-    df,
-    variables={
-        'tn': 'TMIN', 'TMAX': 'TMAX',
-        'prec': 'RAIN', 'rad': 'SRAD',
-        'rh': 'RHUM'
-    }
-)
->>> # Create a WheaterStation instance
->>> wth = WeatherStation(
-    WTH_DATA, 
-    {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-)
->>> # Initialize soil, crop and management instances.
->>> soil = SoilProfile(default_class='SIL')
->>> crop = Crop('maize')
->>> man = Management(
-    cultivar='IB0001',
-    planting_date=DATES[10],
-)
->>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] =         [DATES[190].strftime('%y%j'), 100]
->>> # Initialize Dscsm instance and run.
->>> dssat = Dscsm()
->>> dssat.setup(cwd='/tmp/dssattest')
->>> dssat.run(
-    soil=soil, weather=wth, crop=crop, management=man,
-)
->>> # Get output
->>> PlantGro = dssat.outputs['PlantGro']
->>> dssat.close() # Terminate the simulation environment
-```
-
-
-### _class_ DSSATTools.run.DSSAT()
-
-Class that represents the simulation environment. When initializing and 
-seting up the environment, a new folder is created (usually in the tmp 
-folder), and all of the necesary files to run the model are copied into it.
-
-#### close()
-Removes the simulation environment (tmp folder and files).
-
-
-#### run(soil: SoilProfile, weather: WeatherStation, crop: Crop, management: Management)
-Start the simulation and runs until the end or failure.
-##### Arguments
-```
-soil: DSSATTools.soil.Soil
-    SoilProfile instance
-
-weather: DSSATTools.weather.WeatherStation
-    WeatherStation instance
-
-crop: DSSATTools.crop.Crop
-    Crop instance
-
-managment: DSSATTools.management.Management
-    Management instance
-```
-
-#### setup(cwd=None)
-Setup a simulation environment.
-Creates a tmp folder to run the simulations and move all the required
-files to run the model. Some rguments are optional, if those aren’t provided,
-then standard files location will be used.
-##### Arguments
-```
-cwd: str
-    Working directory. All the model files would be moved to that directory.
-    If None, then a tmp directory will be created.
-```
+The model outputs are storage in the `outputs` attribute. Up to date the only 
+model output parsed into `outputs` is 'PlantGro'.
 
 ## DSSATTools.soil module
 
@@ -400,128 +267,20 @@ as each parameter is also an attribute of the instance.
 >>> soilprofile.SALB = 0.36
 ```
 
-
-### _class_ DSSATTools.soil.SoilLayer(base_depth: int, pars: dict)
-
-Initialize a soil layer instance.
-##### Arguments
-```
-base_depth: int
-    Depth to the bottom of that layer (cm)
-
-pars: dict
-    Dict including the parameter values to initialize the instance. Layer
-    parameters include: 
-    ‘SLMH’,  ‘SLLL’,  ‘SDUL’,  ‘SSAT’,  ‘SRGF’,  ‘SSKS’,  ‘SBDM’,  ‘SLOC’,
-    ‘SLCL’,  ‘SLSI’,  ‘SLCF’,  ‘SLNI’,  ‘SLHW’,  ‘SLHB’,  ‘SCEC’,  ‘SADC’
-    ‘SLPX’,  ‘SLPT’,  ‘SLPO’, ‘CACO3’,  ‘SLAL’,  ‘SLFE’,  ‘SLMN’,  ‘SLBS’,
-    ‘SLPA’,  ‘SLPB’,  ‘SLKE’,  ‘SLMG’,  ‘SLNA’,  ‘SLSU’,  ‘SLEC’,  ‘SLCA’
-    Only mandatory parameters are ‘SLCL’ and ‘SLSI’. The rest of the basic
-    parameters can be calculated from the texture.
-
-    SCOM is optional, and it can be passed as an string referencing the color,
-    or a tupple with CIELAB coordinates (L, a, b). The string can be one of
-    these:
-
-    > BLK: Black (10YR 2/1)
-    > YBR: Yellowish Brown (7.5YR 5/6)
-    > RBR: Redish Brown (10R 4/8)
-    > DBR: Dark Brown (2.5YR 3/4) 
-    > GRE: Grey (10YR 6/1)
-    > YLW: Yellow (10YR 7/8)
-
-```
-
-### _class_ DSSATTools.soil.SoilProfile(file: Optional[str] = None, profile: Optional[str] = None, default_class: Optional[str] = None, pars: dict = {})
-
-Soil Profile class. It can be initialized from an existing file. It also can 
-be initialized from scratch.  If a file is provided, then the soil is 
-initialized as the soil profile with the matching profile id in the file.
-##### Arguments
-```
-file: str
-    Optional. Path to the soil file.
-
-profile: str
-    Optional. Must be passed if file argument is passed. It’s the 
-    id of the profile within the file.
-
-pars: dict
-    Dict with the non-layer soil parameters.
-
-default_class: str
-    Optional. It’s a string defining a DSSAT default soil class. If not 
-    None, then the SoilClass instance is initialized with the paremeters 
-    of the specified default_class.
-    default_class must match any of the next codes:
-    > Sand            |  S 
-    > Loamy Sand      |  LS  
-    > Sandy Loam      |  SL 
-    > Loam            |  L 
-    > Silty Loam      |  SIL 
-    > Silt            |  SI 
-    > Sandy Clay Loam |  SCL 
-    > Clay Loam       |  CL 
-    > Silty Clay Loam |  SICL 
-    > Sandy Clay      |  SC 
-    > Silty Clay      |  SIC 
-    > Clay            |  C
-
-```
-
-#### add_layer(layer: SoilLayer)
-Add a new layer to the Soil.
-##### Arguments
-```
-layer: DSSATTools.soil.SoilLayer
-    Soil Layer object
-```
-
-#### drop_layer(layer: int)
-Drop the layer at the specified depth
-
-
-#### set_parameter(parameter, value)
-Set the value of a soil parameter.
-##### Arguments
-```
-parameter: str
-    Parameter name. You can use the DSSATTools.soil.list_parameters 
-    function
-    to have a list of the parameters and their description.
-
-value: int, float, str
-    Value for that parameter
-```
-
-#### write(filename: str = 'SOIL.SOL')
-It’s called by the DSSATTools.run.Dscsm.run() method to write the file.
-##### Arguments
-```
-filename: str
-    Path to the file to write
-```
-
-### DSSATTools.soil.list_layer_parameters()
-Print a list of the soil parameters
-
-
-### DSSATTools.soil.list_profile_parameters()
-Print a list of the soil parameters
-
-
 ## DSSATTools.weather module
 
-This module includes two basic classes to create a weather station. The 
-WeatherStation class is the one that storages all the station info and the 
-weather data. The WeatherData class inherits all the methods of a 
-pandas.DataFrame, and it’s the one that includes the weather data.
+This module hosts the `Weather` class. It also contains the
+`list_station_parameters` and `list_weather_variables` which return a list of the
+parameters that define the weather station where the data was collected, and the
+weather variables that can be included in the dataset. A `Weather` instance is
+initialized by passing five mandatory parameters: a pandas dataframe including
+the weather data, a dict mapping each dataframe column to one of the DSSAT
+weather varaibles, latitude, longitude, and elevation.
 
-In the next example we’ll create synthetic data and we’ll create a
-WeatherStation object.
+The next example illustrates how to define a Weather instance from syntetic data:
 
 ```python
->>> DATES = pd.date_range('2000-01-01', '2010-12-31')
+>>> DATES = pd.date_range('2000-01-01', '2010-12-31'); N=len(DATES)
 >>> df = pd.DataFrame(
         {
         'tn': np.random.gamma(10, 1, N),
@@ -532,59 +291,19 @@ WeatherStation object.
         index=DATES,
     )
 >>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
->>> # Create a WeatherData instance
->>> WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
+>>> weather = Weather(
+        df, 
+        {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", 
+        "rh": "RHUM", "TMAX": "TMAX"},
+        4.54, -75.1, 1800
     )
->>> Create a WheaterStation instance
->>> wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
->>> wth.data.head() # To check the data first 5 records
 ```
 
+The parameters of the weather station are defined as attributes of the `Weather`
+class. Those parameters can be listed by calling the `list_station_parameters`.
+In the next example the reference height for windspeed measurements is defined
+for the weather instance created in the previous example:
 
-### _class_ DSSATTools.weather.WeatherData(data: DataFrame, variables: dict = {})
-
-WeatherData class.
-Creates a WeatherData instance. That instance is the one that contains
-the records for the Weather Station.
-##### Arguments
+```python
+>>> weather.WNDHT = 2
 ```
-data: pd.Dataframe
-    A DataFrame containg the the weather data.
-
-variables: dict
-    A dict to map the columns of the dataframe, to the DSSAT Weather 
-    variables. Use list_weather_parameters function to have a detailed
-    description of the DSSAT weather variables.
-```
-
-### _class_ DSSATTools.weather.WeatherStation(wthdata: WeatherData, pars: dict, description='Weather Station')
-
-WeatherStation Class.
-Initialize a Weather station instance.
-
-##### Arguments
-```
-pars: dict
-    dict with the Weather station parameters. list_station_parameters
-    provides a list with the parameters and their description. Only LAT,
-    LON and ELEV parameters are mandatory.
-
-description: str
-    An string with the description of the weather station
-```
-
-### DSSATTools.weather.list_station_parameters()
-Print a list of the weather station parameters
-
-
-### DSSATTools.weather.list_weather_parameters()
-Print a list of the weather data parameters

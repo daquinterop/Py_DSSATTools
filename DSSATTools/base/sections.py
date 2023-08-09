@@ -1,3 +1,4 @@
+# TODO: Check parameter values and format directly when setting them. Use the defined formating just to check if the value can be formated. If it can't be formated then throw error. 
 import fortranformat as ff
 from pandas import isna, DataFrame
 from collections import MutableMapping
@@ -245,8 +246,8 @@ class Section(MutableMapping):
     {"PDATE": "82057", "EDATE": -99, "PROP": 7.2, ... , "PAGE": -99}
     '''
     def __init__(self, name:str, **kwargs):
-        self.name = name
-        self.description = None
+        self.__name = name
+        self.__description = None
         self.__idcol = kwargs.get('idcol')
         self.__crop = kwargs.get("crop_name")
         code = kwargs.get("code")
@@ -331,7 +332,14 @@ class Section(MutableMapping):
     
     def parameters(self):
         return self.__data
+    
+    @property
+    def name(self):
+        return self.__name
         
+    @property
+    def description(self):
+        return self.__description
 
     def write(self):
         if self.name in ['cultivar', 'ecotype']:

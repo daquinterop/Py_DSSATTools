@@ -21,7 +21,7 @@ aforementioned classes:
 
     >>> crop = Crop('maize')
     >>> weather = Weather(
-            df, 
+            df, # Weather data with a datetime index
             {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", "rh": "RHUM", "TMAX": "TMAX"},
             4.54, -75.1, 1800
         )
@@ -30,6 +30,8 @@ aforementioned classes:
     >>> dssat = DSSAT()
     >>> dssat.setup()
     >>> dssat.run(soil, wth, crop, man)
+    >>> growth = dssat.output["PlantGro"] 
+    >>> dssat.close() # Terminate the simulation environment
 
 The parameters for ecach class are described later. It is very important to note
 that this library will allow the user to run one treatment at a time. If the user
@@ -38,8 +40,7 @@ treatments in the same experimental file.
 
 All of the parameters and attributes of the four basic clases have the same name
 you find in the DSSAT files (Take a look at the .CDE files in 
-https://github.com/DSSAT/dssat-csm-os/tree/develop/Data). DSSAT includes several
-parameters, and some users are not familiar with the model's github repository.
+https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
 
 Up to date next crops and models are included:
 

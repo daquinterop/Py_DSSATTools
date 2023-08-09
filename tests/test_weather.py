@@ -53,62 +53,75 @@ class TestWeather:
     def test_no_minimum_required_variables(self):
         with pytest.raises(AssertionError) as excinfo:
             Weather(df[["tn", "TMAX"]], {
-                'TMIN': 'TMIN', 'TMAX': 'TMAX',
-                'prec': 'RAIN', 'SRAD': 'HPTA',
+                'tn': 'TMIN', 'TMAX': 'TMAX',
             }, 4.54, -75.1, 1800)
         assert 'Data must contain at least' in str(excinfo.value)
 
-#     def test_no_max_min_consistency(self):
-#         with pytest.raises(AssertionError) as excinfo:
-#             WeatherData(pd.DataFrame({
-#                 'TMIN': [32, 23], 'TMAX': [23, 43],
-#                 'SRAD': [14, 10], 'RAIN': [0, 0]
-#             }))
-#         assert 'TMAX < TMIN' in str(excinfo.value)
+    def test_no_max_min_consistency(self):
+        with pytest.raises(AssertionError) as excinfo:
+            Weather(
+                pd.DataFrame({
+                'TMIN': [32, 23], 'TMAX': [23, 43],
+                'SRAD': [14, 10], 'RAIN': [0, 0]
+                }),
+                {"TMIN": "TMIN", "TMAX": "TMAX", 
+                 "RAIN": "RAIN", "SRAD": "SRAD"},
+                 2.54, -75.1, 1800
+            )
+        assert 'TMAX < TMIN' in str(excinfo.value)
 
-#     def test_no_hr_consistency(self):
-#         with pytest.raises(AssertionError) as excinfo:
-#             WeatherData(pd.DataFrame({
-#                 'TMIN': [14, 23], 'TMAX': [23, 43],
-#                 'SRAD': [14, 10], 'RAIN': [0, 0],
-#                 'RHUM': [0, -2]
-#             }))
-#         assert 'RHUM <= 100' in  str(excinfo.value)
+    def test_no_hr_consistency(self):
+        with pytest.raises(AssertionError) as excinfo:
+            Weather(
+                pd.DataFrame({
+                'TMIN': [14, 23], 'TMAX': [23, 43],
+                'SRAD': [14, 10], 'RAIN': [0, 0],
+                'RHUM': [0, -2]
+                }),
+                {"TMIN": "TMIN", "TMAX": "TMAX", "RHUM": "RHUM", 
+                 "RAIN": "RAIN", "SRAD": "SRAD"},
+                 2.54, -75.1, 1800
+            )
+        assert 'RHUM <= 100' in  str(excinfo.value)
 
-#     def test_no_rain_consistency(self):
-#         with pytest.raises(AssertionError) as excinfo:
-#             WeatherData(pd.DataFrame({
-#                 'TMIN': [14, 23], 'TMAX': [23, 43],
-#                 'SRAD': [14, 10], 'RAIN': [-2, 0],
-#                 'RHUM': [23, 12]
-#             }))
-#         assert '0 <= RAIN' in str(excinfo.value)
+    def test_no_rain_consistency(self):
+        with pytest.raises(AssertionError) as excinfo:
+            Weather(
+                pd.DataFrame({
+                'TMIN': [14, 23], 'TMAX': [23, 43],
+                'SRAD': [14, 10], 'RAIN': [-2, 0],
+                'RHUM': [23, 12]
+                }),
+                {"TMIN": "TMIN", "TMAX": "TMAX", "RHUM": "RHUM", 
+                 "RAIN": "RAIN", "SRAD": "SRAD"},
+                 2.54, -75.1, 1800
+            )
+        assert '0 <= RAIN' in str(excinfo.value)
 
-#     def test_no_srad_consistency(self):
-#         with pytest.raises(AssertionError) as excinfo:
-#             WeatherData(pd.DataFrame({
-#                 'TMIN': [14, 23], 'TMAX': [23, 43],
-#                 'SRAD': [-2, 10], 'RAIN': [1, 0],
-#                 'RHUM': [23, 12]
-#             }))
-#         assert '0 <= SRAD' in str(excinfo.value)
+    def test_no_srad_consistency(self):
+        with pytest.raises(AssertionError) as excinfo:
+            Weather(
+                pd.DataFrame({
+                'TMIN': [14, 23], 'TMAX': [23, 43],
+                'SRAD': [-2, 10], 'RAIN': [1, 0],
+                'RHUM': [23, 12]
+                }),
+                {"TMIN": "TMIN", "TMAX": "TMAX", "RHUM": "RHUM", 
+                 "RAIN": "RAIN", "SRAD": "SRAD"},
+                 2.54, -75.1, 1800
+            )
+        assert '0 <= SRAD' in str(excinfo.value)
 
-
-#     def test_no_date(self):
-#         with pytest.raises(AssertionError) as excinfo:
-#             WeatherData(pd.DataFrame({
-#                 'TMIN': [14, 23], 'TMAX': [23, 43],
-#                 'SRAD': [2, 10], 'RAIN': [1, 0],
-#                 'RHUM': [23, 12],
-#             }))
-#         assert 'of the data columns must be a date' in str(excinfo.value)
-
-#     def test_index_date(self):
-#         WeatherData(pd.DataFrame(
-#             {
-#             'TMIN': [14, 23], 'TMAX': [23, 43],
-#             'SRAD': [2, 10], 'RAIN': [1, 0],
-#             'RHUM': [23, 12],
-#             },
-#             index=pd.date_range('2022-01-01', '2022-01-02'),
-#         ))
+    def test_no_date(self):
+        with pytest.raises(AssertionError) as excinfo:
+            Weather(
+                pd.DataFrame({
+                'TMIN': [14, 23], 'TMAX': [23, 43],
+                'SRAD': [2, 10], 'RAIN': [1, 0],
+                'RHUM': [23, 12],
+                }),
+                {"TMIN": "TMIN", "TMAX": "TMAX", "RHUM": "RHUM", 
+                 "RAIN": "RAIN", "SRAD": "SRAD"},
+                 2.54, -75.1, 1800
+            )
+        assert 'of the data columns must be a date' in str(excinfo.value)

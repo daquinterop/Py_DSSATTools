@@ -1,39 +1,45 @@
+# TODO: Implement class for Irrigation Schedule and Fertilizer Application schedule or make sure the columns of the `TabularSubsection` will be checked for consistency with the section they belong to.
 '''
-`Management` class includes all the information related to management. There are
-multiple arguments to initialize a `Management` instance, however, the only 
-mandatory arguments are cultivar (cultivar id, of course it has to be included 
-in the cultivars list of the `Crop` object you'll be passing to `DSSAT.run`) and
-planting_date. Simulation start is calculated as the day before the planting  
-date, emergence_date is assumed to 5 days after planting, and the initial soil 
-water content is assumed to be 50% of the total available water 
-(PWP + 0.5(FC-PWP)).
+This module hosts the `Management` class, which includes all the information 
+related to management. There are multiple arguments to initialize a `Management`
+instance, however, the only  mandatory argument is planting_date. If not provided, 
+simulation start is calculated as the day before the planting date, emergence date
+is assumed to 5 days after planting, and the initial soil water content is assumed
+to be 50% of the total available water (PWP + 0.5(FC-PWP)).
 
 `Management` class has one attribute per management section. Up to date not all
-of the sections have been implemented and the next sections are available: 
-field, cultivar, initial conditions, planting details, irrigation, 
-fertilizers, harvest details, simulation controls, automatic management. All of
-the sections have `dict` object as base, so you can modify the parameters by
-just reassigning the value as you would do it on a `dict`. Some of the sections
-have a tabular subsection (`TabularSubsection`) that can modify the same as you
-would modify a `pandas.Dataframe`.
+of the sections have been implemented and the next sections are available for the
+user to modify: field, initial conditions, planting details, irrigation, fertilizers, 
+harvest details, simulation controls, automatic management. All the sections are a
+`DSSATTools.section.Sections` object. The options that are not defined when
+initializing the `Management` instance can be defined by modifying the value of
+the parameters in each of the sections. An example will be set. If the user is
+not familiar to the different sections of the DSSAT experimental file then
+reviewing the DSSAT documentation is suggested.
 
-`TabularSubsection` class is intended to represent tabular information like
-irrigation schedules, planting and harvest schedules or Initial condition
-through the different soil's layers. The `TabularSubsection` can be initialized
-the same way a pandas.DataFrame. It's important to mention that the columns must
-have the same names as the DSSAT variables the are representing (See example).
+`DSSATTools.section.TabularSubsection` class is intended to represent tabular
+information like irrigation schedules, fertilizer applications, or initial
+condition through the different soil's layers. The `TabularSubsection` can be
+initialized the same way a pandas.DataFrame. It's important to mention that the
+columns must have the same names as the DSSAT variables the are representing
+(See example).
 
-In the next example a `Management` object is created, and three of its sections
-are modified. 
+In the next example a `Management` object is created, defining the irrigation
+method option as non-irrigated; then the location of the field is defined in the
+field section. 
 
     >>> man = Management( # Initialize instance
-            cultivar='IB0001',
             planting_date=datetime(2020, 1, 1),
+            irrigation="N",
         )
-    >>> # Modify the harvest parameters
-    >>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
-            [datetime(2020, 7, 1).strftime('%y%j'), 100]
-    >>> man.simulation_controls['IRRIG'] = 'R' 
+    >>> # Modify the location of the field
+    >>> man.field["...........XCRD"] = 35.32
+    >>> man.field["...........YCRD"] = -3.21
+
+Even though the irrigation method was defined when the object was created, it can
+still be modified:
+
+    >>> man.simulation_controls["IRRIG"] = "R"
     >>> # Create a irrigation schedule as a pandas.DataFrame
     >>> schedule = pd.DataFrame([
             (datetime(2000,1,15), 80),
@@ -42,7 +48,7 @@ are modified.
             (datetime(2000,3,1),  20)
         ], columns = ['date', 'IRVAL'])
     >>> schedule['IDATE'] = schedule.date.dt.strftime('%y%j')
-    >>> schedule['IROP'] = 'IR001' # Code to define the irrigation operation
+    >>> schedule['IROP'] = 'IR001' # irrigation operation code
     >>> man.irrigation['table'] = TabularSubsection(
             schedule[['IDATE', 'IROP', 'IRVAL']]
         )
@@ -127,7 +133,7 @@ class Management:
     def __init__(
             self, planting_date:datetime, 
             sim_start:datetime=None, emergence_date:datetime=None, 
-            initial_swc:float=.5, irrigation='R',fertilization='R', 
+            initial_swc:float=.5, irrigation='N',fertilization='N', 
             harvest='M', organic_matter='G'):
         self.irrigaton_option = irrigation
         self.fertization_option = fertilization
@@ -335,33 +341,3 @@ class Management:
         repr_str += f"  Simulation start: {datetime.strptime(self.simulation_controls['SDATE'], '%y%j').date()}\n"
         repr_str += f"  Planting date: {datetime.strptime(self.planting_details['PDATE'], '%y%j').date()}"
         return repr_str
-
-
-class Options():
-    '''
-    Initializes a Options instance.
-
-    Arguments
-    ----------
-    cultivar: str
-        Code of the cultivar. That code must match one of the codes in the Crop instance used when runing the model.
-    planting_date: datetime
-        Planting date.
-    sim_start: datetime
-        Date for start of the simulation. If None, it'll be calculated as the previous day to the planting date.
-    emergence_date: datetime
-        Emergence date. If None, I'll be calculated as 5 days after planting.
-    initial_swc: int
-        Fraction of the total available water (FC - PWP) at the start of the simulation. .5(50%) is the default value.
-    irrigation: str
-        Default 'R'. Irrigation management option, options available are:
-            A        Automatic when required
-            N        Not irrigated
-            F        Fixed amount automatic
-            R        On reported dates
-            D        Days after planting
-            P        As reported through last day, then automatic to re-fill (A)
-            W        As reported through last day, then automatic with fixed amount (F)
-    '''
-    def __init__():
-        return
