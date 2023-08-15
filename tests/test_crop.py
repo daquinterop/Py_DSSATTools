@@ -1,10 +1,9 @@
 import pytest
-from DSSATTools.crop import Crop
 import shutil
 import os
 from DSSATTools import (
     Crop, SoilProfile, Weather, 
-    Management, DSSAT
+    Management, DSSAT, available_cultivars
     )
 import pandas as pd
 import numpy as np

@@ -178,6 +178,17 @@ def available_cultivars(crop_name):
     Returns the code and description of the available cultivars for the specified
     crop. 
     """
+    crop_name = crop_name.title()
+    assert crop_name in CROPS_MODULES.keys(), \
+        f'{crop_name} is not a valid crop'
+    SMODEL = CROPS_MODULES[crop_name]
+    CODE = CROP_CODES[crop_name]
+    cul_path = os.path.join(GENOTYPE_PATH, f'{CODE}{SMODEL[2:]}{VERSION}.CUL')
+    with open(cul_path, "r") as f:
+        lines = f.readlines()
+    lines = [l for l in lines if l[:1] not in ["@", "*", "!"]]
+    lines = [l for l in lines if len(l) > 5]
+    return [l.split()[0] for l in lines]
 
 class Crop:
     def __init__(self, crop_name:str='Maize', cultivar_code:str=None):
@@ -200,16 +211,16 @@ class Crop:
             cultivar (not in the .CUL file for that crop) is passed, then default
             parameters will be used.
         '''
-        self.crop_name = crop_name.title()
-        assert self.crop_name in CROPS_MODULES.keys(), \
-            f'{self.crop_name} is not a valid crop'
-        self._SMODEL = CROPS_MODULES[self.crop_name]
-        self._CODE = CROP_CODES[self.crop_name]
+        self._crop_name = crop_name.title()
+        assert self._crop_name in CROPS_MODULES.keys(), \
+            f'{self._crop_name} is not a valid crop'
+        self._SMODEL = CROPS_MODULES[self._crop_name]
+        self._CODE = CROP_CODES[self._crop_name]
         self._SPE_FILE = f'{self._CODE}{self._SMODEL[2:]}{VERSION}.SPE'
         self._spe_path = os.path.join(GENOTYPE_PATH, self._SPE_FILE)
         self._cultivar_code = cultivar_code
         if self._cultivar_code is None:
-            self._cultivar_code = DEFAULT_CULTIVARS[self.crop_name]
+            self._cultivar_code = DEFAULT_CULTIVARS[self._crop_name]
             warnings.warn(
                 f"No cultivar was indicated, default cultivar {self._cultivar_code} will be used"
             )            
@@ -220,7 +231,7 @@ class Crop:
             file_lines = f.readlines()
         file_lines = clean_comments(file_lines)
         self.cultivar = Section(
-            name="cultivar", file_lines=file_lines, crop_name=self.crop_name,
+            name="cultivar", file_lines=file_lines, crop_name=self._crop_name,
             code=self._cultivar_code
         )
         self._cultivar_code = self.cultivar["@VAR#"]
@@ -232,14 +243,14 @@ class Crop:
                 file_lines = f.readlines()
             file_lines = clean_comments(file_lines)
             self.ecotype = Section(
-                name="ecotype", file_lines=file_lines, crop_name=self.crop_name,
+                name="ecotype", file_lines=file_lines, crop_name=self._crop_name,
                 code=self.cultivar["ECO#"]
             )
         except FileNotFoundError:
             pass
 
     def write(self, filepath:str=''):
-        cultivar_str = f'*{self.crop_name.upper()} CULTIVAR COEFFICIENTS: {self._SMODEL}{VERSION} MODEL\n' \
+        cultivar_str = f'*{self._crop_name.upper()} CULTIVAR COEFFICIENTS: {self._SMODEL}{VERSION} MODEL\n' \
             + self.cultivar.write()
         with open(self._spe_path, "r") as f:
             species_str = f.read()
@@ -251,11 +262,19 @@ class Crop:
         with open(os.path.join(filepath, f'{self._SPE_FILE[:-3]}CUL'), 'w') as f:
             f.write(cultivar_str)
         if hasattr(self, "ecotype"):
-            ecotype_str = f'*{self.crop_name.upper()} ECOTYPE COEFFICIENTS: {self._SMODEL}{VERSION} MODEL\n' \
+            ecotype_str = f'*{self._crop_name.upper()} ECOTYPE COEFFICIENTS: {self._SMODEL}{VERSION} MODEL\n' \
                 + self.ecotype.write()
             with open(os.path.join(filepath, f'{self._SPE_FILE[:-3]}ECO'), 'w') as f:
                 f.write(ecotype_str)
 
     def __repr__(self):
-        repr_str = f"{self.crop_name} crop, {self.cultivar[CUL_VARNAME[self._CODE]]} cultivar"
+        repr_str = f"{self._crop_name} crop, {self.cultivar[CUL_VARNAME[self._CODE]]} cultivar"
         return repr_str
+    
+    @property
+    def crop_name(self):
+        return self._crop_name
+    
+    @property
+    def cultivar_code(self):
+        return self._cultivar_code

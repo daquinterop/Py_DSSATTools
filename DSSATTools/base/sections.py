@@ -142,6 +142,166 @@ SECTIONS_ROW_FMT = {
     'mow': [],
     'mow_table': '1X,A5,1X,A5,3(1X,I5),1X,F5.1'
 }
+DESCRIPTION = {
+    "ADDRESS": "Contact address of principal scientist",
+    "C": "Crop component number (default = 1)",
+    "CDATE": "Application date, year + day or days from planting",
+    "CHAMT": "Chemical application amount, kg ha-1",
+    "CHCOD": "Chemical material, code",
+    "CHDEP": "Chemical application depth, cm",
+    "CHME": "Chemical application method, code",
+    "CHNOTES": "Chemical notes (Targets, chemical name, etc.)",
+    "CNAME": "Cultivar name",
+    "CNOTES": "Cultivar details (Type, pedigree, etc.)",
+    "CR": "Crop code",
+    "CU": "Cultivar level",
+    "ECO2": "CO2 adjustment, A,S,M,R + vpm",
+    "EDATE": "Emergence date, earliest treatment",
+    "EDAY": "Daylength adjustment, A,S,M,R+h (Add;Subtract;Multiply;Replace)",
+    "EDEW": "Humidity adjustment, A,S,M,R+oC (Add;Subtract;Multiply;Replace)",
+    "EMAX": "Temp (max) adjustment, A,S,M,R+oC (Add;Subtract;Multiply;Replace)",
+    "EMIN": "Temp (min) adjustment, A,S,M,R+oC (Add;Subtract;Multiply;Replace)",
+    "ERAD": "Radn adjustment, A,S,M,R+MJ m-2day-1 (Add;Subtract;Multiply;Replace)",
+    "ERAIN": "Precipitation adjustment, A,S,M,R+mm (Add;Subtract;Multiply;Replace)",
+    "EWIND": "Wind adjustment, A,S,M,R + km day-1 (Add;Subtract;Multiply;Replace)",
+    "FACD": "Fertilizer application/placement, code",
+    "FAMC": "Ca in applied fertilizer, kg ha-1",
+    "FAMK": "K in applied fertilizer, kg ha-1",
+    "FAMN": "N in applied fertilizer, kg ha-1",
+    "FAMO": "Other elements in applied fertilizer, kg ha-1",
+    "FAMP": "P in applied fertilizer, kg ha-1",
+    "FDATE": "Fertilization date, year + day or days from planting",
+    "FDEP": "Fertilizer incorporation/application depth, cm",
+    "FHDUR": "Field history duration",
+    "FL": "Field level",
+    "FLDD": "Drain depth, cm",
+    "FLDS": "Drain spacing, m",
+    "FLDT": "Drainage type, code",
+    "FLHST": "Field history (5 character lookup)",
+    "FLNAM": "Field name",
+    "FLOB": "Obstruction to sun, degrees",
+    "FLSA": "Slope and aspect, degrees from horizontal plus direction (W, NW, etc.",
+    "FLST": "Surface stones (Abundance, % + Size, S,M,L)",
+    "FMCD": "Fertilizer material, code",
+    "FOCD": "Other element code, e.g.,. MG",
+    "HAREA": "Harvest area, m-2",
+    "HARM": "Harvest method",
+    "HCOM": "Harvest component, code",
+    "HDATE": "Harvest date, year + day or days from planting",
+    "HL": "Harvest level",
+    "HLEN": "Harvest row length, m",
+    "HMCUT": "Mow cutting height, cm",
+    "HMFRQ": "Mow harvest frequency in days, #",
+    "HMGDD": "Mow harvest frequency using GDD, #",
+    "HMMOW": "Stubble mass after mowing, kh ha-1",
+    "HMVS": "Residual vegetative stage after mowing, 0-80",
+    "HPC": "Harvest percentage, %",
+    "HRNO": "Harvest row number",
+    "HRSPL": "Stubble percent leaf, %",
+    "HSIZ": "Harvest size group, code",
+    "HSTG": "Harvest stage",
+    "IAME": "Method for automatic applications, code",
+    "IAMT": "Amount per automatic irrigation if fixed, mm",
+    "IC": "Initial conditions level",
+    "ICBL": "Depth, base of layer, cm",
+    "ICDAT": "Initial conditions measurement date, year + days",
+    "ICNAME": "Name of initial conditions level",
+    "ICND": "Nodule weight from previous crop, kg ha-1",
+    "ICRE": "Rhizobia effectiveness, 0 to 1 scale",
+    "ICRN": "Rhizobia number, 0 to 1 scale",
+    "ICREN": "N content of surface residue, %",
+    "ICREP": "P content of surface residue, %",
+    "ICRES": "Initial surface residue, kg ha-1",
+    "ICRID": "Incorporation depth for surface residue, cm",
+    "ICRIP": "Incorporation amount for surface resiude, %",
+    "ICRT": "Root weight from previous crop, kg ha-1",
+    "ICWD": "Initial water table depth, cm",
+    "IDATE": "Irrigation date, year + day or days from planting",
+    "IDEP": "Management depth for automatic application, cm",
+    "ID_FIELD": "Field ID (Institute + Site + Field)",
+    "ID_SOIL": "Soil ID (Institute + Site + Year + Soil)",
+    "IEFF": "Irrigation application efficiency, fraction",
+    "IEPT": "End point for automatic appl., % of max. available",
+    "INGENO": "Cultivar identifier",
+    "IOFF": "End of automatic applications, growth stage",
+    "IROP": "Irrigation operation, code",
+    "IRVAL": "Irrigation amount, depth of water/watertable, etc., mm",
+    "ITHR": "Threshold for automatic appl., % of max. available",
+    "MC": "Chemical applications level",
+    "ME": "Environment modifications level",
+    "MF": "Fertilizer applications level",
+    "MH": "Harvest level",
+    "MI": "Irrigation level",
+    "MP": "Planting level",
+    "MR": "Residue level",
+    "MT": "Tillage level",
+    "NOTES": "Notes",
+    "O": "Rotation component - option (default = 1)",
+    "ODATE": "Environmental modification date, year + day or days from planting",
+    "PAGE": "Transplant age, days",
+    "PAREA": "Gross plot area per rep, m-2",
+    "PCR": "Previous crop code",
+    "PDATE": "Planting date, year + days from Jan. 1",
+    "PENV": "Transplant environment, oC",
+    "PEOPLE": "Names of scientists",
+    "PLAY": "Plot layout",
+    "PLDP": "Planting depth, cm",
+    "PLDR": "Plots relative to drains, degrees",
+    "PLDS": "Planting distribution, row R, broadcast B, hill H",
+    "PLEN": "Plot length, m",
+    "PLME": "Planting method, code",
+    "PLOR": "Plot orientation, degrees from N",
+    "PLPH": "Plants per hill (if appropriate)",
+    "PLRD": "Row direction, degrees from N",
+    "PLRS": "Row spacing, cm",
+    "PLSP": "Plot spacing, cm",
+    "PLWT": "Planting material dry weight, kg ha-1",
+    "PPOE": "Plant population at emergence, m-2",
+    "PPOP": "Plant population at seeding, m-2",
+    "PRNO": "Rows per plot",
+    "R": "Rotation component - number (default = 1)",
+    "RACD": "Residue application/placement, code",
+    "RAMT": "Residue amount, kg ha-1",
+    "RCOD": "Residue material, code",
+    "RDATE": "Incorporation date, year + days",
+    "RDEP": "Residue incorporation depth, cm",
+    "RDMC": "Residue dry matter content, %",
+    "RESK": "Residue potassium concentration, %",
+    "RESN": "Residue nitrogen concentration, %",
+    "RESP": "Residue phosphorus concentration, %",
+    "RINP": "Residue incorporation percentage, %",
+    "SA": "Soil analysis level",
+    "SABD": "Bulk density, moist, g cm-3",
+    "SABL": "Depth, base of layer, cm",
+    "SADAT": "Analysis date, year + days from Jan. 1",
+    "SADM": "Bulk density, moist, g cm-3",
+    "SAKE": "Potassium, exchangeable, cmol kg-1",
+    "SANAM": "Soil analysis level name",
+    "SANI": "Total nitrogen, %",
+    "SAPHB": "pH in buffer",
+    "SAPHW": "pH in water",
+    "SAOC": "Organic carbon, %",
+    "SAPX": "Phosphorus, extractable, mg kg-1",
+    "SASC": "Measured stable organic carbon, %",
+    "SH2O": "Water, cm3 cm-3",
+    "SITE(S)": "Name and location of experimental site(s)",
+    "SLDP": "Soil depth, cm",
+    "SLTX": "Soil texture",
+    "SM": "Simulation control level",
+    "SMHB": "pH in buffer determination method, code",
+    "SMKE": "Potassium determination method, code",
+    "SMPX": "Phosphorus determination method, code",
+    "SNH4": "Ammonium, KCl, g elemental N Mg-1 soil",
+    "SNO3": "Nitrate, KCl, g elemental N Mg-1 soil",
+    "TDATE": "Tillage date, year + day",
+    "TDEP": "Tillage depth, cm",
+    "TDETAIL": "Tillage details",
+    "TIMPL": "Tillage implement, code",
+    "TL": "Tillage level",
+    "TN": "Treatment number",
+    "TNAME": "Treatment name",
+    "WSTA": "Weather station code (Institute + Site)",
+}
 
 def unpack_keys(section):
     keys = map(lambda x: x.keys(), section.values())
@@ -288,12 +448,12 @@ class Section(MutableMapping):
                     if pars_line[0] == code:
                         init_dict = dict(zip(self.PAR_NAMES, pars_line))
                         break
-            # If walked trhough all lines of the file and the cultivar was not found
-            if (n + 1) == len(file_lines):
-                warnings.warn(
-                    f"{code} {self.name} not in file, default parameters will be used"
-                )
-                init_dict = dict(zip(self.PAR_NAMES, pars_line))
+                # If walked trhough all lines of the file and the cultivar was not found
+                if (n + 1) == len(file_lines):
+                    warnings.warn(
+                        f"{code} {self.name} not in file, default parameters will be used"
+                    )
+                    init_dict = dict(zip(self.PAR_NAMES, pars_line))
 
             kwargs['pars'] = init_dict
         self.__data = kwargs['pars']
@@ -339,7 +499,15 @@ class Section(MutableMapping):
         
     @property
     def description(self):
-        return self.__description
+        for key in self.__data:
+            desc = DESCRIPTION.get(key, False)
+            if desc:
+                print(f"{key}:\t{desc}")
+            if key == "table":
+                for col in self.__data["table"].columns:
+                    desc = DESCRIPTION.get(col, False)
+                    if desc:
+                        print(f"{col}:\t{desc}")
 
     def write(self):
         if self.name in ['cultivar', 'ecotype']:

@@ -1,4 +1,5 @@
 # TODO: Implement class for Irrigation Schedule and Fertilizer Application schedule or make sure the columns of the `TabularSubsection` will be checked for consistency with the section they belong to.
+# TODO: Remove all the non-section attributes from the Management class
 '''
 This module hosts the `Management` class, which includes all the information 
 related to management. There are multiple arguments to initialize a `Management`
@@ -85,70 +86,61 @@ SECTIONS_TITLE = {
 
 TO_FILL = -999999 # To fill from other instances
 class Management:
-    '''
-    Initializes a management instance.
-
-    Arguments
-    ----------
-    cultivar: str
-        Code of the cultivar. That code must match one of the codes in the Crop
-        instance used when runing the model.
-    planting_date: datetime
-        Planting date.
-    sim_start: datetime
-        Date for start of the simulation. If None, it'll be calculated as the
-        previous day to the planting date.
-    emergence_date: datetime
-        Emergence date. If None, I'll be calculated as 5 days after planting.
-    initial_swc: int
-        Fraction of the total available water (FC - PWP) at the start of the
-        simulation. .5(50%) is the default value.
-    irrigation: str
-        Default 'R'. Irrigation management option, options available are:
-            A        Automatic when required
-            N        Not irrigated
-            F        Fixed amount automatic
-            R        On reported dates
-            D        Days after planting
-            P        As reported through last day, then automatic to re-fill (A)
-            W        As reported through last day, then automatic with fixed
-                     amount (F)
-    harvest: str
-        Default 'M'. Harvest management options. available options are:
-            A        Automatic      
-            M        At maturity
-            R        On reported date(s)
-            D        Days after planting
-    fertilization: str
-        Default 'R'. Fertilization management options. available options are:
-            N        Not fertilized
-            R        On reported dates
-            D        Days after planting
-    organic_matter: str
-        Default 'G'. Fertilization management options. available options are:
-            G        Ceres (Godiwn)
-            P        Century (Parton)
-    '''
-
     def __init__(
             self, planting_date:datetime, 
             sim_start:datetime=None, emergence_date:datetime=None, 
             initial_swc:float=.5, irrigation='N',fertilization='N', 
             harvest='M', organic_matter='G'):
-        self.irrigaton_option = irrigation
-        self.fertization_option = fertilization
-        self.organic_matter_option = organic_matter
-        self.harvest_option = harvest
-        self.planting_date = planting_date
+        '''
+        Initializes a management instance.
+
+        Arguments
+        ----------
+        planting_date: datetime
+            Planting date.
+        sim_start: datetime
+            Date for start of the simulation. If None, it'll be calculated as the
+            previous day to the planting date.
+        emergence_date: datetime
+            Emergence date. If None, I'll be calculated as 5 days after planting.
+        initial_swc: int
+            Fraction of the total available water (FC - PWP) at the start of the
+            simulation. .5(50%) is the default value.
+        irrigation: str
+            Default 'N'. Irrigation management option, options available are:
+                A        Automatic when required
+                N        Not irrigated
+                F        Fixed amount automatic
+                R        On reported dates
+                D        Days after planting
+                P        As reported through last day, then automatic to re-fill (A)
+                W        As reported through last day, then automatic with fixed
+                        amount (F)
+        harvest: str
+            Default 'M'. Harvest management options. available options are:
+                A        Automatic      
+                M        At maturity
+                R        On reported date(s)
+                D        Days after planting
+        fertilization: str
+            Default 'N'. Fertilization management options. available options are:
+                N        Not fertilized
+                R        On reported dates
+                D        Days after planting
+        organic_matter: str
+            Default 'G'. Fertilization management options. available options are:
+                G        Ceres (Godiwn)
+                P        Century (Parton)
+        '''
         self.initial_swc = initial_swc
         if sim_start:
             self.sim_start = sim_start
         else:
-            self.sim_start = self.planting_date - timedelta(days=1)
+            self.sim_start = planting_date - timedelta(days=1)
         if emergence_date:
             self.emergence_date = emergence_date
         else:
-            self.emergence_date = self.planting_date + timedelta(days=5)
+            self.emergence_date = planting_date + timedelta(days=5)
         self.__cultivars = Section(
             pars={'CR': TO_FILL, 'INGENO': None, 'CNAME': TO_FILL},
             idcol='@C', # Fill from Crop instance
@@ -190,7 +182,7 @@ class Management:
             name='planting details',
             idcol='@P',
             pars={
-                'PDATE': self.planting_date.strftime('%y%j'), 
+                'PDATE': planting_date.strftime('%y%j'), 
                 'EDATE': self.emergence_date.strftime('%y%j'),
                 'PPOP': 16, 'PPOE': 15, 'PLME': 'S', 'PLDS': 'R', 
                 'PLRS': 35, 'PLRD': None, 'PLDP': 4, 'PLWT': None, 
@@ -205,7 +197,7 @@ class Management:
                 'EFIR': 1, 'IDEP': 30, 'ITHR': 50, 'IEPT': 100, 
                 'IOFF': 'GS000', 'IAME': 'IR001', 'IAMT': 10, 'IRNAME': 'DFLTIR',
                 'table': TabularSubsection({
-                    'IDATE': [self.planting_date.strftime('%y%j'),],
+                    'IDATE': [planting_date.strftime('%y%j'),],
                     'IROP': ['IR001',],
                     'IVAL': [0,]
                 })														
@@ -216,7 +208,7 @@ class Management:
             idcol='@F',
             pars={
                 'table': TabularSubsection({
-                    'FDATE': [self.planting_date.strftime('%y%j'), ], 
+                    'FDATE': [planting_date.strftime('%y%j'), ], 
                     'FMCD': ['FE001', ], 'FACD': ['AP001', ], 
                     'FDEP': [2, ], 'FAMN': [1, ], 'FAMP': [0, ], 
                     'FAMK': [0, ], 'FAMC': [0, ], 'FAMO': [0, ], 
@@ -234,7 +226,7 @@ class Management:
             name='harvest details',
             idcol='@H',
             pars={
-                'HDATE': (self.planting_date + timedelta(days=180)).strftime('%y%j'), 
+                'HDATE': (planting_date + timedelta(days=180)).strftime('%y%j'), 
                 'HSTG': None, 'HCOM': None, 'HSIZE': None, 
                 'HPC': None, 'HBPC': None, 'HNAME': 'DEFAULT',						
             }
@@ -242,7 +234,7 @@ class Management:
         self.simulation_controls = Section(
             name='simulation controls',
             idcol='@N',
-            pars={ # TODO: SMODEL has to be changed
+            pars={
                 'GENERAL': 'GE', 
                 'NYERS': 1, 'NREPS': 1, 'START': 'S', 
                 'SDATE': self.sim_start.strftime('%y%j'), 'RSEED': 2409, 
@@ -256,12 +248,12 @@ class Management:
                 'METHODS': 'ME', 
                 'WTHER': 'M', 'INCON': 'M', 'LIGHT': 'E', 'EVAPO': 'R', 
                 'INFIL': 'S', 'PHOTO': 'C', 'HYDRO': 'R', 'NSWIT': 1, 
-                'MESOM': self.organic_matter_option, 'MESEV': 'S', 'MESOL': 2, 
+                'MESOM': organic_matter, 'MESEV': 'S', 'MESOL': 2, 
 
                 'MANAGEMENT': 'MA', 
-                'PLANT': 'R', 'IRRIG': self.irrigaton_option, 
-                'FERTI': self.fertization_option, 'RESID': 'N', 
-                'HARVS': self.harvest_option, 
+                'PLANT': 'R', 'IRRIG': irrigation, 
+                'FERTI': fertilization, 'RESID': 'N', 
+                'HARVS': harvest, 
                 
                 'OUTPUTS': 'OU',
                 'FNAME': 'N', 'OVVEW': 'Y', 'SUMRY': 'Y', 'FROPT': 1, 
@@ -275,8 +267,8 @@ class Management:
             idcol='@N',
             pars={
                 'PLANTING': 'PL',
-                'PFRST': (self.planting_date-timedelta(days=3)).strftime('%y%j'),
-                'PLAST': (self.planting_date+timedelta(days=3)).strftime('%y%j'), 
+                'PFRST': (planting_date-timedelta(days=3)).strftime('%y%j'),
+                'PLAST': (planting_date+timedelta(days=3)).strftime('%y%j'), 
                 'PH2OL': 40, 'PH2OU': 100, 'PH2OD': 30, 'PSTMX': 40, 'PSTMN': 40,
                 
                 'IRRIGATION': 'IR', 
@@ -291,8 +283,8 @@ class Management:
                 'RIPCN': 100, 'RTIME': 1, 'RIDEP': 20, 
                 
                 'HARVEST': 'HA',
-                'HFRST': self.planting_date.strftime('%y%j'), 
-                'HLAST': (self.planting_date + timedelta(days=2*365)).strftime('%y%j'),
+                'HFRST': planting_date.strftime('%y%j'), 
+                'HLAST': (planting_date + timedelta(days=2*365)).strftime('%y%j'),
                 'HPCNP': 100, 'HPCNR': 0, 														
             }
         )

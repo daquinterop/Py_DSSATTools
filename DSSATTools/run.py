@@ -174,7 +174,7 @@ class DSSAT():
         
         # Fill Managament fields
         management._Management__cultivars['CR'] = crop._CODE
-        management._Management__cultivars['INGENO'] = crop._cultivar_code
+        management._Management__cultivars['INGENO'] = crop.cultivar["@VAR#"]
         management._Management__cultivars['CNAME'] = \
             crop.cultivar[CUL_VARNAME[crop._CODE]]
 
