@@ -7,15 +7,15 @@ defined as attributes of the `Crop` instance. Each parameter is accessible and c
 be modified using the key, value syntax, e.g.
 `crop.cultivar["PARAMETER"] = VALUE`. 
 
-It is well known that for a species there can be multiple cultivars. Therefore, 
+It is well known that for a species there can be multiple varieties. Therefore, 
 when initializing a `Crop` instance, two parameters must be provided: the crop 
 name (species), and the cultivar code. The cultivar codes are defined in the .CUL
 file. If an unknown cultivar is passed, then the last cultivar in the .CUL file is
 used and a warning is shown. To get a list of the available cultivars for a crop
-the user can use the `DSSATTools.crop.available_cultivars` function passing the 
-crop name as only argument.
+the user can use the `DSSATTools.available_cultivars` function passing the 
+crop name as the only argument.
 
-If the user wants to modify the cultivar or ecotype parameters they can be through
+If the user wants to modify the cultivar or ecotype parameters they can through
 the `Crop.cultivar` and `Crop.ecotype` attributes respectively. In these two
 attributes both the cultivar and ecotype parameters are defined as a `Section`
 class (DSSATTools.sections.Section). `Section` class simply maps the parameter's
@@ -40,7 +40,7 @@ from DSSATTools import VERSION
 from DSSATTools import __file__ as module_path
 import warnings
 
-# To add a new crop you have to do the next:
+# To add a new crop you have to do the next: #TODO: I need to update these steps
 # 1. Create a new Class for the crop within the model's submodule in the models module.
 # 2. Add the new model to the CROPS_MODULES and SPE_FILES mapping dict just below.
 # 3. Add the VARNAME item for the crop in the CUL_VARNAME dict in run.py
@@ -207,9 +207,9 @@ class Crop:
             Potato, Tomato, Cabbage, Potato and Sugarcane.
         cultivar: str
             The cultivar identifier. To check the available cultivars for that
-            crop use the DSSATTools.crop.available_cultivars function. If a new
+            crop use the DSSATTools.available_cultivars function. If a new
             cultivar (not in the .CUL file for that crop) is passed, then default
-            parameters will be used.
+            parameters are be used.
         '''
         self._crop_name = crop_name.title()
         assert self._crop_name in CROPS_MODULES.keys(), \

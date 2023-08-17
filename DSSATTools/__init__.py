@@ -10,9 +10,9 @@ for the simulation to be performed:
 method is called a new directory is created in the provided location (a tmp 
 directory is default) and all the files that are necessary to run the model are 
 copied in that folder.
-3. run the simulation using the `DSSAT.run` method. That method needs three 
-parameters to be pased, each one indicating the crop, soil, weather, and management.
-This step can be performed as many times as one wants.
+3. run the simulation calling `DSSAT.run` method. That method needs four 
+parameters to be pased. Each parameter indicates the crop, soil, weather, and management.
+This step can be performed as many times as one wants. 
 4. close the environment using `DSSAT.close`. This removes the directory and the
 files created during the environment setup.
 
@@ -33,13 +33,13 @@ aforementioned classes:
     >>> growth = dssat.output["PlantGro"] 
     >>> dssat.close() # Terminate the simulation environment
 
-The parameters for ecach class are described later. It is very important to note
-that this library will allow the user to run one treatment at a time. If the user
-is familiar with DSSAT, they must know that DSSAT allows to define multiple
-treatments in the same experimental file.
+The parameters for ecach class are described in their doucmentation. It is very 
+important to highlight that this library will allow the user to run only one treatment
+at a time. If the users are familiar to DSSAT, they must know that DSSAT allows to
+define multiple treatments in the same experimental file.
 
-All of the parameters and attributes of the four basic clases have the same name
-you find in the DSSAT files (Take a look at the .CDE files in 
+All of the parameters for the four basic clases have the same names you find in 
+the DSSAT files (Take a look at the .CDE files in 
 https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
 
 Up to date next crops and models are included:

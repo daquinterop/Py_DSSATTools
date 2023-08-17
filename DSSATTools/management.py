@@ -14,7 +14,7 @@ user to modify: field, initial conditions, planting details, irrigation, fertili
 harvest details, simulation controls, automatic management. All the sections are a
 `DSSATTools.section.Sections` object. The options that are not defined when
 initializing the `Management` instance can be defined by modifying the value of
-the parameters in each of the sections. An example will be set. If the user is
+the parameters in each of the sections. An example will be shown. If the user is
 not familiar to the different sections of the DSSAT experimental file then
 reviewing the DSSAT documentation is suggested.
 
@@ -53,6 +53,9 @@ still be modified:
     >>> man.irrigation['table'] = TabularSubsection(
             schedule[['IDATE', 'IROP', 'IRVAL']]
         )
+
+Note how the date is is converted to the format required by DSSAT. This has to be 
+done for all dates.
 '''
 from DSSATTools.base.sections import (
     Section, TabularSubsection

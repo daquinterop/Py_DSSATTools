@@ -1,12 +1,13 @@
 # TODO: There are different ET methods, so this should be included here, I mean,
 #  the minimum data requirement must deppend on the ET method
+# TODO: consider definning two sections for Weather: parameters and data.
 
 '''
 This module hosts the `Weather` class. It also contains the
 `list_station_parameters` and `list_weather_variables` which return a list of the
 parameters that define the weather station where the data was collected, and the
 weather variables that can be included in the dataset. A `Weather` instance is
-initialized by passing five mandatory parameters: a pandas dataframe including
+initialized by passing five mandatory arguments: a pandas dataframe including
 the weather data, a dict mapping each dataframe column to one of the DSSAT
 weather varaibles, latitude, longitude, and elevation.
 
@@ -102,7 +103,7 @@ class Weather():
             data. 
         pars: dict
             A dictionary mapping the data columns to the Weather variables
-            required by DSSAT. Use `weather.list_weather_variables` function to
+            required by DSSAT. Use `DSSATTools.weather.list_weather_variables` function to
             have a detailed description of the DSSAT weather variables.
         lat, lon, elev: float
             Latitude, longitude and elevation of the weather station

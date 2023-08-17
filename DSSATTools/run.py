@@ -1,12 +1,13 @@
 '''
-This module hosts the DSSAT class. That class is the simulation environment, 
+This module hosts the DSSAT class. This class represents the simulation environment, 
 so per each DSSAT instance there's a directory where all the necesary files to 
 run the model are allocated. To run the model there are 3 basic steps:
 
 1. Create a new Dscsm instance.
 2. Initialize the environment by calling the setup() method.
 3. Run the model by calling the run() method.
-You can close the simulation environment by calling the close() method.
+You can close the simulation environment by calling the close() method. This will
+remove the directory and files created durinh the setup() call.
 
 The model outputs are storage in the `outputs` attribute. Up to date the only 
 model output parsed into `outputs` is 'PlantGro'.
@@ -153,13 +154,13 @@ class DSSAT():
 
         Arguments
         ----------
-        soil: DSSATTools.soil.Soil
+        soil: DSSATTools.SoilProfile
             SoilProfile instance
-        weather: DSSATTools.weather.WeatherStation
+        weather: DSSATTools.Weather
             WeatherStation instance
-        crop: DSSATTools.crop.Crop
+        crop: DSSATTools.Crop
             Crop instance
-        managment: DSSATTools.management.Management
+        managment: DSSATTools.Management
             Management instance
         '''
         

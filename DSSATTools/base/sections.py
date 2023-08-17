@@ -1,7 +1,7 @@
 # TODO: Check parameter values and format directly when setting them. Use the defined formating just to check if the value can be formated. If it can't be formated then throw error. 
 import fortranformat as ff
 from pandas import isna, DataFrame
-from collections import MutableMapping
+from collections.abc import MutableMapping
 import warnings 
 
 NA_VALS = (None, '-99', -99, -999999)
@@ -117,7 +117,7 @@ SECTIONS_ROW_FMT = {
     ],
     'initial conditions': '1X,I1,1X,A5,1X,A5,2(1X,I5),2(1X,F5.2),6(1X,I5),1X,A6',
     'initial conditions_table': '1X,I1,1X,I5,1X,F5.2,2(1X,F5.1)',
-    'planting details': '1X,I1,2(1X,A5),2(1X,I5),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
+    'planting details': '1X,I1,2(1X,A5),2(1X,F5.1),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
     # 'planting details_table': '1X,I1,2(1X,A5),2(1X,I5),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
     'irrigation': '1X,I1,4(1X,I5),2(1X,A5),1X,I5,1X,A6',
     'irrigation_table': '1X,I1,2(1X,A5),1X,I5',
