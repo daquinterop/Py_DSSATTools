@@ -1,57 +1,16 @@
 '''
-This module hosts the DSSAT class. That class is the simulation environment, so per each DSSAT instance there's a directory where all the necesary files to run the model are allocated. To run the model there are 3 basic steps:
+This module hosts the DSSAT class. This class represents the simulation environment, 
+so per each DSSAT instance there's a directory where all the necesary files to 
+run the model are allocated. To run the model there are 3 basic steps:
+
 1. Create a new Dscsm instance.
-2. Initialize the environment by running the setup() method.
-3. Run the model by running the run() method.
-You can close the simulation environment by running the close() method.
+2. Initialize the environment by calling the setup() method.
+3. Run the model by calling the run() method.
+You can close the simulation environment by calling the close() method. This will
+remove the directory and files created durinh the setup() call.
 
-The model outputs are storage in the `outputs` attribute. Up to date the only model output parsed into `outputs` is 'PlantGro'.
-
-In the next example all the 4 required objects to run the DSSAT model are created, an a simulation is run.
-
->>> # Create random weather data
->>> df = pd.DataFrame(
-    {
-    'tn': np.random.gamma(10, 1, N),
-    'rad': np.random.gamma(10, 1.5, N),
-    'prec': np.round(np.random.gamma(.4, 10, N), 1),
-    'rh': 100 * np.random.beta(1.5, 1.15, N),
-    },
-    index=DATES,
-)
->>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
->>> # Create a WeatherData instance
->>> WTH_DATA = WeatherData(
-    df,
-    variables={
-        'tn': 'TMIN', 'TMAX': 'TMAX',
-        'prec': 'RAIN', 'rad': 'SRAD',
-        'rh': 'RHUM'
-    }
-)
->>> # Create a WheaterStation instance
->>> wth = WeatherStation(
-    WTH_DATA, 
-    {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-)
->>> # Initialize soil, crop and management instances.
->>> soil = SoilProfile(default_class='SIL')
->>> crop = Crop('maize')
->>> man = Management(
-    cultivar='IB0001',
-    planting_date=DATES[10],
-)
->>> man.harvest_details['table'].loc[0, ['HDATE', 'HPC']] = \
-    [DATES[190].strftime('%y%j'), 100]
->>> # Initialize Dscsm instance and run.
->>> dssat = Dscsm()
->>> dssat.setup(cwd='/tmp/dssattest')
->>> dssat.run(
-    soil=soil, weather=wth, crop=crop, management=man,
-)
->>> # Get output
->>> PlantGro = dssat.outputs['PlantGro']
->>> dssat.close() # Terminate the simulation environment
+The model outputs are storage in the `outputs` attribute. Up to date the only 
+model output parsed into `outputs` is 'PlantGro'.
 '''
 
 import subprocess
@@ -67,35 +26,18 @@ import platform
 import errno, stat
 
 # Libraries for second version
-from DSSATTools import __file__ as DSSATModulePath
+from DSSATTools import __file__ as module_path
 from DSSATTools import VERSION
 from DSSATTools.soil import SoilProfile
-from DSSATTools.weather import WeatherStation
-from DSSATTools.crop import Crop
+from DSSATTools.weather import Weather
+from DSSATTools.crop import Crop, CUL_VARNAME
 from DSSATTools.management import Management
-from DSSATTools.base.sections import TabularSubsection, RowBasedSection
+from DSSATTools.base.sections import TabularSubsection
 from DSSATTools.base.sections import clean_comments
 
 OS = platform.system().lower()
 OUTPUTS = ['PlantGro', ]
 
-CUL_VARNAME = {
-    'MZ': 'VRNAME..........',
-    'ML': 'VAR-NAME........',
-    'BS': 'VRNAME..........',
-    'RI': 'VAR-NAME........',
-    'SG': 'VAR-NAME........',
-    'SW': 'VRNAME..........',
-    'AL': 'VRNAME..........',
-    'BM': 'VRNAME..........',
-    'SB': 'VAR-NAME........',
-    'CN': 'VRNAME..........',
-    'SU': 'VAR-NAME........',
-    'PT': 'VAR-NAME........',
-    'TM': 'VRNAME..........',
-    'CB': 'VRNAME..........',
-    'SC': 'VAR-NAME........'
-}
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
 
@@ -112,10 +54,14 @@ else:
     CHMOD_MODE = 111
 class DSSAT():
     '''
-    Class that represents the simulation environment. When initializing and seting up the environment, a new folder is created (usually in the tmp folder), and all of the necesary files to run the model are copied into it.
+    Class that represents the simulation environment. When initializing and seting 
+    up the environment, a new folder is created (usually in the tmp folder), and 
+    all of the necesary files to run the model are copied into it.
+
+    After the model runs, the output is saved in the output property. 
     '''
     def __init__(self):
-        BASE_PATH = os.path.dirname(DSSATModulePath)
+        BASE_PATH = os.path.dirname(module_path)
         self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
         if 'windows'in OS:
             self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048.exe')
@@ -131,17 +77,21 @@ class DSSAT():
             'crop': None, 'wheater': None, 'soil': None, 'management': None 
         }
 
-        self.output = {}
+        self._output = {}
         self.OUTPUT_LIST = OUTPUTS
 
     def setup(self, cwd=None):
         '''
-        Setup a simulation environment. Creates a tmp folder to run the simulations and move all the required files to run the model. Some rguments are optional, if those aren't provided, then standard files location will be used.
+        Setup a simulation environment. Creates a tmp folder to run the simulations
+        and move all the required files to run the model. Some rguments are 
+        optional, if those aren't provided, then standard files location will be
+        used.
 
         Arguments
         ----------
         cwd: str
-            Working directory. All the model files would be moved to that directory. If None, then a tmp directory will be created.
+            Working directory. All the model files would be moved to that 
+            directory. If None, then a tmp directory will be created.
         '''
         # TODO: verbose the setup process.
         TMP_BASE = tempfile.gettempdir()
@@ -194,25 +144,24 @@ class DSSAT():
 
     def run(self, 
             soil:SoilProfile,
-            weather:WeatherStation,
+            weather:Weather,
             crop:Crop,
             management:Management,
         ):
         '''
-        Start the simulation and runs until the end or failure.
+        Start the simulation and runs until the end or failure. It will return
+        None, but the simulation outputs will be assigned to self.output.
 
         Arguments
         ----------
-        soil: DSSATTools.soil.Soil
+        soil: DSSATTools.SoilProfile
             SoilProfile instance
-        weather: DSSATTools.weather.WeatherStation
+        weather: DSSATTools.Weather
             WeatherStation instance
-        crop: DSSATTools.crop.Crop
+        crop: DSSATTools.Crop
             Crop instance
-        managment: DSSATTools.management.Management
+        managment: DSSATTools.Management
             Management instance
-        options: DSSATTools.management.Options
-            To be implemented
         '''
         
         assert self._SETUP, 'You must initialize the simulation environment by'\
@@ -225,16 +174,23 @@ class DSSAT():
             os.remove(os.path.join(self._RUN_PATH, file))
         
         # Fill Managament fields
-        management.cultivars['CR'] = crop.CODE
-        management.cultivars['CNAME'] = \
-            crop.cultivar[management.cultivar][CUL_VARNAME[crop.CODE]]
+        management._Management__cultivars['CR'] = crop._CODE
+        management._Management__cultivars['INGENO'] = crop.cultivar["@VAR#"]
+        management._Management__cultivars['CNAME'] = \
+            crop.cultivar[CUL_VARNAME[crop._CODE]]
 
-        management.fields['WSTA....'] = weather.INSI \
+        management.field['WSTA....'] = weather.INSI \
             + management.sim_start.strftime('%y01')
-        management.fields['SLDP'] = soil.total_depth
-        management.fields['ID_SOIL'] = soil.id
+        management.field['SLDP'] = soil.total_depth
+        management.field['ID_SOIL'] = soil.id
+        if management.field["...........XCRD"] is None:
+            management.field["...........XCRD"] = weather.LON
+        if management.field["...........YCRD"] is None:
+            management.field["...........YCRD"] = weather.LAT
+        if management.field[".....ELEV"] is None:
+            management.field[".....ELEV"] = weather.ELEV
 
-        management.initial_conditions['PCR'] = crop.CODE
+        management.initial_conditions['PCR'] = crop._CODE
         if not management.initial_conditions['ICDAT']:
             management.initial_conditions['ICDAT'] = \
                 management.sim_start.strftime('%y%j')
@@ -251,21 +207,21 @@ class DSSAT():
         table = table.sort_values(by='ICBL').reset_index(drop=True)
         table['SNH4'] = [0.]*len(table)
         table['SNO3'] = [1.] + [0.]*(len(table)-1)
-        if crop.NAME in ROOTS:
-            assert not any(pd.isna(management.planting_details['table'][['PLWT', 'SPRL']]).values[0]), \
-                f"PLWT, SPRL transplanting parameters are mandatory for {crop.NAME} crop, you must "\
-                "define those parameters in management.planting_details['table']"
+        if crop.crop_name in ROOTS:
+            assert not any(pd.isna([management.planting_details['PLWT'], management.planting_details['SPRL']])), \
+                f"PLWT, SPRL transplanting parameters are mandatory for {crop.crop_name} crop, you must "\
+                "define those parameters in management.planting_details"
         management.initial_conditions['table'] = table
 
-        management.simulation_controls['SMODEL'] = crop.SMODEL        
+        management.simulation_controls['SMODEL'] = crop._SMODEL        
 
         management_filename = weather.INSI \
             + management.sim_start.strftime('%y01') \
-            + f'.{crop.CODE}X'
+            + f'.{crop._CODE}X'
         management_filename = os.path.join(self._RUN_PATH, management_filename) 
         management.write(filename=management_filename)
 
-        if crop.NAME in PERENIAL_FORAGES:
+        if crop.crop_name in PERENIAL_FORAGES:
             if len(management.mow['table']) < 1:
                 warnings.warn('No mow was defined. Define it at the Management.mow attribute')
             management.write_mow(f'{management_filename[:-4]}.MOW')
@@ -279,7 +235,7 @@ class DSSAT():
 
         with open(os.path.join(self._RUN_PATH, self._CONFILE), 'w') as f:
             f.write(f'WED    {wth_path}\n')
-            f.write(f'M{crop.CODE}    {self._RUN_PATH} dscsm048 {crop.SMODEL}{VERSION}\n')
+            f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
             f.write(f'CRD    {self._CRD_PATH}\n')
             f.write(f'PSD    {os.path.join(self._STATIC_PATH, "Pest")}\n')
             f.write(f'SLD    {self._SLD_PATH}\n')
@@ -328,7 +284,7 @@ class DSSAT():
                     (df['@YEAR'] + df['DOY']),
                     format='%Y%j'
                 )
-            self.output[file] = df
+            self._output[file] = df
         return
 
     def close(self):
@@ -337,5 +293,13 @@ class DSSAT():
         '''
         shutil.rmtree(self._RUN_PATH, **WIN_SHUTIL_KWARGS)
         sys.stdout.write(f'{self._RUN_PATH} and its content has been removed.\n')
+
+    @property
+    def output(self):
+        if len(self._output) < 1:
+            warnings.warn("No output has been captured")
+            return None
+        return self._output
+
     
 

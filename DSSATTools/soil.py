@@ -1,53 +1,72 @@
 """
-`soil` module includes the basic soil class `SoilProfile`. This class contains all the soil information necessary to run the DSSAT model. Each of the layers of the soil profile is a `SoilLayer` instance. After a `SoilProfile` instance is created, a new layer can added by calling the `SoilProfile.add_layer` method passing a `SoilLayer` object as argument. You can also use the `SoilProfile.drop_layer` to drop the layer at the specified depth.
+soil module includes the basic soil class `SoilProfile`. This class contains all
+the soil information necessary to run the DSSAT model. Each of the layers of the
+soil profile is a `SoilLayer` instance. After a `SoilProfile` instance is created,
+a new layer can added by calling the `SoilProfile.add_layer` method passing a
+`SoilLayer` object as argument. You can also use the `SoilProfile.drop_layer` to
+drop the layer at the specified depth.
 
-`SoilLayer` class represents each layer in the soil profile. The layer is initialized by passing the layer base depth and a dict with the parameteters as argument. Clay fraction (SLCL) and Silt fraction (SLSI) are the only mandatory parameters when creating a layer, the rest of the parameters are estimated.
+`SoilLayer` class represents each layer in the soil profile. The layer is
+initialized by passing the layer base depth and a dict with the parameteters as
+argument. Clay fraction (SLCL) and Silt fraction (SLSI) are the only mandatory
+parameters when creating a layer, the rest of the parameters are estimated.
 
 There are three basic ways of creating a `SoilProfile object`:
-    1. Specify a .SOL file and Soil id. Of course, the soil id must match one of the profiles in the .SOL file.
 
-        >>> soilprofile = SoilProfile(
-            file='SOIL.SOL',
-            profile='IBBN910030'
-        )
+1. Specify a .SOL file and Soil id. Of course, the soil id must match one of the
+profiles in the .SOL file.
 
-    2. Passing a string code of one the available default soils.
+>>> soilprofile = SoilProfile(
+    file='SOIL.SOL',
+    profile='IBBN910030'
+)
 
-        >>> soilprofile = SoilProfile(
-            default_class='SCL', # Silty Clay Loam
-        )
+2. Passing a string code of one the available default soils.
 
-    3. Pasing a dict with the profile parameters (different from the layer pars). `DSSAT.soil.list_profile_parameters` function prints a detailed list of the layer parameters. And empty dict can be pased as none of the parameters is mandatory.
+>>> soilprofile = SoilProfile(
+    default_class='SCL', # Silty Clay Loam
+)
 
-        >>> soilprofile = SoilProfile(
-            pars={
-                'SALB': 0.25, # Albedo
-                'SLU1': 6, # Stage 1 Evaporation (mm)
-                'SLPF': 0.8 # Soil fertility factor
-            }
-        )
-        >>> layers = [
-            soil.SoilLayer(20, {'SLCL': 50, 'SLSI': 45}),
-            soil.SoilLayer(50, {'SLCL': 30, 'SLSI': 30}),
-            soil.SoilLayer(100, {'SLCL': 30, 'SLSI': 35}),
-            soil.SoilLayer(180, {'SLCL': 20, 'SLSI': 30})
-        ]
-        >>> for layer in layers: soilprofile.add_layer(layer)
+3. Pasing a dict with the profile parameters (different from the layer pars)
+`DSSAT.soil.list_profile_parameters` function prints a detailed list of the layer
+parameters. And empty dict can be pased as none of the parameters is mandatory.
 
-That layer must be initialized with the texture information ('SLCL' and 'SLSI' parameters), or the hydraulic soil parameters ('SLLL', 'SDUL', 'SSAT', 'SRGF', 'SSKS', 'SBDM', 'SLOC'). If a soil hydraulic parameter is not defined, then it's estimated from soil texture using Pedo-transfer Functions. The previous parameters are the mandatory ones, but all the available parameters can be includedin the pars dict. 
+>>> soilprofile = SoilProfile(
+    pars={
+        'SALB': 0.25, # Albedo
+        'SLU1': 6, # Stage 1 Evaporation (mm)
+        'SLPF': 0.8 # Soil fertility factor
+    }
+)
+>>> layers = [
+    soil.SoilLayer(20, {'SLCL': 50, 'SLSI': 45}),
+    soil.SoilLayer(50, {'SLCL': 30, 'SLSI': 30}),
+    soil.SoilLayer(100, {'SLCL': 30, 'SLSI': 35}),
+    soil.SoilLayer(180, {'SLCL': 20, 'SLSI': 30})
+]
+>>> for layer in layers: soilprofile.add_layer(layer)
 
-If you want to save your soil profile in .SOL a file, you can use the `SoilProfile.write` method. The only argument of this method is the filename.
+That layer must be initialized with the texture information ('SLCL' and 'SLSI'
+parameters), or the hydraulic soil parameters ('SLLL', 'SDUL', 'SSAT', 'SRGF',
+'SSKS', 'SBDM', 'SLOC'). If a soil hydraulic parameter is not defined, then it's
+estimated from soil texture using Pedo-transfer Functions. The previous parameters
+are the mandatory ones, but all the available parameters can be includedin the
+pars dict. 
 
-For both classes any of the parameters can be modified after the initialization as each parameter is also an attribute of the instance.
+If you want to save your soil profile in .SOL a file, you can use the
+`SoilProfile.write` method. The only argument of this method is the filename.
 
-    >>> soilprofile = SoilProfile(
-        pars={
-            'SALB': 0.25, # Albedo
-            'SLU1': 6, # Stage 1 Evaporation (mm)
-            'SLPF': 0.8 # Soil fertility factor
-        }
-    >>> # Modify the albedo of the created instance
-    >>> soilprofile.SALB = 0.36
+For both classes any of the parameters can be modified after the initialization as
+each parameter is also an attribute of the instance.
+
+>>> soilprofile = SoilProfile(
+    pars={
+        'SALB': 0.25, # Albedo
+        'SLU1': 6, # Stage 1 Evaporation (mm)
+        'SLPF': 0.8 # Soil fertility factor
+    }
+>>> # Modify the albedo of the created instance
+>>> soilprofile.SALB = 0.36
 """
 
 from re import L
@@ -205,6 +224,7 @@ def list_profile_parameters():
 def van_genuchten(theta_r, theta_s, alpha, n, h):
     '''
     Van Genuchten function for soil water retention. Returns theta for a given h (kPa)
+    
     Arguments
     ----------
     theta_r: float
@@ -242,24 +262,36 @@ def color_to_oc(color=None, L=None, a=None, b=None):
   
 
 class SoilLayer(Series):
-    '''
-    Initialize a soil layer instance.
-
-    Arguments
-    ----------
-    base_depth: int
-        Depth to the bottom of that layer (cm)
-    pars: dict
-        Dict including the parameter values to initialize the instance. Layer parameters include: 'SLMH',  'SLLL',  'SDUL',  'SSAT',  'SRGF',  'SSKS',  'SBDM',  'SLOC', 'SLCL',  'SLSI',  'SLCF',  'SLNI',  'SLHW',  'SLHB',  'SCEC',  'SADC', 'SLPX',  'SLPT',  'SLPO', 'CACO3',  'SLAL',  'SLFE',  'SLMN',  'SLBS', 'SLPA',  'SLPB',  'SLKE',  'SLMG',  'SLNA',  'SLSU',  'SLEC',  'SLCA'.Only mandatory parameters are 'SLCL' and 'SLSI'. The rest of the basic parameters can be calculated from the texture. SCOM is optional, and it can be passed as an string referencing the color, or a tupple with CIELAB coordinates (L, a, b). The string can be one of these:
-
-            BLK: Black (10YR 2/1); 
-            YBR: Yellowish Brown (7.5YR 5/6); 
-            RBR: Redish Brown (10R 4/8); 
-            DBR: Dark Brown (2.5YR 3/4); 
-            GRE: Grey (10YR 6/1); 
-            YLW: Yellow (10YR 7/8)
-    '''
     def __init__(self, base_depth:int, pars:dict):
+        '''
+        Initialize a soil layer instance.
+
+        Arguments
+        ----------
+        base_depth: int
+            Depth to the bottom of that layer (cm)
+        pars: dict
+            Dict including the parameter values to initialize the instance. Layer parameters include: 'SLMH',  'SLLL',  'SDUL',  'SSAT',  'SRGF',  'SSKS',
+            'SBDM',  'SLOC', 'SLCL',  'SLSI',  'SLCF',  'SLNI',  'SLHW',  'SLHB',
+            'SCEC',  'SADC', 'SLPX',  'SLPT',  'SLPO', 'CACO3',  'SLAL',  'SLFE',
+            'SLMN',  'SLBS', 'SLPA',  'SLPB',  'SLKE',  'SLMG',  'SLNA',  'SLSU',
+            'SLEC',  'SLCA'.Only mandatory parameters are 'SLCL' and 'SLSI'. The rest
+            of the basic parameters can be calculated from the texture. SCOM is
+            optional, and it can be passed as an string referencing the color, or a
+            tupple with CIELAB coordinates (L, a, b). The string can be one of these:
+
+                - BLK: Black (10YR 2/1)
+
+                - YBR: Yellowish Brown (7.5YR 5/6)
+                
+                - RBR: Redish Brown (10R 4/8)
+                
+                - DBR: Dark Brown (2.5YR 3/4)
+                
+                - GRE: Grey (10YR 6/1)
+                
+                - YLW: Yellow (10YR 7/8)
+        '''
         super().__init__(
             {
                 key: NA
@@ -335,25 +367,33 @@ class SoilLayer(Series):
 
 
 class SoilProfile():
-    '''
-    Soil Profile class. It can be initialized from an existing file. It also can be initialized from scratch.  If a file is provided, then the soil is initialized as the soil profile with the matching profile id in the file.
-
-    Arguments
-    ----------
-    file: str
-        Optional. Path to the soil file.
-    profile: str
-        Optional. Must be passed if file argument is passed. It's the id of the profile within the file.
-    pars: dict
-        Dict with the non-layer soil parameters. 
-    default_class: str
-        Optional. It's a string defining a DSSAT default soil class. If not None, then the SoilClass instance is initialized with the paremeters of the specified default_class. default_class must match any of the next codes: Sand=S; Loamy Sand=LS; Sandy Loam=SL; Loam=L; Silty Loam=SIL; Silt=SI; Sandy Clay Loam=SCL; Clay Loam=CL; Silty Clay Loam=SICL; Sandy Clay=SC; Silty Clay=SIC; Clay=C.
-    
-    '''
     def __init__(
         self, file:str=None, profile:str=None, default_class:str=None,
         pars:dict={}
         ):
+        '''
+        Soil Profile class. It can be initialized from an existing file. It also 
+        can be initialized from scratch.  If a file is provided, then the soil is
+        initialized as the soil profile with the matching profile id in the file.
+
+        Arguments
+        ----------
+        file: str
+            Optional. Path to the soil file.
+        profile: str
+            Optional. Must be passed if file argument is passed. It's the id of 
+            the profile within the file.
+        pars: dict
+            Dict with the non-layer soil parameters. 
+        default_class: str
+            Optional. It's a string defining a DSSAT default soil class. If not 
+            None, then the SoilClass instance is initialized with the paremeters 
+            of the specified default_class. default_class must match any of the 
+            next codes: Sand=S; Loamy Sand=LS; Sandy Loam=SL; Loam=L; Silty 
+            Loam=SIL; Silt=SI; Sandy Clay Loam=SCL; Clay Loam=CL; Silty Clay 
+            Loam=SICL; Sandy Clay=SC; Silty Clay=SIC; Clay=C.
+        
+        '''
         self.n_layers = 0
         self.id = 'IB12345678'
         self.description = 'Soil profile'
@@ -478,7 +518,7 @@ class SoilProfile():
         '''
         HEADER = False
         FOUND_PROFILE = False
-        with open(self._file_path, 'r') as f:
+        with open(self._file_path, 'r', encoding="utf-8") as f:
             for line in f:
                 stiped_line = line.strip()
                 if len(stiped_line) == 0: 

@@ -1,34 +1,43 @@
+# TODO: There are different ET methods, so this should be included here, I mean,
+#  the minimum data requirement must deppend on the ET method
+# TODO: consider definning two sections for Weather: parameters and data.
+
 '''
-This module includes two basic classes to create a weather station. The `WeatherStation` class is the one that storages all the station info and the weather data. The `WeatherData` class inherits all the methods of a `pandas.DataFrame`, and it's the one that includes the weather data.
+This module hosts the `Weather` class. It also contains the
+`list_station_parameters` and `list_weather_variables` which return a list of the
+parameters that define the weather station where the data was collected, and the
+weather variables that can be included in the dataset. A `Weather` instance is
+initialized by passing five mandatory arguments: a pandas dataframe including
+the weather data, a dict mapping each dataframe column to one of the DSSAT
+weather varaibles, latitude, longitude, and elevation.
 
-In the next example we'll create synthetic data and we'll create a `WeatherStation` object.
+The next example illustrates how to define a Weather instance from syntetic data:
 
->>> DATES = pd.date_range('2000-01-01', '2010-12-31')
->>> df = pd.DataFrame(
-        {
-        'tn': np.random.gamma(10, 1, N),
-        'rad': np.random.gamma(10, 1.5, N),
-        'prec': np.round(np.random.gamma(.4, 10, N), 1),
-        'rh': 100 * np.random.beta(1.5, 1.15, N),
-        },
-        index=DATES,
-    )
->>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
->>> # Create a WeatherData instance
->>> WTH_DATA = WeatherData(
-        df,
-        variables={
-            'tn': 'TMIN', 'TMAX': 'TMAX',
-            'prec': 'RAIN', 'rad': 'SRAD',
-            'rh': 'RHUM'
-        }
-    )
->>> Create a WheaterStation instance
->>> wth = WeatherStation(
-        WTH_DATA, 
-        {'ELEV': 33, 'LAT': 0, 'LON': 0, 'INSI': 'dpoes'}
-    )
->>> wth.data.head() # To check the data first 5 records
+    >>> DATES = pd.date_range('2000-01-01', '2010-12-31'); N=len(DATES)
+    >>> df = pd.DataFrame(
+            {
+            'tn': np.random.gamma(10, 1, N),
+            'rad': np.random.gamma(10, 1.5, N),
+            'prec': np.round(np.random.gamma(.4, 10, N), 1),
+            'rh': 100 * np.random.beta(1.5, 1.15, N),
+            },
+            index=DATES,
+        )
+    >>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
+    >>> weather = Weather(
+            df, 
+            {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", 
+            "rh": "RHUM", "TMAX": "TMAX"},
+            4.54, -75.1, 1800
+        )
+
+The parameters of the weather station are defined as attributes of the `Weather`
+class. Those parameters can be listed by calling the `list_station_parameters`.
+In the next example the reference height for windspeed measurements is defined
+for the weather instance created in the previous example:
+
+    >>> weather.WNDHT = 2
+
 '''
 import os
 import pandas as pd
@@ -70,28 +79,47 @@ def list_station_parameters():
         if key in PARS_STATION:
             print(key + ': ' + value)
 
-def list_weather_parameters():
+def list_weather_variables():
     '''
     Print a list of the weather data parameters
     '''
     for key, value in PARS_DESC.items():
         if key in PARS_DATA:
             print(key + ': ' + value)
-        
 
-class WeatherData(DataFrame):
-    '''
-    Creates a WeatherData instance. That instance is the one that contains the records for the Weather Station.
 
-    Arguments
-    ----------
-    data: pd.Dataframe
-        A DataFrame containg the the weather data.
-    variables: dict
-        A dict to map the columns of the dataframe, to the DSSAT Weather variables. Use `list_weather_parameters` function to have a detailed description of the DSSAT weather variables.
-    '''
-    def __init__(self, data:DataFrame, variables:dict={}):
-        for key, value in variables.items():
+class Weather():
+    def __init__(self, df:DataFrame, pars:dict, lat:float, lon:float, elev:float):
+        '''
+        Initialize a Weather instance. This instance contains the weather data,
+        as well as the parameters that define the weather station that the data
+        represents,nsuch as the latitude, longitude and elevation.
+
+        Arguments
+        ----------
+        df: DataFrame
+            pandas DataFrame with the weather data. The index of the dataframe
+            must be datetime. A simple quality control check is performed for
+            data. 
+        pars: dict
+            A dictionary mapping the data columns to the Weather variables
+            required by DSSAT. Use `DSSATTools.weather.list_weather_variables` function to
+            have a detailed description of the DSSAT weather variables.
+        lat, lon, elev: float
+            Latitude, longitude and elevation of the weather station
+        '''
+        self.description = "Weather station"
+        self.INSI = 'WSTA'
+        self.LAT = lat
+        self.LON = lon
+        self.ELEV = elev 
+        self.TAV = 17 
+        self.AMP = 10 
+        self.REFHT = 2
+        self.WNDHT = 10
+        data = df.copy()
+
+        for key, value in pars.items():
             assert value in PARS_DATA, \
                 f'{value} is not a valid variable name'
             if (value in PARS_DATA) and (key not in PARS_DATA):
@@ -101,72 +129,35 @@ class WeatherData(DataFrame):
         assert all(map(lambda x: x in data.columns, MANDATORY_DATA)), \
             f'Data must contain at least {", ".join(MANDATORY_DATA)} variables'
 
-        super().__init__(data)
-
         # A really quick QC check
-        TEMP_QC = all(self.TMIN <= self.TMAX)
+        TEMP_QC = all(data.TMIN <= data.TMAX)
         assert TEMP_QC, 'TMAX < TMIN at some point in the series'
         if 'RHUM' in data.columns:
-            RHUM_QC = all((self.RHUM >= 0) & (self.RHUM <= 100))
+            RHUM_QC = all((data.RHUM >= 0) & (data.RHUM <= 100))
             assert RHUM_QC, '0 <= RHUM <= 100 must be accomplished'
-        RAIN_QC = all(self.RAIN >= 0)
+        RAIN_QC = all(data.RAIN >= 0)
         assert RAIN_QC, '0 <= RAIN must be accomplished'
         if 'SRAD' in data.columns:
-            SRAD_QC = all(self.SRAD >= 0)
+            SRAD_QC = all(data.SRAD >= 0)
             assert SRAD_QC, '0 <= SRAD must be accomplished'
 
         # Check date column
         DATE_COL = False
-        for col in self.columns:
-            if pd.api.types.is_datetime64_any_dtype(self[col]):
+        for col in data.columns:
+            if pd.api.types.is_datetime64_any_dtype(data[col]):
                 DATE_COL = col
-        if pd.api.types.is_datetime64_any_dtype(self.index):
+        if pd.api.types.is_datetime64_any_dtype(data.index):
             DATE_COL = True
         assert DATE_COL, 'At least one of the data columns must be a date'
 
         if isinstance(DATE_COL, str):
-            self.set_index(DATE_COL, inplace=True)
-            
-        
-
-class WeatherStation():
-    '''
-    Initialize a Weather station instance.
-
-    Arguments
-    ----------
-    pars: dict
-        dict with the Weather station parameters. `list_station_parameters` provides a list with the parameters and their description. Only LAT, LON and ELEV parameters are mandatory.
-    description: str
-        An string with the description of the weather station
-    '''
-    def __init__(
-        self, wthdata:WeatherData, pars:dict,
-        description='Weather Station'):
-        self.description = description
-        self.INSI = 'SERV'
-        self.LAT = NA
-        self.LON = NA
-        self.ELEV = NA 
-        self.TAV = 17 
-        self.AMP = 10 
-        self.REFHT = 2
-        self.WNDHT = 10
-
-        self.start_date = None
-        self.end_date = None
-        for par, value in pars.items():
-            assert par in self.__dict__.keys(),\
-                f'{par} is not a valid attribute for a WeatherStation class'
-            self.__dict__[par] = value
+            data.set_index(DATE_COL, inplace=True)
         
         self.INSI = self.INSI[:4].upper()
-        assert not any((isna(self.LAT), isna(self.LON), isna(self.ELEV))), \
-            'LAT, LON and ELEV parameters are mandatory'
 
-        assert isinstance(wthdata, WeatherData), \
-            'wthdata must be a WeatherData instance'
-        self.data = wthdata
+        assert isinstance(data, DataFrame), \
+            'wthdata must be a DataFrame instance'
+        self.data = data
 
     def write(self, folder:str='', **kwargs):
         '''
@@ -204,4 +195,11 @@ class WeatherStation():
             
             with open(os.path.join(folder, filename), 'w') as f:
                 f.write(outstr)
+
+    def __repr__(self):
+        repr_str = f"Weather data at {self.LON:.3f}°, {self.LAT:.3f}°\n"
+        repr_str += f"  Date start: {self.data.index.min().strftime('%Y-%m-%d')}\n"
+        repr_str += f"  Date end: {self.data.index.max().strftime('%Y-%m-%d')}\n"
+        repr_str += "Average values:\n" + self.data.mean().__repr__()
+        return repr_str
         
