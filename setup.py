@@ -36,8 +36,7 @@ setuptools.setup(
         'DSSATTools.static', 'DSSATTools.static.bin', 
         'DSSATTools.static.Genotype', 'DSSATTools.static.Pest', 
         'DSSATTools.static.StandardData', 'DSSATTools.static.Soil', 
-        
-        'DSSATTools.models', 'DSSATTools.base'
+        'DSSATTools.base'
         ],
     python_requires=">=3.6",
     license='MIT',

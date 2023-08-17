@@ -25,11 +25,7 @@ CULTIVAR_HEADER_FMT = {
 }
 CULTIVAR_ROWS_FMT = {
     'Maize':        'A6,1X,A16,1X,A5,1X,A6,1X,F5.1,1X,F5.3,2(1X,F5.0),2(1X,F5.2)',
-<<<<<<< HEAD
     'Millet':       'A6,1X,A16,1X,A5,1X,A6,4(1X,F5.1),4(1X,F5.2),1X,F5.1',
-=======
-    'Millet':       'A6,1X,A16,1X,A5,1X,A6,1X,F5.1,1X,F5.2,2(1X,F5.1),5(1X,F5.2)',
->>>>>>> v2.1
     'Sugarbeet':    'A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.2',
     'Rice':         'A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.4,1X,F5.2,4(1X,F5.1)',
     'Sorghum':      'A6,1X,A16,1X,A5,1X,A6,2(1X,F5.1),1X,F5.2,5(1X,F5.1),1X,F5.2,4(1X,F5.1)',
