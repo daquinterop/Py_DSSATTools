@@ -66,7 +66,8 @@ PARS_DESC = {
     'WIND': 'Daily wind speed (km d-1)',
     'PAR': 'Daily photosynthetic radiation, moles m-2 day-1',
     'EVAP': 'Daily pan evaporation (mm d-1)',
-    'RHUM': 'Relative humidity average, %'
+    'RHUM': 'Relative humidity average, %',
+    'CO2': 'CO2 (ppm)'
 }
 PARS_STATION = ['INSI', 'LAT', 'LONG', 'ELEV', 'TAV', 'AMP', 'REFHT', 'WNDHT']
 PARS_DATA = [i for i in PARS_DESC.keys() if i not in PARS_STATION]
