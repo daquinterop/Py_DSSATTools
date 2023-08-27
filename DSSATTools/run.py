@@ -157,7 +157,7 @@ class DSSAT():
         soil: DSSATTools.SoilProfile
             SoilProfile instance
         weather: DSSATTools.Weather
-            WeatherStation instance
+            Weather instance
         crop: DSSATTools.Crop
             Crop instance
         managment: DSSATTools.Management
@@ -179,8 +179,7 @@ class DSSAT():
         management._Management__cultivars['CNAME'] = \
             crop.cultivar[CUL_VARNAME[crop._CODE]]
 
-        management.field['WSTA....'] = weather.INSI \
-            + management.sim_start.strftime('%y01')
+        management.field['WSTA....'] = weather._name
         management.field['SLDP'] = soil.total_depth
         management.field['ID_SOIL'] = soil.id
         if management.field["...........XCRD"] is None:

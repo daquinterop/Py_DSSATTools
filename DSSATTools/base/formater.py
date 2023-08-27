@@ -51,10 +51,10 @@ def weather_station(fields):
 
 def weather_data_header(fields):
     fmt = f'{len(fields)}(1X,A5)'
-    return '@DATE' + ff.FortranRecordWriter(fmt).write(fields) + '\n'
+    return '@  DATE' + ff.FortranRecordWriter(fmt).write(fields) + '\n'
 
 def weather_data(fields):
-    fmt = f'A5,{len(fields)}(1X,F5.1)'
+    fmt = f'A7,{len(fields)}(1X,F5.1)'
     return ff.FortranRecordWriter(fmt).write(fields) + '\n'
 
 

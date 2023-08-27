@@ -38,9 +38,7 @@ class TestWeather:
         wth = Weather(df, variables, 4.54, -75.1, 1800)
         wth.write(folder)
         assert os.path.exists(folder)
-        for year in range(2000, 2010):
-            year = str(year)[2:]
-            assert os.path.exists(os.path.join(folder, f'WSTA{year}01.WTH'))
+        assert os.path.exists(os.path.join(folder, f'WSTA0011.WTH'))
 
     def test_wrong_variable_map(self):
         with pytest.raises(AssertionError) as excinfo:

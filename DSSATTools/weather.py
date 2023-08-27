@@ -42,6 +42,7 @@ for the weather instance created in the previous example:
 import os
 import pandas as pd
 from pandas import DataFrame
+from datetime import datetime
 from pandas import NA, isna
 from DSSATTools.base.formater import weather_data, weather_data_header, weather_station
 
@@ -157,7 +158,12 @@ class Weather():
 
         assert isinstance(data, DataFrame), \
             'wthdata must be a DataFrame instance'
-        self.data = data
+        self.data = data.sort_index()
+
+        first_year = self.data.index[0].year
+        total_years = self.data.index[-1].year - self.data.index[0].year + 1
+        self._name = f'{self.INSI}{str(first_year)[2:]}{total_years:02d}'
+
 
     def write(self, folder:str='', **kwargs):
         '''
@@ -173,28 +179,24 @@ class Weather():
             os.mkdir(folder)
         man = kwargs.get('management', False)
         if man:
-            from datetime import datetime
             sim_start = datetime(man.sim_start.year, man.sim_start.month, man.sim_start.day)
             self.data = self.data.loc[self.data.index >= sim_start]
-        for year in self.data.index.year.unique():
-            df = self.data.loc[self.data.index.year == year]
-            # month = df.index[0].strftime('%m')
-            month = '01'
-            filename = f'{self.INSI}{str(year)[2:]}{month}.WTH'
-            outstr = f'*WEATHER DATA : {self.description}\n\n'
-            outstr += '@ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT\n'
-            outstr += weather_station([
-                self.INSI, self.LAT, self.LON, self.ELEV,
-                self.TAV, self.AMP, self.REFHT, self.WNDHT
-            ])
-            outstr += weather_data_header(self.data.columns)
-            
-            for day, fields in df.iterrows():
-                day = day.strftime('%y%j')
-                outstr += weather_data([day]+list(fields))
-            
-            with open(os.path.join(folder, filename), 'w') as f:
-                f.write(outstr)
+
+        filename = f'{self._name}.WTH'
+        outstr = f'$WEATHER DATA : {self.description}\n\n'
+        outstr += '@ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT\n'
+        outstr += weather_station([
+            self.INSI, self.LAT, self.LON, self.ELEV,
+            self.TAV, self.AMP, self.REFHT, self.WNDHT
+        ])
+        outstr += weather_data_header(self.data.columns)
+        
+        for day, fields in self.data.iterrows():
+            day = day.strftime('%Y%j')
+            outstr += weather_data([day]+list(fields))
+        
+        with open(os.path.join(folder, filename), 'w') as f:
+            f.write(outstr)
 
     def __repr__(self):
         repr_str = f"Weather data at {self.LON:.3f}°, {self.LAT:.3f}°\n"
