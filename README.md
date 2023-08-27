@@ -181,8 +181,8 @@ run the model are allocated. To run the model there are 3 basic steps:
 3. Run the model by calling the run() method.
 You can close the simulation environment by calling the close() method.
 
-The model outputs are storage in the `outputs` attribute. Up to date the only 
-model output parsed into `outputs` is 'PlantGro'.
+The model outputs are storage in the `output` attribute. Up to date the next output
+are available: PlantGro, Weather, SoilWat, SoilOrg.
 
 ## DSSATTools.soil module
 

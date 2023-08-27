@@ -43,10 +43,16 @@ def weather_station(fields):
     for n, field in enumerate(fields[4:], 4):
         fmt += ',1X'
         if isna(field):
-            fields[n] = '-99'
+            if (n + 1) == len(fields):
+                fields[n] = ''
+            else:
+                fields[n] = '-99'
             fmt += ',A5'
         else:
-            fmt += ',F5.1'
+            if (n + 1) == len(fields):
+                fmt += ",I5"
+            else:
+                fmt += ',F5.1'
     return ff.FortranRecordWriter(fmt).write(fields) + '\n'
 
 def weather_data_header(fields):

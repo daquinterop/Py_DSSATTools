@@ -9,8 +9,8 @@ run the model are allocated. To run the model there are 3 basic steps:
 You can close the simulation environment by calling the close() method. This will
 remove the directory and files created durinh the setup() call.
 
-The model outputs are storage in the `outputs` attribute. Up to date the only 
-model output parsed into `outputs` is 'PlantGro'.
+The model outputs are storage in the `output` attribute. Up to date the next output
+are available: PlantGro, Weather, SoilWat, SoilOrg.
 '''
 
 import subprocess
@@ -36,7 +36,11 @@ from DSSATTools.base.sections import TabularSubsection
 from DSSATTools.base.sections import clean_comments
 
 OS = platform.system().lower()
-OUTPUTS = ['PlantGro', ]
+OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg"]
+OUTPUT_MAP = {
+    "PlantGro": "GROUT",  "SoilWat": "WAOUT", "SoilOrg": "CAOUT",
+    "Weather": "GROUT"
+}
 
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
@@ -78,7 +82,6 @@ class DSSAT():
         }
 
         self._output = {}
-        self.OUTPUT_LIST = OUTPUTS
 
     def setup(self, cwd=None):
         '''
@@ -170,6 +173,8 @@ class DSSAT():
         # Remove previous outputs and inputs
         OUTPUT_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] == 'OUT']
         INP_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] in ['INP', 'INH']]
+        self._output = {}
+
         for file in (OUTPUT_FILES + INP_FILES):
             os.remove(os.path.join(self._RUN_PATH, file))
         
@@ -252,6 +257,10 @@ class DSSAT():
             + ' detailed report'
 
         OUTPUT_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] == 'OUT']
+        self.OUTPUT_LIST = [
+            var for var in OUTPUTS
+            if management.simulation_controls.get(OUTPUT_MAP.get(var)) in ("Y", None)
+        ]
         
         for file in self.OUTPUT_LIST:
             assert f'{file}.OUT' in OUTPUT_FILES, \
@@ -296,7 +305,7 @@ class DSSAT():
     @property
     def output(self):
         if len(self._output) < 1:
-            warnings.warn("No output has been captured")
+            warnings.warn("No output has been saved")
             return None
         return self._output
 
