@@ -6,13 +6,16 @@ The simulation environment is managed by the `DSSAT` Class. There are three stag
 for the simulation to be performed: 
 
 1. Initialize a `DSSAT` instance. 
+
 2. setup the simulation environment by using the `DSSAT.setup` method. When that 
 method is called a new directory is created in the provided location (a tmp 
 directory is default) and all the files that are necessary to run the model are 
 copied in that folder.
+
 3. run the simulation calling `DSSAT.run` method. That method needs four 
 parameters to be pased. Each parameter indicates the crop, soil, weather, and management.
 This step can be performed as many times as one wants. 
+
 4. close the environment using `DSSAT.close`. This removes the directory and the
 files created during the environment setup.
 
