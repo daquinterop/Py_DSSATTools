@@ -1,6 +1,7 @@
 from pyparsing import col
 import pytest
-from DSSATTools.weather import Weather
+from DSSATTools import Weather, SoilProfile, DSSAT, Management, Crop
+from datetime import datetime
 import pandas as pd
 import numpy as np
 import shutil
@@ -38,15 +39,13 @@ class TestWeather:
         wth = Weather(df, variables, 4.54, -75.1, 1800)
         wth.write(folder)
         assert os.path.exists(folder)
-        for year in range(2000, 2010):
-            year = str(year)[2:]
-            assert os.path.exists(os.path.join(folder, f'WSTA{year}01.WTH'))
+        assert os.path.exists(os.path.join(folder, f'WSTA0011.WTH'))
 
     def test_wrong_variable_map(self):
         with pytest.raises(AssertionError) as excinfo:
             Weather(df, {
-                'TMIN': 'TMIN', 'TMAX': 'TMAX',
-                'prec': 'RAIN', 'SRAD': 'HPTA',
+                'tn': 'TMIN', 'TMAX': 'TMAX',
+                'prec': 'RAIN', 'rad': 'HPTA',
             }, 4.54, -75.1, 1800)
         assert 'HPTA is not a valid variable name' in str(excinfo.value)
 
@@ -125,3 +124,37 @@ class TestWeather:
                  2.54, -75.1, 1800
             )
         assert 'of the data columns must be a date' in str(excinfo.value)
+
+    def test_co2_value(self):
+        '''
+        Run with default CO2 option (Mauna Loa), then modify CO2 and check the 
+        Weather output files.
+        '''
+        wth = Weather(df, {
+            'tn': 'TMIN', 'TMAX': 'TMAX',
+            'prec': 'RAIN', 'rad': 'SRAD',
+        }, 4.54, -75.1, 1800)
+        soil = SoilProfile(default_class='SIL')
+        man = Management(planting_date=datetime(2000, 2, 1))
+        crop = Crop("maize")
+        dssat = DSSAT()
+        dssat.setup("/tmp/dssat_test")
+        # Test CO2 from Mauna Loa
+        man.simulation_controls["CO2"] = "M"
+        dssat.run(
+            soil, wth, crop, man
+        )
+        assert np.isclose(dssat.output["Weather"]["CO2D"].iloc[0], 368.73, atol=1)
+        # Test default value (380)
+        man.simulation_controls["CO2"] = "D"
+        dssat.run(
+            soil, wth, crop, man
+        )
+        assert np.isclose(dssat.output["Weather"]["CO2D"].iloc[0], 380., atol=1)
+        # test CO2 in weather station
+        man.simulation_controls["CO2"] = "W"
+        wth.CO2 = 500
+        dssat.run(
+            soil, wth, crop, man
+        )
+        assert np.isclose(dssat.output["Weather"]["CO2D"].iloc[0], 500., atol=1)

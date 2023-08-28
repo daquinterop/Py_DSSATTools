@@ -42,6 +42,7 @@ for the weather instance created in the previous example:
 import os
 import pandas as pd
 from pandas import DataFrame
+from datetime import datetime
 from pandas import NA, isna
 from DSSATTools.base.formater import weather_data, weather_data_header, weather_station
 
@@ -55,6 +56,7 @@ PARS_DESC = {
     'AMP': 'Temperature amplitude (range), monthly averages [long-term], C',
     'REFHT': 'Reference height for weather measurements, m',
     'WNDHT': 'Reference height for windspeed measurements, m',
+    'CO2': 'CO2 (vpm)',
     # Data parameters
     'DATE': 'Date, year + days from Jan. 1',
     'SRAD': 'Daily solar radiation, MJ m-2 day-1',
@@ -65,9 +67,9 @@ PARS_DESC = {
     'WIND': 'Daily wind speed (km d-1)',
     'PAR': 'Daily photosynthetic radiation, moles m-2 day-1',
     'EVAP': 'Daily pan evaporation (mm d-1)',
-    'RHUM': 'Relative humidity average, %'
+    'RHUM': 'Relative humidity average, %',
 }
-PARS_STATION = ['INSI', 'LAT', 'LONG', 'ELEV', 'TAV', 'AMP', 'REFHT', 'WNDHT']
+PARS_STATION = ['INSI', 'LAT', 'LONG', 'ELEV', 'TAV', 'AMP', 'REFHT', 'WNDHT', "CO2"]
 PARS_DATA = [i for i in PARS_DESC.keys() if i not in PARS_STATION]
 MANDATORY_DATA = ['TMIN', 'TMAX', 'RAIN', 'SRAD']
 
@@ -89,7 +91,8 @@ def list_weather_variables():
 
 
 class Weather():
-    def __init__(self, df:DataFrame, pars:dict, lat:float, lon:float, elev:float):
+    def __init__(self, df:DataFrame, pars:dict, lat:float, lon:float, elev:float,
+                 co2:int=380):
         '''
         Initialize a Weather instance. This instance contains the weather data,
         as well as the parameters that define the weather station that the data
@@ -107,6 +110,9 @@ class Weather():
             have a detailed description of the DSSAT weather variables.
         lat, lon, elev: float
             Latitude, longitude and elevation of the weather station
+        co2: float
+            CO2 concentration (vpm). management.simulation_controls["CO2"] must 
+            be set to "W" to use this value.
         '''
         self.description = "Weather station"
         self.INSI = 'WSTA'
@@ -118,13 +124,19 @@ class Weather():
         self.REFHT = 2
         self.WNDHT = 10
         data = df.copy()
-
+        self.CO2 = co2
+        
+        cols = []
         for key, value in pars.items():
             assert value in PARS_DATA, \
                 f'{value} is not a valid variable name'
-            if (value in PARS_DATA) and (key not in PARS_DATA):
+            if (value in PARS_DATA):
                 data[value] = data[key]
-                data.drop(columns=[key], inplace=True)
+                cols.append(value)
+                if (key not in PARS_DATA):
+                    data.drop(columns=[key], inplace=True)
+        data = data[cols]
+
 
         assert all(map(lambda x: x in data.columns, MANDATORY_DATA)), \
             f'Data must contain at least {", ".join(MANDATORY_DATA)} variables'
@@ -157,7 +169,12 @@ class Weather():
 
         assert isinstance(data, DataFrame), \
             'wthdata must be a DataFrame instance'
-        self.data = data
+        self.data = data.sort_index()
+
+        first_year = self.data.index[0].year
+        total_years = self.data.index[-1].year - self.data.index[0].year + 1
+        self._name = f'{self.INSI}{str(first_year)[2:]}{total_years:02d}'
+
 
     def write(self, folder:str='', **kwargs):
         '''
@@ -173,28 +190,25 @@ class Weather():
             os.mkdir(folder)
         man = kwargs.get('management', False)
         if man:
-            from datetime import datetime
             sim_start = datetime(man.sim_start.year, man.sim_start.month, man.sim_start.day)
             self.data = self.data.loc[self.data.index >= sim_start]
-        for year in self.data.index.year.unique():
-            df = self.data.loc[self.data.index.year == year]
-            # month = df.index[0].strftime('%m')
-            month = '01'
-            filename = f'{self.INSI}{str(year)[2:]}{month}.WTH'
-            outstr = f'*WEATHER DATA : {self.description}\n\n'
-            outstr += '@ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT\n'
-            outstr += weather_station([
-                self.INSI, self.LAT, self.LON, self.ELEV,
-                self.TAV, self.AMP, self.REFHT, self.WNDHT
-            ])
-            outstr += weather_data_header(self.data.columns)
-            
-            for day, fields in df.iterrows():
-                day = day.strftime('%y%j')
-                outstr += weather_data([day]+list(fields))
-            
-            with open(os.path.join(folder, filename), 'w') as f:
-                f.write(outstr)
+
+        filename = f'{self._name}.WTH'
+        outstr = f'$WEATHER DATA : {self.description}\n\n'
+        outstr += '@ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT  CCO2\n'
+        outstr += weather_station([
+            self.INSI, self.LAT, self.LON, self.ELEV,
+            self.TAV, self.AMP, self.REFHT, self.WNDHT,
+            self.CO2
+        ])
+        outstr += weather_data_header(self.data.columns)
+        
+        for day, fields in self.data.iterrows():
+            day = day.strftime('%Y%j')
+            outstr += weather_data([day]+list(fields))
+        
+        with open(os.path.join(folder, filename), 'w') as f:
+            f.write(outstr)
 
     def __repr__(self):
         repr_str = f"Weather data at {self.LON:.3f}°, {self.LAT:.3f}°\n"

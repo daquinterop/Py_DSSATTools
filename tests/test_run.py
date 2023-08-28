@@ -338,6 +338,51 @@ def test_issue_11():
     )
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))    
 
+def test_outputs():
+    """
+    Test that different outputs are saved if they have been defined in the 
+    simulation_controls
+    """
+    crop = Crop('maize')
+    man = Management(
+        planting_date=DATES[10],
+    )
+
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    outputs = ['PlantGro', "Weather", "SoilWat", "SoilOrg"]
+    assert all(map(lambda x: x in outputs, dssat.output))
+
+    man.simulation_controls["GROUT"] = "N"
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert all(
+        map(lambda x: (x in ["SoilWat", "SoilOrg"]) 
+            and (x not in ['PlantGro', "Weather"]) 
+            ,dssat.output)
+    )
+    assert all(map(lambda x: x in outputs, dssat.output))
+
+    man.simulation_controls["WAOUT"] = "N"
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert all(
+        map(lambda x: (x in ["SoilOrg"]) 
+            and (x not in ['PlantGro', "Weather", "SoilWat"]) 
+            ,dssat.output)
+    )
+
+    man.simulation_controls["CAOUT"] = "N"
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    with pytest.warns(UserWarning, match='No output has been'):
+        dssat.output 
 
 if __name__ == '__main__':
-    test_set_crop_parameter_and_run()
+    test_outputs()
