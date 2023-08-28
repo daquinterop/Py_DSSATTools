@@ -147,6 +147,7 @@ class DSSAT():
             weather:Weather,
             crop:Crop,
             management:Management,
+            verbose=True
         ):
         '''
         Start the simulation and runs until the end or failure. It will return
@@ -192,8 +193,7 @@ class DSSAT():
 
         management.initial_conditions['PCR'] = crop._CODE
         if not management.initial_conditions['ICDAT']:
-            management.initial_conditions['ICDAT'] = \
-                management.sim_start.strftime('%y%j')
+            management.initial_conditions['ICDAT'] = management.sim_start.strftime('%y%j')
         
         initial_swc = []
         for depth, layer in soil.layers.items():
@@ -245,8 +245,9 @@ class DSSAT():
         excinfo = subprocess.run(exc_args, 
             cwd=self._RUN_PATH, capture_output=True, text=True
         )
-        for line in clean_comments(excinfo.stdout.split('\n')):
-            sys.stdout.write(line + '\n')
+        if verbose:
+            for line in clean_comments(excinfo.stdout.split('\n')):
+                sys.stdout.write(line + '\n')
 
         assert excinfo.returncode == 0, 'DSSAT execution Failed, check '\
             + f'{os.path.join(self._RUN_PATH, "ERROR.OUT")} file for a'\
