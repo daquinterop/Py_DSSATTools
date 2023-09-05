@@ -40,32 +40,13 @@ from DSSATTools import VERSION
 from DSSATTools import __file__ as module_path
 import warnings
 
-# To add a new crop you have to do the next: #TODO: I need to update these steps
-# 1. Create a new Class for the crop within the model's submodule in the models module.
-# 2. Add the new model to the CROPS_MODULES and SPE_FILES mapping dict just below.
-# 3. Add the VARNAME item for the crop in the CUL_VARNAME dict in run.py
-#   3.1. If forage or root, add to the PERENIAL_FORAGES and ROOTS constants
-# 4. Add the fortran format strings in the sections module
-# 5. Create a test in test_run.py
-# 6. Run the test and fix the bugs until it works (of course, including all of the previous test as well).
-# 7. Add crop to the crop.Crop docstirng and README
-# CROPS_MODULES = {
-#     'Maize': CERES.Maize,
-#     'Millet': CERES.Millet,
-#     'Sugarbeet': CERES.Sugarbeet,
-#     'Rice': CERES.Rice,
-#     'Sorghum': CERES.Sorghum,
-#     'Sweetcorn': CERES.Sweetcorn,
-#     'Alfalfa': FORAGE.Alfalfa,
-#     'Bermudagrass': FORAGE.Bermudagrass,
-#     'Soybean': CROPGRO.Soybean,
-#     'Canola': CROPGRO.Canola,
-#     'Sunflower': CROPGRO.Sunflower,
-#     'Potato': SUBSTOR.Potato,
-#     'Tomato': CROPGRO.Tomato,
-#     'Cabbage': CROPGRO.Cabbage,
-#     'Sugarcane': CANEGRO.Sugarcane
-# }
+# To add a new crop you have to do the next: 
+# 1. Add all the new crop to DEFAULT_CULTIVARS, CROP_CODES, CROPS_MODULES, CUL_VARNAME 
+#    in this file
+# 2. Add the new crop to CULTIVAR_HEADER_FMT, CULTIVAR_ROWS_FMT, ECOTYPE_HEADER_FMT, and
+#    ECOTYPE_ROWS_FMT in sections.py
+# 3. Add the crop in the __init__ docstring and the README file.
+
 SPE_FILES = {
     'Maize': f'MZCER{VERSION}.SPE',
     'Millet': f'MLCER{VERSION}.SPE',

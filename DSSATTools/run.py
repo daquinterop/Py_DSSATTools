@@ -262,6 +262,9 @@ class DSSAT():
             var for var in OUTPUTS
             if management.simulation_controls.get(OUTPUT_MAP.get(var)) in ("Y", None)
         ]
+        # Check for man.simulation_controls["WATER"]
+        if management.simulation_controls["WATER"] == "N":
+            self.OUTPUT_LIST = list(filter(lambda x: x != "SoilWat", self.OUTPUT_LIST))
         
         for file in self.OUTPUT_LIST:
             assert f'{file}.OUT' in OUTPUT_FILES, \
