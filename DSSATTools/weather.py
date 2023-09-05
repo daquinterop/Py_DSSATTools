@@ -202,10 +202,11 @@ class Weather():
             self.CO2
         ])
         outstr += weather_data_header(self.data.columns)
-        
-        for day, fields in self.data.iterrows():
-            day = day.strftime('%Y%j')
-            outstr += weather_data([day]+list(fields))
+
+        df = self.data.applymap(lambda x: f"{x:5.1f}")
+        df['day'] = df.index.strftime("%Y%j")
+        df = df [["day"]+list(self.data.columns)]
+        outstr += "\n".join(map(lambda x: " ".join(x), df.values))
         
         with open(os.path.join(folder, filename), 'w') as f:
             f.write(outstr)

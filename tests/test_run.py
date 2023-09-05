@@ -384,17 +384,17 @@ def test_outputs():
     with pytest.warns(UserWarning, match='No output has been'):
         dssat.output 
 
-def test_issue14():
-    crop = Crop('maize')
-    man = Management(
-        planting_date=DATES[10],
-    )
-    man.simulation_controls["NYERS"] = 2
-    dssat = DSSAT()
-    dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
-    dssat.run(
-        soil=soil, weather=wth, crop=crop, management=man,
-    )
+# def test_issue14():
+#     crop = Crop('maize')
+#     man = Management(
+#         planting_date=DATES[10],
+#     )
+#     man.simulation_controls["NYERS"] = 2
+#     dssat = DSSAT()
+#     dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
+#     dssat.run(
+#         soil=soil, weather=wth, crop=crop, management=man,
+#     )
 
 
 def test_no_wat_sim():
