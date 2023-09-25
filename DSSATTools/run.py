@@ -210,8 +210,8 @@ class DSSAT():
         table = TabularSubsection(initial_swc)
         table.columns = ['ICBL', 'SH2O']
         table = table.sort_values(by='ICBL').reset_index(drop=True)
-        table['SNH4'] = [0.]*len(table)
-        table['SNO3'] = [1.] + [0.]*(len(table)-1)
+        table['SNH4'] = [0.01]*len(table) # DSSAT default values
+        table['SNO3'] = [0.01]*len(table)
 
         if crop.crop_name in ROOTS:
             assert not any(pd.isna([management.planting_details['PLWT'], management.planting_details['SPRL']])), \
