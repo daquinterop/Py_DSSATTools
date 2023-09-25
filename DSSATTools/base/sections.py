@@ -116,7 +116,7 @@ SECTIONS_ROW_FMT = {
         '1X,I1,2(1X,A15),1X,I9,1X,I17,5(1X,A5)'
     ],
     'initial conditions': '1X,I1,1X,A5,1X,A5,2(1X,I5),2(1X,F5.2),6(1X,I5),1X,A6',
-    'initial conditions_table': '1X,I1,1X,I5,1X,F5.2,2(1X,F5.1)',
+    'initial conditions_table': '1X,I1,1X,I5,1X,F5.2,2(1X,F5.2)',
     'planting details': '1X,I1,2(1X,A5),2(1X,F5.1),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
     # 'planting details_table': '1X,I1,2(1X,A5),2(1X,I5),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
     'irrigation': '1X,I1,4(1X,I5),2(1X,A5),1X,I5,1X,A6',
