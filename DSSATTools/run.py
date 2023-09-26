@@ -243,7 +243,10 @@ class DSSAT():
 
         with open(os.path.join(self._RUN_PATH, self._CONFILE), 'w') as f:
             f.write(f'WED    {wth_path}\n')
-            f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
+            if crop._CODE in ["WH", "BA"]:
+                f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 CSCER{VERSION}\n')
+            else:
+                f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
             f.write(f'CRD    {self._CRD_PATH}\n')
             f.write(f'PSD    {os.path.join(self._STATIC_PATH, "Pest")}\n')
             f.write(f'SLD    {self._SLD_PATH}\n')

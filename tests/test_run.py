@@ -26,7 +26,7 @@ df = pd.DataFrame(
 )
 df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
 # Create a WheaterStation instance
-wth = wth = Weather(
+wth =  Weather(
         df, {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", "rh": "RHUM", "TMAX": "TMAX"},
         4.54, -75.1, 1800
     )
@@ -267,6 +267,24 @@ def test_run_sugarcane():
     )
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
 
+# def test_run_wheat():
+#     crop = Crop('Wheat')
+#     df["TMAX"] -= 8
+#     df["tn"] -= 8
+#     wth =  Weather(
+#         df, {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", "rh": "RHUM", "TMAX": "TMAX"},
+#         4.54, -75.1, 1800
+#     )
+#     man = Management(
+#         planting_date=DATES[10],
+#     )
+#     dssat = DSSAT()
+#     dssat.setup(cwd=os.path.join(TMP, 'test_wh'))
+#     dssat.run(
+#         soil=soil, weather=wth, crop=crop, management=man,
+#     )
+#     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+
 def test_close():
     crop = Crop('cabbage')
     man = Management(
@@ -384,18 +402,6 @@ def test_outputs():
     with pytest.warns(UserWarning, match='No output has been'):
         dssat.output 
 
-# def test_issue14():
-#     crop = Crop('maize')
-#     man = Management(
-#         planting_date=DATES[10],
-#     )
-#     man.simulation_controls["NYERS"] = 2
-#     dssat = DSSAT()
-#     dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
-#     dssat.run(
-#         soil=soil, weather=wth, crop=crop, management=man,
-#     )
-
 
 def test_no_wat_sim():
     crop = Crop('maize')
@@ -412,4 +418,4 @@ def test_no_wat_sim():
 
 
 if __name__ == '__main__':
-    test_issue14()
+    test_run_wheat()

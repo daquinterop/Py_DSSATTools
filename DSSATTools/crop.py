@@ -62,7 +62,8 @@ SPE_FILES = {
     'Potato': f'PTSUB{VERSION}.SPE',
     'Tomato': f'TMGRO{VERSION}.SPE',
     'Cabbage': f'CBGRO{VERSION}.SPE',
-    'Sugarcane': f'SCCAN{VERSION}.SPE'
+    'Sugarcane': f'SCCAN{VERSION}.SPE',
+    "Wheat": f"WHCER{VERSION}.SPE"
 }
 
 DEFAULT_CULTIVARS = {
@@ -81,6 +82,7 @@ DEFAULT_CULTIVARS = {
     'Tomato': "TM0001",
     'Cabbage': "990001",
     'Sugarcane': "IB0001",
+    "Wheat": "IB1500"
 }
 
 CROP_CODES = {
@@ -99,6 +101,7 @@ CROP_CODES = {
     'Tomato': "TM",
     'Cabbage': "CB",
     'Sugarcane': "SC",
+    "Wheat": "WH"
 }
 
 CROPS_MODULES = {
@@ -117,6 +120,7 @@ CROPS_MODULES = {
     'Tomato': "CRGRO",
     'Cabbage': "CRGRO",
     'Sugarcane': "SCCAN",
+    "Wheat": "WHCER"
 }
 
 DSSAT_MODULE_PATH = os.path.dirname(module_path)
@@ -150,7 +154,8 @@ CUL_VARNAME = {
     'PT': 'VAR-NAME........',
     'TM': 'VRNAME..........',
     'CB': 'VRNAME..........',
-    'SC': 'VAR-NAME........'
+    'SC': 'VAR-NAME........',
+    "WH": "VAR-NAME........"
 }
 
 
@@ -231,7 +236,8 @@ class Crop:
             pass
 
     def write(self, filepath:str=''):
-        cultivar_str = f'*{self._crop_name.upper()} CULTIVAR COEFFICIENTS: {self._SMODEL}{VERSION} MODEL\n' \
+        cultivar_str = self.cultivar.__dict__.get("_Section__versionLine", "")
+        cultivar_str += f'*{self._crop_name.upper()} CULTIVAR COEFFICIENTS: {self._SMODEL}{VERSION} MODEL\n' \
             + self.cultivar.write()
         with open(self._spe_path, "r") as f:
             species_str = f.read()
@@ -243,7 +249,8 @@ class Crop:
         with open(os.path.join(filepath, f'{self._SPE_FILE[:-3]}CUL'), 'w') as f:
             f.write(cultivar_str)
         if hasattr(self, "ecotype"):
-            ecotype_str = f'*{self._crop_name.upper()} ECOTYPE COEFFICIENTS: {self._SMODEL}{VERSION} MODEL\n' \
+            ecotype_str = self.ecotype.__dict__.get("_Section__versionLine", "")
+            ecotype_str += f'*{self._crop_name.upper()} ECOTYPE COEFFICIENTS: {self._SMODEL}{VERSION} MODEL\n' \
                 + self.ecotype.write()
             with open(os.path.join(filepath, f'{self._SPE_FILE[:-3]}ECO'), 'w') as f:
                 f.write(ecotype_str)
