@@ -13,7 +13,7 @@ sys.path.insert(0, '../DSSATTools')
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'DSSATTools'
-copyright = '2022, Diego Quintero'
+copyright = '2023, Diego Quintero'
 author = 'Diego Quintero'
 exclude_patterns = ['base', 'models']
 

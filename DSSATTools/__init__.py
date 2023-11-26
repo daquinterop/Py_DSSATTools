@@ -55,7 +55,7 @@ Millet               CERES
 Rice                 CERES               
 Sugarbeet            CERES               
 Sorghum              CERES               
-Sweetcorn            CERES               
+Sweetcorn            CERES             
 Alfalfa              FORAGE-Alfalfa      
 Bermudagrass         FORAGE-Bermudagrass 
 Soybean              CROPGRO             

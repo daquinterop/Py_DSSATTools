@@ -32,7 +32,6 @@ setuptools.setup(
     package_dir={"": "."},
     packages=[
         'DSSATTools', 
-        
         'DSSATTools.static', 'DSSATTools.static.bin', 
         'DSSATTools.static.Genotype', 'DSSATTools.static.Pest', 
         'DSSATTools.static.StandardData', 'DSSATTools.static.Soil', 

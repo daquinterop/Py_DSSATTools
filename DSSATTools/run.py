@@ -35,6 +35,8 @@ from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection
 from DSSATTools.base.sections import clean_comments
 
+import time 
+
 OS = platform.system().lower()
 OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg"]
 OUTPUT_MAP = {
@@ -150,6 +152,7 @@ class DSSAT():
             weather:Weather,
             crop:Crop,
             management:Management,
+            verbose=True
         ):
         '''
         Start the simulation and runs until the end or failure. It will return
@@ -166,18 +169,17 @@ class DSSAT():
         managment: DSSATTools.Management
             Management instance
         '''
-        
         assert self._SETUP, 'You must initialize the simulation environment by'\
             + ' running the setup() method'
-
+        
         # Remove previous outputs and inputs
         OUTPUT_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] == 'OUT']
         INP_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] in ['INP', 'INH']]
         self._output = {}
-
+        
         for file in (OUTPUT_FILES + INP_FILES):
             os.remove(os.path.join(self._RUN_PATH, file))
-        
+
         # Fill Managament fields
         management._Management__cultivars['CR'] = crop._CODE
         management._Management__cultivars['INGENO'] = crop.cultivar["@VAR#"]
@@ -196,9 +198,8 @@ class DSSAT():
 
         management.initial_conditions['PCR'] = crop._CODE
         if not management.initial_conditions['ICDAT']:
-            management.initial_conditions['ICDAT'] = \
-                management.sim_start.strftime('%y%j')
-        
+            management.initial_conditions['ICDAT'] = management.sim_start.strftime('%y%j')
+
         initial_swc = []
         for depth, layer in soil.layers.items():
             initial_swc.append((
@@ -209,8 +210,9 @@ class DSSAT():
         table = TabularSubsection(initial_swc)
         table.columns = ['ICBL', 'SH2O']
         table = table.sort_values(by='ICBL').reset_index(drop=True)
-        table['SNH4'] = [0.]*len(table)
-        table['SNO3'] = [1.] + [0.]*(len(table)-1)
+        table['SNH4'] = [0.01]*len(table) # DSSAT default values
+        table['SNO3'] = [0.01]*len(table)
+
         if crop.crop_name in ROOTS:
             assert not any(pd.isna([management.planting_details['PLWT'], management.planting_details['SPRL']])), \
                 f"PLWT, SPRL transplanting parameters are mandatory for {crop.crop_name} crop, you must "\
@@ -218,7 +220,7 @@ class DSSAT():
         management.initial_conditions['table'] = table
 
         management.simulation_controls['SMODEL'] = crop._SMODEL        
-
+        
         management_filename = weather.INSI \
             + management.sim_start.strftime('%y01') \
             + f'.{crop._CODE}X'
@@ -231,7 +233,9 @@ class DSSAT():
             management.write_mow(f'{management_filename[:-4]}.MOW')
 
         crop.write(self._RUN_PATH)
+
         soil.write(os.path.join(self._RUN_PATH, 'SOIL.SOL'))
+
         wth_path = os.path.join(self._RUN_PATH, 'Weather')
         weather.write(wth_path, management=management)
 
@@ -239,7 +243,10 @@ class DSSAT():
 
         with open(os.path.join(self._RUN_PATH, self._CONFILE), 'w') as f:
             f.write(f'WED    {wth_path}\n')
-            f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
+            if crop._CODE in ["WH", "BA"]:
+                f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 CSCER{VERSION}\n')
+            else:
+                f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
             f.write(f'CRD    {self._CRD_PATH}\n')
             f.write(f'PSD    {os.path.join(self._STATIC_PATH, "Pest")}\n')
             f.write(f'SLD    {self._SLD_PATH}\n')
@@ -249,8 +256,10 @@ class DSSAT():
         excinfo = subprocess.run(exc_args, 
             cwd=self._RUN_PATH, capture_output=True, text=True
         )
-        for line in clean_comments(excinfo.stdout.split('\n')):
-            sys.stdout.write(line + '\n')
+
+        if verbose:
+            for line in clean_comments(excinfo.stdout.split('\n')):
+                sys.stdout.write(line + '\n')
 
         assert excinfo.returncode == 0, 'DSSAT execution Failed, check '\
             + f'{os.path.join(self._RUN_PATH, "ERROR.OUT")} file for a'\
@@ -261,6 +270,9 @@ class DSSAT():
             var for var in OUTPUTS
             if management.simulation_controls.get(OUTPUT_MAP.get(var)) in ("Y", None)
         ]
+        # Check for man.simulation_controls["WATER"]
+        if management.simulation_controls["WATER"] == "N":
+            self.OUTPUT_LIST = list(filter(lambda x: x != "SoilWat", self.OUTPUT_LIST))
         
         for file in self.OUTPUT_LIST:
             assert f'{file}.OUT' in OUTPUT_FILES, \
@@ -293,6 +305,7 @@ class DSSAT():
                     format='%Y%j'
                 )
             self._output[file] = df
+
         return
 
     def close(self):
