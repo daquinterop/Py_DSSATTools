@@ -1,35 +1,3 @@
-
-Skip to content
-Pull requests
-Issues
-Marketplace
-Explore
-@daquinterop
-DSSAT /
-dssat-csm-os
-Public
-
-Code
-Issues 21
-Pull requests
-Actions
-Projects
-Security
-
-    Insights
-
-dssat-csm-os/Data/MODEL.ERR
-@kthorp
-kthorp Merge branch 'develop' into nodefaultPET
-Latest commit c5edffd on Jul 28
-History
-5 contributors
-@fabiooliveira72
-@GerritHoogenboom
-@chporter
-@lpmorenoc
-@kthorp
-964 lines (640 sloc) 21.5 KB
 !AUTOM   42
 AUTOMATIC MANAGEMENT section missing.
 
@@ -189,6 +157,33 @@ Error a new weather year is defined prior to the start of simulation.
 FRHARV    1
 Error in forage harvest. Mow input date is defined prior to the start of simulation.
 
+FRHARV    2
+Error reading stuble mass and percent leaf forage harvest in species file.
+
+FRHARV    3
+Error in Automatic Management section. Correct mow harvest frequency (days).
+
+FRHARV    4
+Error in Automatic Management section. Correct mow harvest frequency (GDD).
+
+FRHARV    5
+Error in Automatic Management section. Correct the stubble percent leaf.
+
+FRHARV    6
+Error in Automatic Management section. Correct the cutting height.
+
+FRHARV    7
+Error in Automatic Management section. Correct the stubble mass.
+
+FRHARV    8
+Error in Automatic Management section. Correct residual veg. stage after mowing.
+
+FRHARV    9
+Missing AutoMOW section in the species file.
+
+FRSHWT    1
+Pod/Fruit harvest age (XMAGE) is not properly defined. Fix the Ecotype file.
+
 GETDSC   29
 Detail.CDE file not found.  Program will stop.
 
@@ -224,6 +219,12 @@ Error in chemical code.  Correct input file.
 
 IPCHEM   11
 No input amount defined for chemical applications.
+
+IPDMND   1
+Time for pod/fruit to reach har. maturity (XFPHT) not set properly.
+
+IPDMND   2
+Initial partitioning to pod/fruit in early growth (XFINT) not set properly.
 
 IPCUL     2
 Cultivar input level not found. Please correct input file.
@@ -994,21 +995,3 @@ Input date is greather than 99 years after start simulation date.
 
 FORCST    1
 Forecast date is before start of simulation date.
-Footer
-© 2022 GitHub, Inc.
-Footer navigation
-
-    Terms
-    Privacy
-    Security
-    Status
-    Docs
-    Contact GitHub
-    Pricing
-    API
-    Training
-    Blog
-    About
-
-dssat-csm-os/Data at develop · DSSAT/dssat-csm-os
-dssat-csm-os/MODEL.ERR at develop · DSSAT/dssat-csm-os

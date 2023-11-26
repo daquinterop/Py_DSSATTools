@@ -1,13 +1,11 @@
 '''
 This module hosts the DSSAT class. This class represents the simulation environment, 
 so per each DSSAT instance there's a directory where all the necesary files to 
-run the model are allocated. To run the model there are 3 basic steps:
+run the model are allocated. To run the model there are 2 basic steps:
 
-1. Create a new Dscsm instance.
-2. Initialize the environment by calling the setup() method.
-3. Run the model by calling the run() method.
-You can close the simulation environment by calling the close() method. This will
-remove the directory and files created durinh the setup() call.
+1. Create a new DSSAT instance.
+2. Run the model by calling the run() method.
+You can close the simulation environment by calling the close() method.
 
 The model outputs are storage in the `output` attribute. Up to date the next output
 are available: PlantGro, Weather, SoilWat, SoilOrg.
@@ -23,7 +21,8 @@ import pandas as pd
 import sys
 import warnings
 import platform
-import errno, stat
+import stat
+import re
 
 # Libraries for second version
 from DSSATTools import __file__ as module_path
@@ -33,9 +32,6 @@ from DSSATTools.weather import Weather
 from DSSATTools.crop import Crop, CUL_VARNAME
 from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection
-from DSSATTools.base.sections import clean_comments
-
-import time 
 
 OS = platform.system().lower()
 OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg"]
@@ -46,6 +42,20 @@ OUTPUT_MAP = {
 
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
+
+# Paths to DSSAT and Env variables
+BASE_PATH = os.path.dirname(module_path)
+STATIC_PATH = os.path.join(BASE_PATH, 'static')
+STATIC_PATH = STATIC_PATH + os.sep
+STD_PATH = os.path.join(STATIC_PATH, 'StandardData')
+CRD_PATH = os.path.join(STATIC_PATH, 'Genotype')
+SLD_PATH = os.path.join(STATIC_PATH, 'Soil')
+if 'windows'in OS:
+    BIN_PATH = os.path.join(STATIC_PATH, 'bin', 'dscsm048.exe')
+    CONFILE = 'DSSATPRO.V48'
+else: 
+    BIN_PATH = os.path.join(STATIC_PATH, 'bin', 'dscsm048')
+    CONFILE = 'DSSATPRO.L48'
 
 # function to handle windows permisions
 def handleRemoveReadonly(func, path, excinfo):
@@ -58,47 +68,42 @@ if 'windows' in OS:
 else:
     WIN_SHUTIL_KWARGS = {}
     CHMOD_MODE = 111
+
 class DSSAT():
     '''
-    Class that represents the simulation environment. When initializing and seting 
-    up the environment, a new folder is created (usually in the tmp folder), and 
-    all of the necesary files to run the model are copied into it.
+    Class that represents the simulation environment for a single treatment. When
+    initializing and seting up the environment, a new folder is created (usually
+    in the tmp folder) to run the model there. 
 
     After the model runs, the output is saved in the output property. 
     '''
-    def __init__(self):
-        BASE_PATH = os.path.dirname(module_path)
-        self._STATIC_PATH = os.path.join(BASE_PATH, 'static')
-        if 'windows'in OS:
-            self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048.exe')
-            self._CONFILE = 'DSSATPRO.V48'
-        else: 
-            self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
-            self._CONFILE = 'DSSATPRO.L48'
-        self._STD_PATH = os.path.join(self._STATIC_PATH, 'StandardData')
-        self._CRD_PATH = os.path.join(self._STATIC_PATH, 'Genotype')
-        self._SLD_PATH = os.path.join(self._STATIC_PATH, 'Soil')
-        self._SETUP = False
+    def __init__(self):   
+        self._isAllSet = False
         self._input = {
             'crop': None, 'wheater': None, 'soil': None, 'management': None 
         }
 
         self._output = {}
 
-    def setup(self, cwd=None):
+    def setup(self, cwd=None, **kwargs):
         '''
         Setup a simulation environment. Creates a tmp folder to run the simulations
         and move all the required files to run the model. Some rguments are 
         optional, if those aren't provided, then standard files location will be
-        used.
+        used. Running this method is not longer needed after version 2.1.1
 
         Arguments
         ----------
         cwd: str
-            Working directory. All the model files would be moved to that 
-            directory. If None, then a tmp directory will be created.
+            Working directory. The model will be run in that directory. 
+            If None, then a tmp directory will be created.
         '''
-        # TODO: verbose the setup process.
+        if not kwargs.get("fromRunMethod", False):
+            warnings.warn(
+                "setup module is not longer needed. You should only use it if defining a custom directory for running DSSAT", 
+                DeprecationWarning
+            )
+
         TMP_BASE = tempfile.gettempdir()
         if cwd:
             self._RUN_PATH = cwd
@@ -111,40 +116,7 @@ class DSSAT():
             )
             os.mkdir(self._RUN_PATH)
         sys.stdout.write(f'{self._RUN_PATH} created.\n')
-        
-        # Move files
-        if not os.path.exists(
-            os.path.join(self._RUN_PATH, os.path.basename(self._BIN_PATH))
-            ):
-            shutil.copyfile(
-                self._BIN_PATH, 
-                os.path.join(self._RUN_PATH, os.path.basename(self._BIN_PATH))
-            )
-            os.chmod(
-                os.path.join(self._RUN_PATH, os.path.basename(self._BIN_PATH)),
-                mode=CHMOD_MODE
-            )
-        for file in os.listdir(self._STATIC_PATH):
-            if file.endswith('.CDE'):
-                shutil.copyfile(
-                    os.path.join(self._STATIC_PATH, file), 
-                    os.path.join(self._RUN_PATH, file)
-                )
-        # Copy static path
-        if os.path.exists(os.path.join(self._RUN_PATH, 'static')):
-            shutil.rmtree(os.path.join(self._RUN_PATH, 'static'))
-        shutil.copytree(self._STATIC_PATH, os.path.join(self._RUN_PATH, 'static'))
-        sys.stdout.write(f'Static files copied to {self._RUN_PATH}.\n')
-        self._STATIC_PATH = os.path.join(self._RUN_PATH, 'static')
-        if 'windows'in OS:
-            self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048.exe')
-        else: 
-            self._BIN_PATH = os.path.join(self._STATIC_PATH, 'bin', 'dscsm048')
-        self._STD_PATH = os.path.join(self._STATIC_PATH, 'StandardData')
-        self._CRD_PATH = os.path.join(self._STATIC_PATH, 'Genotype')
-        self._SLD_PATH = os.path.join(self._STATIC_PATH, 'Soil')
-
-        self._SETUP = True
+        self._isAllSet = True
 
 
     def run(self, 
@@ -169,8 +141,8 @@ class DSSAT():
         managment: DSSATTools.Management
             Management instance
         '''
-        assert self._SETUP, 'You must initialize the simulation environment by'\
-            + ' running the setup() method'
+        if not self._isAllSet:
+            self.setup(fromRunMethod=True)
         
         # Remove previous outputs and inputs
         OUTPUT_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] == 'OUT']
@@ -241,24 +213,27 @@ class DSSAT():
 
         
 
-        with open(os.path.join(self._RUN_PATH, self._CONFILE), 'w') as f:
+        with open(os.path.join(self._RUN_PATH, CONFILE), 'w') as f:
             f.write(f'WED    {wth_path}\n')
             if crop._CODE in ["WH", "BA"]:
                 f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 CSCER{VERSION}\n')
             else:
                 f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
-            f.write(f'CRD    {self._CRD_PATH}\n')
-            f.write(f'PSD    {os.path.join(self._STATIC_PATH, "Pest")}\n')
-            f.write(f'SLD    {self._SLD_PATH}\n')
-            f.write(f'STD    {self._STD_PATH}\n')
+            f.write(f'CRD    {CRD_PATH}\n')
+            f.write(f'PSD    {os.path.join(STATIC_PATH, "Pest")}\n')
+            f.write(f'SLD    {SLD_PATH}\n')
+            f.write(f'STD    {STD_PATH}\n')
 
-        exc_args = [self._BIN_PATH, 'C', os.path.basename(management_filename), '1']
+        exc_args = [BIN_PATH, 'C', os.path.basename(management_filename), '1']
         excinfo = subprocess.run(exc_args, 
-            cwd=self._RUN_PATH, capture_output=True, text=True
+            cwd=self._RUN_PATH, capture_output=True, text=True,
+            env={"DSSAT_HOME": STATIC_PATH, }
         )
+        excinfo.stdout = re.sub("\n{2,}", "\n", excinfo.stdout)
+        excinfo.stdout = re.sub("\n$", "", excinfo.stdout)
 
         if verbose:
-            for line in clean_comments(excinfo.stdout.split('\n')):
+            for line in excinfo.stdout.split("\n"):
                 sys.stdout.write(line + '\n')
 
         assert excinfo.returncode == 0, 'DSSAT execution Failed, check '\
