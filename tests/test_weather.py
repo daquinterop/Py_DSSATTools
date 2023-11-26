@@ -138,7 +138,7 @@ class TestWeather:
         man = Management(planting_date=datetime(2000, 2, 1))
         crop = Crop("maize")
         dssat = DSSAT()
-        dssat.setup("/tmp/dssat_test")
+        dssat.setup()
         # Test CO2 from Mauna Loa
         man.simulation_controls["CO2"] = "M"
         dssat.run(
