@@ -144,6 +144,7 @@ class Management:
             self.emergence_date = emergence_date
         else:
             self.emergence_date = planting_date + timedelta(days=5)
+        self._treatmentOptions = IMPLEMENTED_SECTIONS
         self.__cultivars = Section(
             pars={'CR': TO_FILL, 'INGENO': None, 'CNAME': TO_FILL},
             idcol='@C', # Fill from Crop instance
@@ -213,7 +214,7 @@ class Management:
                 'table': TabularSubsection({
                     'FDATE': [planting_date.strftime('%y%j'), ], 
                     'FMCD': ['FE001', ], 'FACD': ['AP001', ], 
-                    'FDEP': [2, ], 'FAMN': [1, ], 'FAMP': [0, ], 
+                    'FDEP': [2, ], 'FAMN': [0, ], 'FAMP': [0, ], 
                     'FAMK': [0, ], 'FAMC': [0, ], 'FAMO': [0, ], 
                     'FOCD': [None, ], 'FERNAME': [None, ], 														
                 })
@@ -229,7 +230,7 @@ class Management:
             name='harvest details',
             idcol='@H',
             pars={
-                'HDATE': (planting_date + timedelta(days=180)).strftime('%y%j'), 
+                'HDATE': None, 
                 'HSTG': None, 'HCOM': None, 'HSIZE': None, 
                 'HPC': None, 'HBPC': None, 'HNAME': 'DEFAULT',						
             }
@@ -286,8 +287,8 @@ class Management:
                 'RIPCN': 100, 'RTIME': 1, 'RIDEP': 20, 
                 
                 'HARVEST': 'HA',
-                'HFRST': planting_date.strftime('%y%j'), 
-                'HLAST': (planting_date + timedelta(days=2*365)).strftime('%y%j'),
+                'HFRST': None, 
+                'HLAST': None,
                 'HPCNP': 100, 'HPCNR': 0, 														
             }
         )
@@ -313,7 +314,10 @@ class Management:
 
         outstr += '*TREATMENTS                        -------------FACTOR LEVELS------------\n'
         outstr += '@N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM\n'
-        outstr += f' 1 0 0 0 DEFAULT TREATMENT          {"  ".join(map(str, IMPLEMENTED_SECTIONS.values()))}\n\n'
+        self._treatmentOptions["MI"] = min(1, self.irrigation['table']["IVAL"].sum())
+        self._treatmentOptions["MF"] = min(1, self.fertilizers["table"][["FAMN", "FAMP", "FAMK", "FAMC", "FAMO"]].values.max())
+        self._treatmentOptions["MH"] = min(1, int(self.harvest_details["HDATE"] is not None))
+        outstr += f' 1 1 0 0 DEFAULT TREATMENT          {"  ".join(map(str, IMPLEMENTED_SECTIONS.values()))}\n\n'
 
         for section in SECTIONS:
             section_obj = self.__dict__[section.replace(' ', '_')]

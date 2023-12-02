@@ -91,8 +91,9 @@ def list_weather_variables():
 
 
 class Weather():
-    def __init__(self, df:DataFrame, pars:dict, lat:float, lon:float, elev:float,
-                 co2:int=380):
+    def __init__(self, df:DataFrame, pars:dict, lat:float=None, lon:float=None, 
+                 elev:float=None, tav:float=None, amp:float=None, co2:float=None,
+                 refht:float=None, wndht:float=None):
         '''
         Initialize a Weather instance. This instance contains the weather data,
         as well as the parameters that define the weather station that the data
@@ -110,6 +111,14 @@ class Weather():
             have a detailed description of the DSSAT weather variables.
         lat, lon, elev: float
             Latitude, longitude and elevation of the weather station
+        amp: float
+            Amplitude of temperature function used to calculate soil temperatures (°C)
+        tav: float
+            Average annual soil temperature, used with TAMP to calculate soil temperature. (°C)
+        refht: float
+            Reference height for temperature (m)
+        wndht: float
+            Reference height for wind speed (m)
         co2: float
             CO2 concentration (vpm). management.simulation_controls["CO2"] must 
             be set to "W" to use this value.
@@ -119,10 +128,10 @@ class Weather():
         self.LAT = lat
         self.LON = lon
         self.ELEV = elev 
-        self.TAV = 17 
-        self.AMP = 10 
-        self.REFHT = 2
-        self.WNDHT = 10
+        self.TAV = tav 
+        self.AMP = amp 
+        self.REFHT = refht
+        self.WNDHT = wndht
         data = df.copy()
         self.CO2 = co2
         
@@ -191,7 +200,7 @@ class Weather():
         man = kwargs.get('management', False)
         if man:
             sim_start = datetime(man.sim_start.year, man.sim_start.month, man.sim_start.day)
-            self.data = self.data.loc[self.data.index >= sim_start]
+            # self.data = self.data.loc[self.data.index >= sim_start]
 
         filename = f'{self._name}.WTH'
         outstr = f'$WEATHER DATA : {self.description}\n\n'

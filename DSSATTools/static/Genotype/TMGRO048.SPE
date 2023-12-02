@@ -34,7 +34,7 @@
 
 !*CARBON AND NITROGEN MINING PARAMETERS
  0.022  0.70  .250  .090  0.38  0.15   CMOBMX,CADSTF,CADPR1,NMOBMX,NVSMOB,NRCVR LAST
-    PD                                 XPODF
+    PD  0.70                           XPODF, NSTFAC
   0.04  0.08  0.04  0.08               ALPHL,ALPHS,ALPHR,ALPHSH
 
 !*NITROGEN FIXATION PARAMETERS
@@ -54,7 +54,7 @@
 
 !*LEAF GROWTH PARAMETERS
   220.  300.  300.   4.1   0.0        FINREF,SLAREF,SIZREF,VSSINK,EVMODC
-  720. 385.0 -.047  1.50              SLAMAX,SLAMIN,SLAPAR,TURSLA
+  720. 385.0 -.047  1.50  1.00        SLAMAX,SLAMIN,SLAPAR,TURSLA,NSLA
 
 !Note to users from KJB. The LA vs V data came from Scholberg but had
 !different set of V:  0.0, 1.7, 4.3, 5.9, 6.9, and 7.9 with same LA as below
@@ -129,7 +129,8 @@
   0.05  0.05  0.40  1.00  0.00                       YHWTEM(1-5),RELATIVE EXPAN
   0.00  5.00  7.50 10.00 15.00 20.00 30.00 80.00     XHWPAR(1-8),PAR VALUES
   4.00  2.00  1.50  1.25  1.05  1.00  1.00  1.00     YHWPAR(1-8),RELATIVE EXPAN
-
+  1.00                                               NHGT
+  
 !*EVAPOTRANSPIRATION
   0.70   1.0       KEP, EORATIO
   0.50  1.10       SSKC, SKCBmax ASCE short ref (12 cm grass)
@@ -137,4 +138,30 @@
 
 *FRESH WEIGHT
      Y                      Switch for fresh weight option
-                            
+
+*PHOSPHORUS CONTENT (optimized for peanut, by J.B. Naab)
+! Two options for Optimum and minimum P concentrations for shoots:
+! (1) supply values for shoots (leaf plus stem)
+! (2) supply values individually for leaf and for stem
+! If positive values for shoots are supplied, any values supplied for leaf and
+! stem will be ignored.
+   -99.0   -99.0   -99.0  Optimum Shoot Conc (emergence, 1st flower, full seed) OPTSHTP-EM,OPTSHTP-FF,OPTSHTP-FS
+  0.0038  0.0033  0.0022  Optimum Leaf Conc  (emergence, 1st flower, full seed) OPTLFP-EM,OPTLFP-FF,OPTLFP-FS
+  0.0028  0.0025  0.0019  Optimum Stem Conc  (emergence, 1st flower, full seed) OPTSTP-EM,OPTSTP-FF,OPTSTP-FS
+  0.0021  0.0018  0.0015  Optimum Root Conc  (emergence, 1st flower, full seed) OPTRTP-EM,OPTRTP-FF,OPTRTP-FS
+   -99.0  0.0021  0.0017  Optimum Shell Conc (emergence, 1st flower, full seed) OPTSHLP-EM,OPTSHLP-FF,OPTSHLP-FS
+   -99.0  0.0040  0.0044  Optimum Seed Conc  (emergence, 1st flower, full seed) OPTSDP-EM,OPTSDP-FF,OPTSDP-FS
+
+   -99.0   -99.0   -99.0  Minimum Shoot Conc (emergence, 1st flower, full seed) MINSHTP-EM,MINSHTP-FF,MINSHTP-FS
+  0.0027  0.0022  0.0017  Minimum Leaf Conc  (emergence, 1st flower, full seed) MINLFP-EM,MINLFP-FF,MINLFP-FS
+  0.0017  0.0013  0.0010  Minimum Stem Conc  (emergence, 1st flower, full seed) MINSTP-EM,MINSTP-FF,MINSTP-FS
+  0.0011  0.0011  0.0011  Minimum Root Conc  (emergence, 1st flower, full seed) MINRTP-EM,MINRTP-FF,MINRTP-FS
+   -99.0  0.0011  0.0011  Minimum Shell Conc (emergence, 1st flower, full seed) MINSHLP-EM,MINSHLP-FF,MINSHLP-FS
+   -99.0  0.0033  0.0033  Minimum Seed Conc  (emergence, 1st flower, full seed) MINSDP-EM,MINSDP-FF,MINSDP-FS
+
+    20.0    10.0     5.0  Maximum Veg N:P ratio (emergence, 1st flower, full seed)
+     5.0     5.0     5.0  Minimum Veg N:P ratio (emergence, 1st flower, full seed)
+
+    0.63    0.83  SRATPHOTO, SRATPART
+    0.20          FracPMobil - max fraction of P which can be mobilized from leaf & stem / day
+  0.0025          ROOTRAD - radius of cylinder around roots from which soil P can be extracted (m)

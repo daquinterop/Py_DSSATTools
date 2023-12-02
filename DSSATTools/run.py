@@ -100,9 +100,10 @@ class DSSAT():
         '''
         if not kwargs.get("fromRunMethod", False):
             warnings.warn(
-                "setup module is not longer needed. You should only use it if defining a custom directory for running DSSAT", 
+                "calling setup method is not longer needed. You should only use it if defining a custom directory for running DSSAT", 
                 DeprecationWarning
             )
+            return
 
         TMP_BASE = tempfile.gettempdir()
         if cwd:
@@ -128,7 +129,8 @@ class DSSAT():
         ):
         '''
         Start the simulation and runs until the end or failure. It will return
-        None, but the simulation outputs will be assigned to self.output.
+        None, but the simulation outputs will be assigned to self.output. The 
+        summary output from DSSAT is printed and saved as a string in self.stdout.
 
         Arguments
         ----------
@@ -172,24 +174,26 @@ class DSSAT():
         if not management.initial_conditions['ICDAT']:
             management.initial_conditions['ICDAT'] = management.sim_start.strftime('%y%j')
 
-        initial_swc = []
-        for depth, layer in soil.layers.items():
-            initial_swc.append((
-                depth, 
-                layer['SLLL'] + management.initial_swc \
-                    * (layer['SDUL'] - layer['SLLL'])
-            ))
-        table = TabularSubsection(initial_swc)
-        table.columns = ['ICBL', 'SH2O']
-        table = table.sort_values(by='ICBL').reset_index(drop=True)
-        table['SNH4'] = [0.01]*len(table) # DSSAT default values
-        table['SNO3'] = [0.01]*len(table)
+        if management.initial_conditions["ICDAT"] is None:
+            initial_swc = []
+            for depth, layer in soil.layers.items():
+                initial_swc.append((
+                    depth, 
+                    layer['SLLL'] + management.initial_swc \
+                        * (layer['SDUL'] - layer['SLLL'])
+                ))
+            table = TabularSubsection(initial_swc)
+            table.columns = ['ICBL', 'SH2O']
+            table = table.sort_values(by='ICBL').reset_index(drop=True)
+            table['SNH4'] = [0.01]*len(table) # DSSAT default values
+            table['SNO3'] = [0.01]*len(table)
+            management.initial_conditions['table'] = table
 
         if crop.crop_name in ROOTS:
             assert not any(pd.isna([management.planting_details['PLWT'], management.planting_details['SPRL']])), \
                 f"PLWT, SPRL transplanting parameters are mandatory for {crop.crop_name} crop, you must "\
                 "define those parameters in management.planting_details"
-        management.initial_conditions['table'] = table
+        
 
         management.simulation_controls['SMODEL'] = crop._SMODEL        
         
@@ -231,6 +235,7 @@ class DSSAT():
         )
         excinfo.stdout = re.sub("\n{2,}", "\n", excinfo.stdout)
         excinfo.stdout = re.sub("\n$", "", excinfo.stdout)
+        self.stdout = excinfo.stdout
 
         if verbose:
             for line in excinfo.stdout.split("\n"):

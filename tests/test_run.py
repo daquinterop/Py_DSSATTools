@@ -1,3 +1,4 @@
+# TODO: Make tests with the experiments included in DSSAT
 import pytest
 
 from DSSATTools import (
@@ -267,23 +268,67 @@ def test_run_sugarcane():
     )
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
 
-# def test_run_wheat():
-#     crop = Crop('Wheat')
-#     df["TMAX"] -= 8
-#     df["tn"] -= 8
-#     wth =  Weather(
-#         df, {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", "rh": "RHUM", "TMAX": "TMAX"},
-#         4.54, -75.1, 1800
-#     )
-#     man = Management(
-#         planting_date=DATES[10],
-#     )
-#     dssat = DSSAT()
-#     dssat.setup(cwd=os.path.join(TMP, 'test_wh'))
-#     dssat.run(
-#         soil=soil, weather=wth, crop=crop, management=man,
-#     )
-#     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+def test_run_wheat():
+    # KSAS8101 experiment, treatment 1
+    crop = Crop('Wheat', "IB0488")
+    soil = SoilProfile("tests/input_files/SOIL.SOL", "IBWH980018")
+    # Management
+    df = pd.DataFrame()
+    for year in range(81, 83):
+        df = pd.concat(
+            [df, pd.read_csv(f"tests/input_files/wheat/KSAS{year}01.WTH", skiprows=4, sep="\s+")], 
+            ignore_index=True
+        )
+    df.index = pd.to_datetime(df["@DATE"], format="%y%j")
+    df = df.sort_index()
+    wth =  Weather(
+        df, {"TMIN": "TMIN", "SRAD": "SRAD", "RAIN": "RAIN", "TMAX": "TMAX"},
+        lat=37.18, lon=-99.75, elev=226, tav=12., amp=32
+    )
+    
+    man = Management(
+        planting_date=datetime.strptime("81289", "%y%j"),
+    )
+    # Initial conditions 
+    pars = {
+        "PCR": "WH", "ICDAT": "81279", "ICRT": 1200, "ICND": 0, "ICRN": 1,
+        "ICRE": 1, "ICRES": 6500, "ICREN": 1.14, "ICREP": 0, "ICRIP": 100,
+        "ICRID": 15,
+    }
+    for key, val in pars.items(): man.initial_conditions[key] = val
+    man.initial_conditions["table"] = TabularSubsection(pd.DataFrame(
+        [(  15,  .205,   3.4,   9.8),
+         (  30,   .17,   3.2,   7.3),
+         (  60,  .092,   2.5,   5.1),
+         (  90,  .065,   2.2,   4.7),
+         ( 120,  .066,   2.7,   4.3),
+         ( 150,  .066,   2.7,   4.3),
+         ( 180,  .066,   2.7,   4.3)],
+        columns=["ICBL", "SH2O", "SNH4", "SNO3"]
+    ))
+    # Planting
+    pars = {
+        "EDATE": None, "PPOP": 162, "PPOE": 162, "PLME": "S", "PLRS": 16,
+        "PLRD": 0, "PLDP": 5.5 
+    }
+    for key, val in pars.items(): man.planting_details[key] = val
+    # Simulation controls
+    pars = {
+        "WATER": "Y", "NITRO": "Y", "CO2": "M", "WTHER": "M", "INCON": "M",
+        "LIGHT": "E", "EVAPO": "R", "INFIL": "S", "PHOTO": "C", "HYDRO": "R",
+        "NSWIT": 1, "MESOM": "G", "MESEV": "S", "MESOL": 2, "PLANT": "R",
+        "IRRIG": "R", "FERTI": "R", "RESID": "N", "HARVS": "M", "SDATE": 81279,
+        "RSEED": 2150, "NIOUT": "Y", "CAOUT": "N",
+    }
+    for key, val in pars.items(): man.simulation_controls[key] = val
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(TMP, 'test_wh'))
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+    harwt = int(dssat.stdout.split("\n")[-1].split()[6])
+    assert np.isclose(2417, harwt, rtol=0.01)
 
 def test_close():
     crop = Crop('cabbage')
@@ -415,7 +460,12 @@ def test_no_wat_sim():
         soil=soil, weather=wth, crop=crop, management=man,
     )
 
-
+def test_setup_setup_deprecation():
+    dssat = DSSAT()
+    with pytest.warns(DeprecationWarning, match='calling setup method is not longer needed'):
+        dssat.setup()
+    
+    
 
 if __name__ == '__main__':
     test_run_wheat()
