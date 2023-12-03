@@ -98,7 +98,7 @@ class DSSAT():
             Working directory. The model will be run in that directory. 
             If None, then a tmp directory will be created.
         '''
-        if not kwargs.get("fromRunMethod", False):
+        if (cwd is None) and (not kwargs.get("fromRunMethod", False)):
             warnings.warn(
                 "calling setup method is not longer needed. You should only use it if defining a custom directory for running DSSAT", 
                 DeprecationWarning

@@ -92,7 +92,7 @@ class Management:
     def __init__(
             self, planting_date:datetime, 
             sim_start:datetime=None, emergence_date:datetime=None, 
-            initial_swc:float=.5, irrigation='N',fertilization='N', 
+            initial_swc:float=1, irrigation='N',fertilization='N', 
             harvest='M', organic_matter='G'):
         '''
         Initializes a management instance.
@@ -108,7 +108,7 @@ class Management:
             Emergence date. If None, I'll be calculated as 5 days after planting.
         initial_swc: int
             Fraction of the total available water (FC - PWP) at the start of the
-            simulation. .5(50%) is the default value.
+            simulation. 1(100%) is the default value.
         irrigation: str
             Default 'N'. Irrigation management option, options available are:
                 A        Automatic when required
@@ -141,9 +141,9 @@ class Management:
         else:
             self.sim_start = planting_date - timedelta(days=1)
         if emergence_date:
-            self.emergence_date = emergence_date
-        else:
-            self.emergence_date = planting_date + timedelta(days=5)
+            self.emergence_date = emergence_date.strftime('%y%j')
+        else: 
+            self.emergence_date = None
         self._treatmentOptions = IMPLEMENTED_SECTIONS
         self.__cultivars = Section(
             pars={'CR': TO_FILL, 'INGENO': None, 'CNAME': TO_FILL},
@@ -187,7 +187,7 @@ class Management:
             idcol='@P',
             pars={
                 'PDATE': planting_date.strftime('%y%j'), 
-                'EDATE': self.emergence_date.strftime('%y%j'),
+                'EDATE': self.emergence_date,
                 'PPOP': 16, 'PPOE': 15, 'PLME': 'S', 'PLDS': 'R', 
                 'PLRS': 35, 'PLRD': None, 'PLDP': 4, 'PLWT': None, 
                 'PAGE': None, 'PENV': None, 'PLPH': None, 
