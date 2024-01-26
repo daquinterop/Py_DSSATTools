@@ -51,25 +51,26 @@ https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
 **At the moment Only the next crops and models are implemented:**
 | Crop         | Model               |
 |--------------|---------------------|
-| Maize        | CERES               |
+| Maize*       | CERES               |
 | Millet       | CERES               |
 | Rice         | CERES               |
 | Sugarbeet    | CERES               |
-| Sorghum      | CERES               |
+| Sorghum*     | CERES               |
 | Sweetcorn    | CERES               |
+| Wheat*       | CERES               |
 | Alfalfa      | FORAGE-Alfalfa      |
 | Bermudagrass | FORAGE-Bermudagrass |
-| Soybean      | CROPGRO             |
+| Soybean*     | CROPGRO             |
 | Canola       | CROPGRO             |
 | Sunflower    | CROPGRO             |
-| Tomato       | CROPGRO             |
+| Tomato*      | CROPGRO             |
 | Cabbage      | CROPGRO             |
 | Potato       | SUBSTOR             |
 | Sugarcane    | CANEGRO             |
 
-More crops and models will be added later.
+(*) Only a those crops have been validated. During the validation one DSSAT experiment was run using DSSATTools and the results were compared with those obtained using DSSAT desktop. I'll be validating more crops as long as a I have time to do it.
 
-If you're interested in contributing to this project, don't hesitate in sending me an email (daquinterop@gmail.com). Of course, if you want to contribute then I'll have to create a Developer's guide to the project.
+If you're interested in contributing to this project, don't hesitate in sending me an email (daquinterop@gmail.com). 
 
 All the Classes can be imported as:
 ```python
