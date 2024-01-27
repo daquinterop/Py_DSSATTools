@@ -172,9 +172,9 @@ def available_cultivars(crop_name):
     cul_path = os.path.join(GENOTYPE_PATH, f'{CODE}{SMODEL[2:]}{VERSION}.CUL')
     with open(cul_path, "r") as f:
         lines = f.readlines()
-    lines = [l for l in lines if l[:1] not in ["@", "*", "!"]]
+    lines = [l for l in lines if l[:1] not in ["@", "*", "!", "$"]]
     lines = [l for l in lines if len(l) > 5]
-    return [l.split()[0] for l in lines]
+    return [l.split()[0] for l in lines if len(l.strip()) > 6]
 
 class Crop:
     def __init__(self, crop_name:str='Maize', cultivar_code:str=None):
