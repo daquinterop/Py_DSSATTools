@@ -13,7 +13,7 @@ else:
 
 setuptools.setup(
     name="DSSATTools",
-    version="2.1.2b",
+    version="2.1.3",
     author="Diego Quintero",
     author_email="daquinterop@gmail.com",
     description="A DSSAT's Python implementation",
