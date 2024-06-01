@@ -40,7 +40,7 @@ CULTIVAR_ROWS_FMT = {
     'Tomato':       'A6,1X,A20,1X,A1,1X,A6,2(1X,F5.2),3(1X,F5.1),3(1X,F5.2),1X,F5.0,1X,F5.1,1X,F5.2,1X,F5.4,4(1X,F5.1),2(1X,F5.3)',
     'Cabbage':      'A6,1X,A16,1X,A5,1X,A6,1X,F5.2,1X,F5.3,3(1X,F5.1),2(1X,F5.2),1X,F5.3,1X,F5.0,1X,F5.1,1X,F5.3,1X,F5.2,1X,F5.1,1X,F5.2,2(1X,F5.1),2(1X,F5.3)',
     'Sugarcane':    'A6,1X,A16,1X,A5,1X,A6,22(1X,F14.4)',
-    "Wheat":        "A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.2,1X,F5.1"
+    "Wheat":        "A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.2,1X,F5.0"
 }
 ECOTYPE_HEADER_FMT = {
     'Maize':        'A5,1X,1X,A16,1X,11(1X,A5)',
