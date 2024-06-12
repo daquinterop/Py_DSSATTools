@@ -34,11 +34,12 @@ from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection
 
 OS = platform.system().lower()
-OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg"]
+OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg", "SoilNi"]
 OUTPUT_MAP = {
     "PlantGro": "GROUT",  "SoilWat": "WAOUT", "SoilOrg": "CAOUT",
-    "Weather": "GROUT"
+    "Weather": "GROUT", "SoilNi": "NIOUT"
 }
+SOIL_LAYER_OUTPUTS = ["SoilNi"]
 
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
@@ -270,16 +271,21 @@ class DSSAT():
             assert f'{file}.OUT' in OUTPUT_FILES, \
                 f'{file}.OUT does not exist in {self._RUN_PATH}'
             table_start = -1
+            init_lines = []
             with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
                 while True:
                     table_start += 1
-                    if '@' in f.readline():
+                    init_lines.append(f.readline())
+                    if '@' in init_lines[-1][:10]:
                         break
+            
             try:  
                 df = pd.read_csv(
                     os.path.join(self._RUN_PATH, f'{file}.OUT'),
                     skiprows=table_start, sep=' ', skipinitialspace=True
                 )
+                df = df.dropna(how="all", axis=1)
+
             except UnicodeDecodeError:
                 with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
                     lines = f.readlines()
