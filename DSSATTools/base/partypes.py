@@ -5,20 +5,34 @@ from datetime import date, datetime
 from collections.abc import MutableMapping, MutableSequence
 from pandas import DataFrame
 import numpy as np
-from dataclasses import dataclass
+from typing import Union, Type
 
 DATE_VARS = [ # This might not be needed as I won't let the user deal with the base classes
-    "p.pdate"
+    "pdate"
 ]
 METHOD_VARS = {
-    "p.plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V"],
-    "p.plds": ["H", "R", "U"]
+    "plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V"],
+    "plds": ["H", "R", "U"],
+    "hstg": [f"GS0{i:02d}" for i in range(50)], #TODO: Deppends of crop, how to address that? https://github.com/DSSAT/dssat-csm-os/blob/develop/Data/GRSTAGE.CDE
+    "hcom": ["C", "L", "H", None],
+    "hsize": ["A", "S", "M", "L", None],
+    "cr": ["MZ", "SB"]
 }
 
 class MethodType(str):
     def __new__(cls, name, value, fmt):
+        if isinstance(value, str):
+            value = value.strip()
+        elif np.isnan(value):
+            value = None
+        else:
+            pass
+        if (value == "-99"):
+            value = None
         assert value in METHOD_VARS[name], \
             f"{name} must be one of {METHOD_VARS[name]}"
+        if value is None:
+            value = ""
         assert name in METHOD_VARS, f"{name} is not defined as a MethodType"
         return super().__new__(cls, value)
 
@@ -28,14 +42,30 @@ class MethodType(str):
 
     @property
     def str(self):
-        return format(self, self.fmt)
+        if (self is None) or (self == ""):
+            return format(-99, f'{self.fmt[:2]}.0f')
+        else:
+            return format(self, self.fmt)
+            
     
 class DateType(date):
     def __new__(cls, name, value, fmt):
-        if value is None:
+        if isinstance(value, (date, datetime)):
+            pass
+        elif value is None:
             value = date(9999, 1, 1)
-        assert isinstance(value, (date, datetime)), \
-            f"value must be a datetime.datetime or datetime.date instance"
+        elif int(value) == -99:
+            value = date(9999, 1, 1)
+        elif isinstance(value, str):
+            try:
+                value = datetime.strptime(value, "%y%j")
+            except:
+                try:
+                    value = datetime.strptime(value, "%Y%j")
+                except ValueError:
+                    raise ValueError(f"{value} can't be interpreted as a date")
+        else:
+            raise ValueError(f"value must be datetime, date, None, -99 or some date representation")            
         return super().__new__(cls, value.year, value.month, value.day)
     
     def __init__(self, name, value, fmt):
@@ -55,6 +85,10 @@ class NumberType(float):
     def __new__(cls, name, value, fmt):
         if value is None:
             value = np.nan
+        elif int(float(value)) == -99:
+            value = np.nan
+        else:
+            pass
         return super().__new__(cls, value)
     
     def __init__(self, name, value, fmt):
@@ -67,14 +101,37 @@ class NumberType(float):
             return format(-99, f'{self.fmt[:2]}.0f')
         else:
             return format(self, self.fmt)
+        
+class DescriptionType(str):
+    def __new__(cls, name, value, fmt):
+        if isinstance(value, str):
+            value = value.strip()
+        elif np.isnan(value):
+            value = None
+        else:
+            pass
+        if (value is None) or (value == "-99"):
+            value = ""
+        return super().__new__(cls, value)
 
-class Event(MutableMapping):
+    def __init__(self, name, value, fmt):
+        self.name = name
+        self.fmt = fmt
+
+    @property
+    def str(self):
+        if (self is None) or (self == ""):
+            return format(-99, f'{self.fmt}.0f')
+        else:
+            return format(self, self.fmt)
+
+class Record(MutableMapping):
     """
     Generic class to handle a single event, e.g. Irrigation event, planting event,
     tillage event, etc.
     """
-    __data = {}
     def __init__(self):
+        self.__data = {}
         super().__init__()
         
     def __len__(self):
@@ -84,21 +141,22 @@ class Event(MutableMapping):
         return iter(self.__data)
 
     def __setitem__(self, key, value):
-        type_hints = self.__dict__[f"_{type(self).__name__}__type_hints"]
-        if key not in type_hints:
+        key = key.lower()
+        if key not in self.dtypes:
             raise KeyError(key)
         if "ECO#" in key: 
             raise Exception(
                 "The ecotype code can't be changed. If any change is to be done in the ecotype modify the ecotype parameters directly"
             )
-        self.__data[key] = type_hints[key](
-            f'{self.prefix}.{key}', value, self.pars_fmt[key]
+        self.__data[key] = self.dtypes[key](
+            f'{key}', value, self.pars_fmt[key]
         )
 
     def __delitem__(self, k):
         raise NotImplementedError
 
     def __getitem__(self, key):
+        key = key.lower()
         return self.__data[key]
 
     def __contains__(self, k):
@@ -114,7 +172,8 @@ class Event(MutableMapping):
     def write(self):
         return " ".join([par.str for name, par in self.items()])
     
-class Schedule(MutableSequence):
+class Tabular(MutableSequence):
+    top: Union[Record, Type[None]] # For those tabular sections that also have non-tabular information at top
     def __init__(self):
         return 
     
@@ -122,4 +181,12 @@ class Schedule(MutableSequence):
         return
     
     def write(self):
+        return
+    
+class SimulationControls:
+    def __init__(self):
+        return
+    
+class Field:
+    def __init__(self):
         return
