@@ -180,7 +180,6 @@ class InitialConditionsLayer(Record):
             super().__setitem__(name, value)
         return
 
-
 class InitialConditions(TabularRecord):
     prefix = "c"
     dtypes = {
@@ -247,6 +246,7 @@ class InitialConditions(TabularRecord):
             super().__setitem__(name, value)
         self.table = table
         return
+
 
 class FertilizerEvent(Record):
     prefix = "f"
@@ -320,11 +320,244 @@ class Fertilizer(TabularRecord):
         super().__init__()
         self.table = table
 
-class Irrigation(TabularRecord):
-    def __init__(self):
+
+class SoilAnalysisLayer(Record):
+    prefix = "a"
+    dtypes = {
+        "sabl": NumberType, "sadm": NumberType, "saoc": NumberType, 
+        "sani": NumberType, "saphw": NumberType, "saphb": NumberType,
+        "sapx": NumberType, "sake": NumberType, "sasc": NumberType
+    }
+    pars_fmt = {
+        "sabl": ">4.0f", "sadm": ">5.1f", "saoc": ">5.2f", "sani": ">5.2f",
+        "saphw": ">5.1f", "saphb": ">5.1f", "sapx": ">5.1f", "sake": ">5.1f",
+        "sasc": ">5.2f"
+    }
+    table_index = "sabl" # Index when buliding table
+    def __init__(self, sabl:float, sadm:float=None, saoc:float=None, 
+                 sani:float=None, saphw:float=None, saphb:float=None,
+                 sapx:float=None, sake:float=None, sasc:float=None):
+        """
+        Initializes a soil analysis for layer instance.
+
+        Arguments
+        ----------
+        sabl: float
+            Depth of base layer, cm
+        sadm: float
+            Bulk density, moist, g cm-3
+        saoc: float
+            Organic carbon, %
+        sani: float
+            Total nitrogen, %
+        saphw: float
+            pH in water
+        saphb: float
+            pH in buffer
+        sapx: float
+            Phosphorus extractable, mg kg-1
+        sake: float
+            Potassium exchangeable, cmol kg-1
+        sasc: float
+            Stable organic carbon, %
+        """
+        super().__init__()
+        kwargs = {"sabl": sabl, "sadm": sadm, "saoc": saoc, "sani": sani,
+                  "saphw": saphw, "saphb": saphb, "sapx": sapx, "sake": sake,
+                  "sasc": sasc}
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
         return
-    
+
+class SoilAnalysis(TabularRecord):
+    prefix = "a"
+    dtypes = {
+        "sadat": DateType, "smhb": MethodType, "smpx": MethodType, 
+        "smke": MethodType, "saname": DescriptionType
+    }
+    pars_fmt = {
+        "sadat": ">5", "smhb": ">5", "smpx": ">5", "smke": ">5", 
+        "saname": "<16"
+    }
+    table_dtype = SoilAnalysisLayer
+    def __init__(self, sadat:date, table:list[SoilAnalysisLayer],
+                smhb:str=None, smpx:str=None, smke:str=None, saname:str=None):
+        """
+        Initializes a soil analysis instance.
+
+        Arguments
+        ----------
+        sadat: date
+            Soil Analysis date
+        table: list
+            List of SoilAnalysisLayer instances
+        smhb: str
+            pH in buffer determination method
+        smpx: str
+            Phosphorus determination method
+        smke: str
+            Potassium determination method
+        saname: str
+            Soil Analysis name
+        """
+        super().__init__()
+        kwargs = {
+            "sadat": sadat, "smhb": smhb, "smpx": smpx, "smke": smke, 
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+        self.table = table
+
+
+class IrrigationEvent(Record):
+    prefix = "i"
+    dtypes = {
+        "idate": DateType, "irop": MethodType, "irval": NumberType, 
+    }
+    pars_fmt = {
+        "idate": ">5", "irop": ">5", "irval": ">5.1f"
+    }
+    table_index = "idate" # Index when buliding table
+    def __init__(self, idate:date, irval:float, irop:str=None):
+        """
+        Initializes a irrigation event instance.
+
+        Arguments
+        ----------
+        idate: date
+            Irrigation date
+        irval: float
+            Irrigation amount, mm
+        irop: str
+            Operation method
+        """
+        super().__init__()
+        kwargs = {"idate": idate, "irop": irop, "irval": irval}
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+        return
+
+class Irrigation(TabularRecord):
+    prefix = "i"
+    dtypes = {
+        "efir": NumberType, "idep": NumberType, "ithr": NumberType,
+        "iept": NumberType, "ioff": MethodType, "iame": MethodType,
+        "iamt": NumberType, "irname": DescriptionType
+    }
+    pars_fmt = {
+        "efir": ">5.2f", "idep": ">5.1f", "ithr": ">5.1f", "iept": ">5.1f",
+        "ioff": ">5", "iame": ">5", "iamt": ">5.1f", "irname": "<16"
+    }
+    table_dtype = IrrigationEvent
+    def __init__(self, table=list[IrrigationEvent], efir:float=1,
+                    idep:float=None, ithr:float=None, iept:float=None,
+                    ioff:str=None, iame:str=None, iamt:float=None, 
+                    irname:str=None):
+        """
+        Initializes a Irrigation instance.
+
+        Arguments
+        ----------
+        table: list
+            List of IrrigationEvent
+        efir: float
+            Irrigation efficiency, 0-1
+        idep: float
+            Management depth for automatic application, cm
+        ithr: float
+            Threshold for automatic appl., % of max. available
+        iept: float
+            End point for automatic appl., % of max. available
+        ioff: str
+            End of automatic applications, growth stage
+        iame: str
+            Method for automatic applications, code
+        iamt: float
+            Amount per automatic irrigation if fixed, mm
+        irname: str
+            Irrigation treatment name
+        """
+        super().__init__()
+        kwargs = {
+            "efir": efir, "idep": idep, "ithr": ithr, "iept": iept,
+            "ioff": ioff, "iame": iame, "iamt": iamt, 
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+        self.table = table
+
+
+class ResidueEvent(Record):
+    prefix = "r"
+    dtypes = {
+        "rdate": DateType, "rcod": MethodType, "ramt": NumberType,
+        "resn": NumberType, "resp": NumberType, "resk": NumberType,
+        "rinp": NumberType, "rdep": NumberType, "rmet": MethodType,
+        "rename": DescriptionType
+    }
+    pars_fmt = {
+        "rdate": ">5", "rcod": ">5", "ramt": ">5.0f", "resn": ">5.2f",
+        "resp": ">5.2f", "resk": ">5.2f", "rinp": ">5.0f", "rdep": ">5.0f",
+        "rmet": ">5", "rename": "<16"
+    }
+    table_index = "rdate" # Index when buliding table
+    def __init__(self, rdate:date, rcod:str, ramt:float, resn:float,
+                 resp:float, resk:float, rinp:float, rdep:float, rmet:str,
+                 rename:str=None):
+        """
+        Initializes a residue application.
+
+        Arguments
+        ----------
+        rdate: date
+            Residue application date
+        rcod: str
+            Residue material, code
+        ramt: float
+            Residue amount, kg ha-1
+        resn: float
+            Residue nitrogen concentration, %
+        resp: float
+            Residue phosph. concentration, %
+        resk: float
+            Residue potassium concentration, %
+        rinp: float
+            Residue incorporation, %
+        rdep: float
+            Incorporation depth, cm
+        rmet: str
+            Method of incorporation, code
+        rename: str
+            Description
+        """
+        super().__init__()
+        kwargs = {
+            "rdate": rdate, "rcod": rcod, "ramt": ramt, "resn": resn,
+            "resp": resp, "resk": resk, "rinp": rinp, "rdep": rdep,
+            "rmet": rmet, "rename": rename
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+
 class Residue(TabularRecord):
+    prefix = "r"
+    dtypes = {}
+    pars_fmt = {}
+    table_dtype = ResidueEvent
+    def __init__(self, table=list[ResidueEvent]):
+        """
+        Initializes a residue section. 
+
+        Arguments
+         ----------
+        table: list of ResidueEvent
+            Residue application events
+        """
+        super().__init__()
+        self.table = table
+    
+
+class ChemicalsEvent(Record):
     def __init__(self):
         return
     
@@ -355,6 +588,8 @@ def get_header_range(l, h, pars_fmt):
 def read_filex(filexpath):
     """
     Asumptions:
+    Some of the assumptions are needed to deal with description fields 
+    that can contain spaces, such as Cultivar name.
     - Values are below their header
     - Each column/header must be right or left justified
     - Treament number is always the first column
@@ -443,6 +678,12 @@ def read_filex(filexpath):
                 cls = InitialConditions
             elif l[:6] == "*FERTI":
                 cls = Fertilizer
+            elif l[:6] == "*SOIL ":
+                cls = SoilAnalysis
+            elif l[:6] == "*IRRIG":
+                cls = Irrigation
+            elif l[:6] == "*RESID":
+                cls = Residue
             else:
                 continue
             # Some sections are only tables, for those go directly to table

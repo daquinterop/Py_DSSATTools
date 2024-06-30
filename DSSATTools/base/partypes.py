@@ -13,10 +13,10 @@ DATE_VARS = [ # This might not be needed as I won't let the user deal with the b
 METHOD_VARS = {
     "plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V"],
     "plds": ["H", "R", "U"],
-    "hstg": [f"GS0{i:02d}" for i in range(50)], #TODO: Deppends of crop, how to address that? https://github.com/DSSAT/dssat-csm-os/blob/develop/Data/GRSTAGE.CDE
+    "hstg": [None] + [f"GS0{i:02d}" for i in range(50)], #TODO: Deppends of crop, how to address that? https://github.com/DSSAT/dssat-csm-os/blob/develop/Data/GRSTAGE.CDE
     "hcom": ["C", "L", "H", None],
     "hsize": ["A", "S", "M", "L", None],
-    "cr": ["MZ", "SB"],
+    "cr": ["MZ", "SB", "FA"], # TODO: Add all crops
     "fmcd": [None] + [f"FE{i:03d}" for i in range(1, 71)] + \
             [f"FE{i:03d}" for i in range(201, 213)] + \
             [f"FE{i:03d}" for i in range(300, 313)] + \
@@ -27,10 +27,22 @@ METHOD_VARS = {
              'FE665', 'FE666', 'FE667', 'FE668', 'FE669', 'FE670', 'FE680',
              'FE681', 'FE682', 'FE683', 'FE684', 'FE685', 'FE700', 'FE701',
              'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900'],
-    "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)]
+    "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)],
+    "smhb": [None] + ["SA011", "SA012"],
+    "smpx": [None] + [f"SA{i:03d}" for i in range(1, 11)],
+    "smke": [None] + ["SA013", "SA014", "SA015"],
+    "iame": [None] + [f"IR{i:03d}" for i in range(1, 12)],
+    "rcod": [None] + ['RE001','RE101','RE201','RE301','RE999','RE002','RE003',
+            'RE004','RE005','RE006','RE102','RE103','RE104','RE105','RE106',
+            'RE107','RE108','RE109','RE110','RE111','RE202','RE203','RE204',
+            'RE205','RE206','RE207','RE208','RE302','RE303','RE304','RE305',
+            'RE306','RE401','RE402','RE403','RE404'],
 }
 METHOD_VARS["pcr"] = METHOD_VARS["cr"]
 METHOD_VARS["focd"] = METHOD_VARS["fmcd"]
+METHOD_VARS["ioff"] = METHOD_VARS['hstg']
+METHOD_VARS["irop"] = METHOD_VARS["iame"]
+METHOD_VARS["rmet"] = METHOD_VARS["facd"]
 PROTECTED_ATTRS = ["prefix", "pars_fmt", "dtypes", "table_dtype", "table_index"]
 
 class MethodType(str):
@@ -286,6 +298,7 @@ class TabularRecord(Record):
     '''
     table_dtype:Type # Data type contained in the table
     table_index:str # Unique id for the table
+    table:TableType # The table
     def __init__(self):
         super().__init__()
         self.table = []
