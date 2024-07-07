@@ -7,16 +7,18 @@ from pandas import DataFrame
 import numpy as np
 from typing import Union, Type
 
-DATE_VARS = [ # This might not be needed as I won't let the user deal with the base classes
-    "pdate"
-]
-METHOD_VARS = {
+CODE_VARS = {
     "plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V"],
     "plds": ["H", "R", "U"],
     "hstg": [None] + [f"GS0{i:02d}" for i in range(50)], #TODO: Deppends of crop, how to address that? https://github.com/DSSAT/dssat-csm-os/blob/develop/Data/GRSTAGE.CDE
     "hcom": ["C", "L", "H", None],
     "hsize": ["A", "S", "M", "L", None],
-    "cr": ["MZ", "SB", "FA"], # TODO: Add all crops
+    "cr": [
+        'AL', 'BA', 'BC', 'BM', 'BH', 'BN', 'BR', 'BS', 'CB', 'CH', 'CI', 'CN', 
+        'CO', 'CP', 'CS', 'FA', 'FB', 'GB', 'GG', 'GY', 'LT', 'ML', 'MZ', 'NP', 
+        'PE', 'PI', 'PN', 'PO', 'PP', 'PR', 'PT', 'QU', 'RI', 'SB', 'SC', 'SF', 
+        'SG', 'SQ', 'SR', 'SS', 'SU', 'SW', 'TF', 'TM', 'TN', 'TR', 'VB', 'WH', 
+    ],
     "fmcd": [None] + [f"FE{i:03d}" for i in range(1, 71)] + \
             [f"FE{i:03d}" for i in range(201, 213)] + \
             [f"FE{i:03d}" for i in range(300, 313)] + \
@@ -26,44 +28,82 @@ METHOD_VARS = {
              'FE640', 'FE641', 'FE660', 'FE661', 'FE662', 'FE663', 'FE664',
              'FE665', 'FE666', 'FE667', 'FE668', 'FE669', 'FE670', 'FE680',
              'FE681', 'FE682', 'FE683', 'FE684', 'FE685', 'FE700', 'FE701',
-             'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900'],
+             'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900',
+             "IB002"],
     "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)],
     "smhb": [None] + ["SA011", "SA012"],
     "smpx": [None] + [f"SA{i:03d}" for i in range(1, 11)],
     "smke": [None] + ["SA013", "SA014", "SA015"],
     "iame": [None] + [f"IR{i:03d}" for i in range(1, 12)],
-    "rcod": [None] + ['RE001','RE101','RE201','RE301','RE999','RE002','RE003',
-            'RE004','RE005','RE006','RE102','RE103','RE104','RE105','RE106',
-            'RE107','RE108','RE109','RE110','RE111','RE202','RE203','RE204',
-            'RE205','RE206','RE207','RE208','RE302','RE303','RE304','RE305',
-            'RE306','RE401','RE402','RE403','RE404'],
+    "rcod": [None] + [
+        'RE001','RE101','RE201','RE301','RE999','RE002','RE003', 'RE004',
+        'RE005','RE006','RE102','RE103','RE104','RE105','RE106', 'RE107',
+        'RE108','RE109','RE110','RE111','RE202','RE203','RE204', 'RE205',
+        'RE206','RE207','RE208','RE302','RE303','RE304','RE305', 'RE306',
+        'RE401','RE402','RE403','RE404'
+    ],
+    "cht": [],
+    "chcod": [
+        'CH001', 'CH002', 'CH003', 'CH004', 'CH005', 'CH006', 'CH007', 'CH008',
+        'CH009', 'CH010', 'CH011', 'CH021', 'CH022', 'CH023', 'CH024', 'CH025', 
+        'CH026', 'CH027', 'CH028', 'CH029', 'CH030', 'CH031', 'CH032', 'CH033', 
+        'CH034', 'CH035', 'CH036', 'CH037', 'CH038', 'CH039', 'CH040', 'CH041', 
+        'CH042', 'CH043', 'CH044', 'CH045', 'CH051', 'CH052', 'CH053', 'CH054', 
+        'CH055', 'CH056', 'CH057', 'CH100', 'CH101', 'CH102', 
+    ],
+    "timpl": [None] + [
+        'TI001', 'TI002', 'TI003', 'TI004', 'TI005', 'TI006', 'TI007', 'TI008', 
+        'TI009', 'TI010', 'TI011', 'TI012', 'TI013', 'TI014', 'TI015', 'TI016', 
+        'TI017', 'TI018', 'TI019', 'TI020', 'TI021', 'TI022', 'TI023', 'TI024', 
+        'TI025', 'TI026', 'TI031', 'TI032', 'TI033', 'TI034', 'TI035', 'TI036', 
+        'TI037', 'TI038', 'TI039', 'TI041', 'TI042',
+    ],
+    "sltx": [None] + [
+        "C", "CL", "L", "LS", "S", "SC", "SCL", "SI", "SIC", "SICL", "SIL", 
+        "SL", "SA"
+    ],
+    "fldt": ["DR000", "DR001", "DR002", "DR003", "IB000"],
+    "flst": [None, "00000"],
+    "flhst": [None] + ["FH101", "FH102", "FH201", "FH202", "FH301", "FH302"]
 }
-METHOD_VARS["pcr"] = METHOD_VARS["cr"]
-METHOD_VARS["focd"] = METHOD_VARS["fmcd"]
-METHOD_VARS["ioff"] = METHOD_VARS['hstg']
-METHOD_VARS["irop"] = METHOD_VARS["iame"]
-METHOD_VARS["rmet"] = METHOD_VARS["facd"]
-PROTECTED_ATTRS = ["prefix", "pars_fmt", "dtypes", "table_dtype", "table_index"]
+CODE_VARS["pcr"] = CODE_VARS["cr"]
+CODE_VARS["focd"] = CODE_VARS["fmcd"]
+CODE_VARS["ioff"] = CODE_VARS['hstg']
+CODE_VARS["irop"] = CODE_VARS["iame"]
+CODE_VARS["rmet"] = CODE_VARS["facd"]
+CODE_VARS["chme"] = CODE_VARS["facd"]
+PROTECTED_ATTRS = [
+    "prefix", "pars_fmt", "dtypes", "table_dtype", "table_index", 
+    "section_header"
+    ]
+SECTION_HEADERS = {
+    "Planting": "*PLANTING DETAILS"
+}
 
-class MethodType(str):
+class CodeType(str):
     def __new__(cls, name, value, fmt):
         if isinstance(value, str):
             value = value.strip()
+        elif value is None:
+            pass
         elif np.isnan(value):
             value = None
         else:
             pass
+
         if (value == "-99"):
             value = None
-        assert value in METHOD_VARS[name], \
-            f"{name} must be one of {METHOD_VARS[name]}"
+        assert (value in CODE_VARS[name]) or (CODE_VARS[name] == []), \
+            f"{name} must be one of {CODE_VARS[name]}"
         if value is None:
             value = ""
-        assert name in METHOD_VARS, f"{name} is not defined as a MethodType"
+        assert name in CODE_VARS, f"{name} is not defined as a CodeType"
         return super().__new__(cls, value)
 
     def __init__(self, name, value, fmt):
         self.name = name
+        if fmt[0] == ".": # For the case of headers with leading points
+            fmt = fmt[1:]
         self.fmt = fmt
 
     @property
@@ -73,7 +113,6 @@ class MethodType(str):
         else:
             return format(self, self.fmt)
             
-    
 class DateType(date):
     def __new__(cls, name, value, fmt):
         if isinstance(value, (date, datetime)):
@@ -97,6 +136,8 @@ class DateType(date):
     def __init__(self, name, value, fmt):
         # I'm not sure if I should do this. I don't expect users to use this classes
         self.name = name
+        if fmt[0] == ".": # For the case of headers with leading points
+            fmt = fmt[1:]
         self.fmt = fmt
     
     @property
@@ -111,6 +152,8 @@ class NumberType(float):
     def __new__(cls, name, value, fmt):
         if value is None:
             value = np.nan
+        elif isinstance(value, str) and (len(value.split()) == 0):
+            value = np.nan
         elif int(float(value)) == -99:
             value = np.nan
         else:
@@ -119,12 +162,14 @@ class NumberType(float):
     
     def __init__(self, name, value, fmt):
         self.name = name
+        if fmt[0] == ".": # For the case of headers with leading points
+            fmt = fmt[1:]
         self.fmt = fmt
 
     @property
     def str(self):
         if np.isnan(self):
-            return format(-99, f'{self.fmt[:2]}.0f')
+            return format(-99, f'{self.fmt.split(".")[0]}.0f')
         else:
             return format(self, self.fmt)
         
@@ -144,6 +189,8 @@ class DescriptionType(str):
 
     def __init__(self, name, value, fmt):
         self.name = name
+        if fmt[0] == ".": # For the case of headers with leading points
+            fmt = fmt[1:]
         self.fmt = fmt
 
     @property
@@ -239,6 +286,8 @@ class Record(MutableMapping):
     """ 
     prefix:dict # Prefix on FILEX
     dtypes:dict # Data type of each parameter in the record
+    pars_fmt:dict # Format of each parameter
+    n_tiers:int = 1 # Number of tiers. Sections like Field have more than one
     def __init__(self):
         self.__data = {}
         super().__init__()
@@ -284,11 +333,26 @@ class Record(MutableMapping):
     def parameters(self):
         return self.__data
     
-    def write(self):
+    def _write_row(self):
         return " ".join([
             par.str for name, par in self.items()
             if name != "table"
-        ])
+        ]) + "\n"
+    
+    def _write_section(self):
+        header = ["@"+self.prefix.upper()]
+        for key, fmt in self.pars_fmt.items():
+            if fmt == "%y%j":
+                fmt = ">5"
+            if fmt[0] == ".":
+                leading = "."
+            else:
+                leading = ""
+            fmt = leading + fmt.split(".")[0]
+            header.append(format(key.upper(), fmt))
+        out_str = SECTION_HEADERS[type(self).__name__] + "\n"
+        out_str += " ".join(header) + "\n" + " 1 " + self._write_row()
+        return out_str
     
 
 class TabularRecord(Record):
@@ -312,10 +376,14 @@ class TabularRecord(Record):
     
     def __setattr__(self, name, value):
         if name == "table":
+            # TODO: Implement DataFrame input
             table = TableType(value, self.table_dtype)
             super().__setattr__(name, table)
         else:
             super().__setattr__(name, value)
+
+    def write_section(self):
+        return
 
 
 class SimulationControls:
