@@ -97,7 +97,7 @@ class Weather():
         '''
         Initialize a Weather instance. This instance contains the weather data,
         as well as the parameters that define the weather station that the data
-        represents,nsuch as the latitude, longitude and elevation.
+        represents, such as the latitude, longitude and elevation.
 
         Arguments
         ----------
@@ -212,7 +212,7 @@ class Weather():
         ])
         outstr += weather_data_header(self.data.columns)
 
-        df = self.data.applymap(lambda x: f"{x:5.1f}")
+        df = self.data.map(lambda x: f"{x:5.1f}")
         df['day'] = df.index.strftime("%Y%j")
         df = df [["day"]+list(self.data.columns)]
         outstr += "\n".join(map(lambda x: " ".join(x), df.values))
