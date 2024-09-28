@@ -203,7 +203,7 @@ class Management:
                 'table': TabularSubsection({
                     'IDATE': [planting_date.strftime('%y%j'),],
                     'IROP': ['IR001',],
-                    'IVAL': [0,]
+                    'IRVAL': [0,]
                 })														
             }
         )
@@ -314,7 +314,7 @@ class Management:
 
         outstr += '*TREATMENTS                        -------------FACTOR LEVELS------------\n'
         outstr += '@N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM\n'
-        self._treatmentOptions["MI"] = min(1, self.irrigation['table']["IVAL"].sum())
+        self._treatmentOptions["MI"] = min(1, self.irrigation['table']["IRVAL"].sum())
         self._treatmentOptions["MF"] = min(1, self.fertilizers["table"][["FAMN", "FAMP", "FAMK", "FAMC", "FAMO"]].values.max())
         self._treatmentOptions["MH"] = min(1, int(self.harvest_details["HDATE"] is not None))
         outstr += f' 1 1 0 0 DEFAULT TREATMENT          {"  ".join(map(str, IMPLEMENTED_SECTIONS.values()))}\n\n'
