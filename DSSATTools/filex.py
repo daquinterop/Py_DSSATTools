@@ -426,6 +426,7 @@ class SoilAnalysis(TabularRecord):
         super().__init__()
         kwargs = {
             "sadat": sadat, "smhb": smhb, "smpx": smpx, "smke": smke, 
+            "saname": saname
         }
         for name, value in kwargs.items():
             super().__setitem__(name, value)

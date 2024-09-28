@@ -4,6 +4,7 @@ You can install the library using Python pip.
 ```
 pip install DSSATTools
 ```
+If you are a windows user I recommend to use it the library in a WSL environment. You can find more information [here](https://learn.microsoft.com/en-us/windows/wsl/about). 
 ## v2.1 Updates
 For the latest version the next changes were implemented:
 - The library simultes only one treatment. Therefore, only one option for cultivars, irrigation, fertilizer, field, etc. can be defined. 
