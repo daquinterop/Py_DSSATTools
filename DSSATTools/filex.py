@@ -213,7 +213,7 @@ class InitialConditions(TabularRecord):
         "icname": DescriptionType
     }
     pars_fmt = {
-        "pcr": ">5", "icdat": ">5", "icrt": ">5.0f", "icnd": ">5.0f", 
+        "pcr": ">5", "icdat": "%y%j", "icrt": ">5.0f", "icnd": ">5.0f", 
         "icrn": ">5.0f", "icre": ">5.0f", "icwd": ">5.0f", "icres": ">5.0f", 
         "icren": ">5.0f", "icrep": ">5.0f", "icrip": ">5.0f", "icrid": ">5.0f",
         "icname": "<25"
@@ -399,7 +399,7 @@ class SoilAnalysis(TabularRecord):
         "smke": CodeType, "saname": DescriptionType
     }
     pars_fmt = {
-        "sadat": ">5", "smhb": ">5", "smpx": ">5", "smke": ">5", 
+        "sadat": "%y%j", "smhb": ">5", "smpx": ">5", "smke": ">5", 
         "saname": "<16"
     }
     table_dtype = SoilAnalysisLayer
@@ -439,7 +439,7 @@ class IrrigationEvent(Record):
         "idate": DateType, "irop": CodeType, "irval": NumberType, 
     }
     pars_fmt = {
-        "idate": ">5", "irop": ">5", "irval": ">5.1f"
+        "idate": "%y%j", "irop": ">5", "irval": ">5.1f"
     }
     table_index = "idate" # Index when buliding table
     def __init__(self, idate:date, irval:float, irop:str=None):
@@ -520,7 +520,7 @@ class ResidueEvent(Record):
         "rename": DescriptionType
     }
     pars_fmt = {
-        "rdate": ">5", "rcod": ">5", "ramt": ">5.0f", "resn": ">5.2f",
+        "rdate": "%y%j", "rcod": ">5", "ramt": ">5.0f", "resn": ">5.2f",
         "resp": ">5.2f", "resk": ">5.2f", "rinp": ">5.0f", "rdep": ">5.0f",
         "rmet": ">5", "rename": "<16"
     }
@@ -589,7 +589,7 @@ class ChemicalsEvent(Record):
         "chname": DescriptionType
     }
     pars_fmt = {
-        "cdate": ">5", "chcod": ">5", "chamt": ">5.2f", "chme": ">5",
+        "cdate": "%y%j", "chcod": ">5", "chamt": ">5.2f", "chme": ">5",
         "chdep": ">5.0f", "cht": ">5", "chname": "<16"
     }
     table_index = "cdate" # Index when buliding table
@@ -648,7 +648,7 @@ class TillageEvent(Record):
         "tname": DescriptionType
     }
     pars_fmt = {
-        "tdate": ">5", "timpl": ">5", "tdep": ">5.0f", "tname": "<16"
+        "tdate": "%y%j", "timpl": ">5", "tdep": ">5.0f", "tname": "<16"
     }
     table_index = "tdate" # Index when buliding table
     def __init__(self, tdate:date, timpl:str=None, tdep:float=None, 
@@ -673,7 +673,8 @@ class TillageEvent(Record):
         }
         for name, value in kwargs.items():
             super().__setitem__(name, value) 
-    
+
+
 class Tillage(TabularRecord):
     prefix = "t"
     dtypes = {}
@@ -813,9 +814,451 @@ class Field(Record):
             out_str += " ".join(header) + "\n" + " 1 " + " ".join(values) + "\n"
         return out_str
 
+
+class SCGeneral(Record):
+    prefix = "n"
+    dtypes = {
+        "nyers": NumberType, "nreps": NumberType, "start": CodeType,
+        "sdate": DateType, "rseed": NumberType, "sname": DescriptionType,
+        "smodel": CodeType
+    }
+    pars_fmt = {
+        "nyers": ">5.0f", "nreps": ">5.0f", "start": ">5",
+        "sdate": ">5.0f", "rseed": ">5.0f", "sname": "<25",
+        "smodel": ">6"
+    }
+    def __init__(self, sdate:date, nyers:int=1, nreps:int=1, start:str="S", 
+                 rseed:int=2150, sname:str=None, smodel:str=None):
+        """
+        Initializes a Simulation Controls General section. 
+
+        Arguments
+         ----------
+        nyers: int
+            Number of years in Seasonal analysis
+        nreps: int
+            Number of repetitions (When weather generator in forecast mode)
+        start: str
+            Start method. Must be kept at 'S' (When specified)
+        rseed: int
+            Random seed
+        sname: str
+            Simulation name
+        smodel: str
+            Model to use
+        """
+        super().__init__()
+        kwargs = {
+            "sdate": sdate, "nyers": nyers, "nreps": nreps, "start": start,
+            "rseed": rseed, "sname": sname, "smodel": smodel
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+        return
+    
+
+class SCOptions(Record):
+    prefix = "n"
+    dtypes = {
+        "water": CodeType, "nitro": CodeType, "symbi": CodeType,
+        "phosp": CodeType, "potas": CodeType, "dises": CodeType,
+        "chem": CodeType, "till": CodeType, "co2": CodeType
+    }
+    pars_fmt = {
+        "water": ">5", "nitro": ">5", "symbi": ">5",
+        "phosp": ">5", "potas": ">5", "dises": ">5",
+        "chem": ">5", "till": ">5", "co2": ">5"
+    }
+    def __init__(self, water:str="Y", nitro:str="Y", symbi:str="N",
+                 phosp:str="N", potas:str="N", dises:str="N", 
+                 chem:str="N", till:str="N", co2:str="M"):
+        """
+        Initializes a Simulation Controls Options section. 
+
+        Arguments
+         ----------
+        water: str
+            Water effect switch (Y or N)
+        nitro: str
+            Nitrogen effect switch (Y or N)
+        symbi: str
+            Symbiosis effect (nitrogen fixation) switch (Y or N)
+        phosp: str
+            Phosphorus effect switch (Y or N)
+        potas: str
+            Potasium effect switch (Y or N)
+        dises: str
+            Diseases effect swtich (Y or N)
+        chem: str
+            Chemical effect switch (Y or N)
+        till: str
+            Tillage effect switch (Y or N)
+        co2: str
+            CO2 data source (M: Mauna Loa, D: Default, W: In weather file)
+        """
+        super().__init__()
+        kwargs = {
+            "water": water, "nitro": nitro, "symbi": symbi,
+            "phosp": phosp, "potas": potas, "dises": dises,
+            "chem": chem, "till": till, "co2": co2
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
+class SCMethods(Record):
+    prefix = "n"
+    dtypes = {
+        "wther": CodeType, "incon": CodeType, "light": CodeType,
+        "evapo": CodeType, "infil": CodeType, "photo": CodeType,
+        "hydro": CodeType, "nswit": CodeType, "mesom": CodeType,
+        "mesev": CodeType, "mesol": CodeType
+    }
+    pars_fmt = {
+        "wther": ">5", "incon": ">5", "light": ">5",
+        "evapo": ">5", "infil": ">5", "photo": ">5",
+        "hydro": ">5", "nswit": ">5", "mesom": ">5",
+        "mesev": ">5", "mesol": ">5"
+    }
+    def __init__(self, wther:str="M", incon:str="M", light:str="E",
+                 evapo:str="R", infil:str="R", photo:str="C", hydro:str="R",
+                 nswit:str="1", mesom:str="P", mesev:str="R", mesol:str="1"):
+        """
+        Initializes a Simulation Controls Methods section. 
+
+        Arguments
+         ----------
+        wther: str
+            Weather data source (M: Measured data, G: Generated (WTG files)
+            S: Simulated (SIMMETEO), W: Simualted internal (WGEN))
+        incon: str
+            Initial conditions soil conditions (M: As reported)
+        light: str
+            ? Light interception method
+        evapo: str
+            Evapotranspiration Method (R: Priestley-Taylor, F: FAO-56, 
+            S: ASCE Std Ref ET-Short, T: ASCE Std Ref ET-Tall)
+        infil: str
+            Infiltration method (S: Soil conservation service , R: Ritchie, 
+            N: No mulch)
+        photo: str
+            Photosyntesis method (C: Canopy curve, L: Leaf photosynt response
+            curve , R: Radiation effiency)
+        hydro: str
+            Hydrology (R: Ritchie)
+        nswit: str
+            ??
+        mesom: str
+            Soil Organic Matter method (G: Ceres (Godwin), P: Century (Parton))
+        mesev: str
+            Soil evaporation method (R: Ritchie-Ceres, S: Suleiman-Ritchie)
+        mesol: str
+            Soil layer distribution (1: Model-specified soil layers,
+            2: Modified soil profile, 3: Unmodified soil profile)
+        """
+        super().__init__()
+        kwargs = {
+            "wther": wther, "incon": incon, "light": light, "evapo": evapo,
+            "infil": infil, "photo": photo, "hydro": hydro, "nswit": nswit,
+            "mesom": mesom, "mesev": mesev, "mesol": mesol
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
+class SCManagement(Record):
+    prefix = "n"
+    dtypes = {
+        "plant": CodeType, "irrig": CodeType, "ferti": CodeType,
+        "resid": CodeType, "harvs": CodeType, 
+    }
+    pars_fmt = {
+        "plant": ">5", "irrig": ">5", "ferti": ">5",
+        "resid": ">5", "harvs": ">5", 
+    }
+    def __init__(self, plant:str="R", irrig:str="D", ferti:str="D",
+                 resid:str="D", harvs:str="A"):
+        """
+        Initializes a Simulation Controls Mangement section. 
+
+        Arguments
+         ----------
+        plant: str
+            Planting option (A: Automatic window,  F: Automatic force in the 
+            last day of window, R: On reported date)
+        irrig: str
+            Irrigation option (A: Automatic when required, D: days after
+            planting, F: Fixed amount automatic, N: Not irrigated, P: As 
+            reported through last day then automatic to refill, R: On reported
+            dates, W: As reported thorugh last day then automatic with fixed)
+        ferti: str
+            Fertilization option (D: Days after planting, N: Not fertilized,
+            R: On reported dates)
+        residue: str
+            Organic amendments option (D: Days after planting, N: Not
+            fertilized, R: On reported dates)
+        harvest: str
+            Harvest option (A: Automatic, D: Days after planting, M: At 
+            maturity, R: On reported dates, W: AutoMOW using days as harvest
+            frequency, X: autoMOW using GDD as harvest frequency, Y: smartMOW
+            using days as harvest frequency, Z: smartMOW using GDD as harvest
+            frequency)
+        """
+        super().__init__()
+        kwargs = {
+            "plant": plant, "irrig": irrig, "ferti": ferti, "resid": resid,
+            "harvs": harvs, 
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
+class SCOutputs(Record):
+    prefix = "n"
+    dtypes = {
+        'fname': CodeType, 'ovvew': CodeType, 'sumry': CodeType, 
+        'fropt': NumberType, 'grout': CodeType, 'caout': CodeType, 
+        'waout': CodeType, 'niout': CodeType, 'miout': CodeType,
+        'diout': CodeType, 'vbose': CodeType, 'chout': CodeType, 
+        'opout': CodeType, 'fmopt': CodeType
+    }
+    pars_fmt = {
+        'fname': ">5", 'ovvew': ">5", 'sumry': ">5", 'fropt': ">5.0f", 
+        'grout': ">5", 'caout': ">5", 'waout': ">5", 'niout': ">5", 
+        'miout': ">5", 'diout': ">5", 'vbose': ">5", 'chout': ">5", 
+        'opout': ">5", 'fmopt': ">5"
+    }
+    def __init__(self, fname:str="N", ovvew:str="Y", sumry:str="Y", 
+                 fropt:int=1, grout:str="Y", caout:str="Y", waout:str="N",
+                 niout:str="N", miout:str="N", diout:str="N", vbose:str="Y",
+                 chout:str="N", opout:str="N", fmopt:str="A"):
+        """
+        Initializes a Simulation Controls Output section. 
+
+        Arguments
+         ----------
+        fname: str
+            Use experiment name in output files (Y or N)
+        ovvew, sumry, grout, caout, waout, niout, miout, diout,
+        chout, opout: str
+            Switch to produce output files (Y or N)
+        fropt: int
+            Output interval
+        vbose: str
+            Verbose level (A, D, N, Y, 0)
+        fmopt: str
+            Output format (A: Text file, C: csv)
+        """
+        super().__init__()
+        kwargs = {
+            'fname': fname, 'ovvew': ovvew, 'sumry': sumry, 'fropt': fropt, 
+            'grout': grout, 'caout': caout, 'waout': waout, 'niout': niout, 
+            'miout': miout, 'diout': diout, 'vbose': vbose, 'chout': chout, 
+            'opout': opout, 'fmopt': fmopt
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
+class AMPlanting(Record):
+    prefix = "n"
+    dtypes = {
+        'pfrst': DateType, 'plast': DateType, 'ph2ol': NumberType, 
+        'ph2ou': NumberType, 'ph2od': NumberType, 'pstmx': NumberType, 
+        'pstmn': NumberType,
+    }
+    pars_fmt = {
+        'pfrst': "%y%j", 'plast': "%y%j", 'ph2ol': ">5.0f", 
+        'ph2ou': ">5.0f", 'ph2od': ">5.0f", 'pstmx': ">5.0f", 
+        'pstmn': ">5.0f",
+    }
+    def __init__(self, pfrst:date, plast:date, ph2ol:float=40, 
+                 ph2ou:float=100, ph2od:float=30, pstmx:float=30,
+                 pstmn:float=10):
+        """
+        Initializes a Automatic Management Planting section. 
+
+        Arguments
+         ----------
+        pfrst: date
+            Start of planting window
+        plast: date
+            End of planting window
+        ph2ol: float
+            Lower soil water level (%)
+        ph2ou: float
+            Upper soil water level (%)
+        ph2od: float
+            Depth of soil layer to consider for soil water level (cm)
+        pstmx: float
+            Maximum soil temperature (C)
+        pstmn: float
+            Minium soil temperature (C)
+        """
+        super().__init__()
+        kwargs = {
+            'pfrst': pfrst, 'plast': plast, 'ph2ol': ph2ol, 
+            'ph2ou': ph2ou, 'ph2od': ph2od, 'pstmx': pstmx, 
+            'pstmn': pstmn
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
+class AMIrrigation(Record):
+    prefix = "n"
+    dtypes = {
+        'imdep': NumberType, 'ithrl': NumberType, 'ithru': NumberType, 
+        'iroff': CodeType, 'imeth': CodeType, 'iramt': NumberType, 
+        'ireff': NumberType,
+    }
+    pars_fmt = {
+        'imdep': ">5.0f", 'ithrl': ">5.0f", 'ithru': ">5.0f", 
+        'iroff': ">5", 'imeth': ">5", 'iramt': ">5.0f", 
+        'ireff': ">5.2f",
+    }
+    def __init__(self, imdep:float, ithrl:float, ithru:float, 
+                 iroff:str, imeth:str, iramt:float,
+                 ireff:float=1.):
+        """
+        Initializes a Automatic Management Irrigation section. 
+
+        Arguments
+         ----------
+        imdep: float
+            Management depth (cm)
+        ithrl: float
+            Threshold, % of max available
+        ithru: float
+            End point, % of max available
+        iroff: str
+            End of application, Growth stage
+        imeth: str
+            Application method code
+        iramt: float
+            Fixed amount (mm)
+        ireff: float
+            Irrigation effiency (fraction)
+        """
+        super().__init__()
+        kwargs = {
+            'imdep': imdep, 'ithrl': ithrl, 'ithru': ithru, 
+            'iroff': iroff, 'imeth': imeth, 'iramt': iramt, 
+            'ireff': ireff,
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
+class AMNitrogen(Record):
+    prefix = "n"
+    dtypes = {
+        'nmdep': NumberType, 'nmthr': NumberType, 'namnt': NumberType, 
+        'ncode': CodeType, 'naoff': CodeType, 
+    }
+    pars_fmt = {
+        'nmdep': ">5.0f", 'nmthr': ">5.0f", 'namnt': ">5.0f", 
+        'ncode': ">5", 'naoff': ">5", 
+    }
+    def __init__(self, nmdep:float=30, nmthr:float=50, namnt:float=25, 
+                 ncode:str="IB001", naoff:str="IB001"):
+        """
+        Initializes a Automatic Management Nitrogen section. 
+
+        Arguments
+         ----------
+        nmdep: float
+            Management depth (cm)
+        nmthr: float
+            Threshold, stress factor (%)
+        namnt: float
+            Amount per application (kg N/ha)
+        ncode: str
+            Fertilizer type code
+        naoff: str
+            End of applications, Growth factor
+        """
+        super().__init__()
+        kwargs = {
+            'nmdep': nmdep, 'nmthr': nmthr, 'namnt': namnt, 
+            'ncode': ncode, 'naoff': naoff
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
+class AMResidues(Record):
+    prefix = "n"
+    dtypes = {
+        'ripcn': NumberType, 'rtime': NumberType, 'ridep': NumberType, 
+    }
+    pars_fmt = {
+        'ripcn': ">5.0f", 'rtime': ">5.0f", 'ridep': ">5.0f", 
+    }
+    def __init__(self, ripcn:float=100, rtime:float=1, ridep:float=20):
+        super().__init__()
+        """
+        Initializes a Automatic Management Organic Amendment section. 
+
+        Arguments
+         ----------
+        ripcn: float
+            Incorporation percentage (%)
+        rtime: float
+            Incorporation, days after harvest
+        ridep: float
+            Incorporation depth (cm)
+        """
+        kwargs = {
+            'ripcn': ripcn, 'rtime': rtime, 'ridep': ridep, 
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
+class AMHarvest(Record):
+    prefix = "n"
+    dtypes = {
+        'hfrst': NumberType, 'hlast': DateType, 'hpcnp': NumberType, 
+        'hpcnr': NumberType
+    }
+    pars_fmt = {
+        'hfrst': ">5.0f", 'hlast': "%y%j", 'hpcnp': ">5.0f", 
+        'hpcnr': ">5.0f"
+    }
+    def __init__(self, hlast:date, hpcnp:float, hpcnr:float):
+        """
+        Initializes a Automatic Management Harvest section. 
+
+        Arguments
+         ----------
+        hlast: date
+            Last day of harvest
+        hpcnp: float
+            Percentage of product harvested
+        hpcnr: float
+            Percentafe of residue harvested 
+        """
+        hfrst = 0 # Option not implemented yet on the GUI
+        super().__init__()
+        kwargs = {
+            'hfrst': hfrst, 'hlast': hlast, 'hpcnp': hpcnp, 'hpcnr': hpcnr
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+    
+
 class SimulationControls:
+    dtypes = {
+        "general": SCGeneral, "options": SCOptions, 
+        "methods": SCMethods, "management": SCManagement, 
+        "outputs": SCOutputs, "planting": AMPlanting,
+        "irrigation": AMIrrigation, "nitrogen": AMNitrogen,
+        "residues": AMResidues, "harvest": AMHarvest
+    }
     def __init__(self):
         return
+
 
 def get_header_range(l, h, pars_fmt):
     """Get variable start and index in the header line"""
@@ -836,6 +1279,11 @@ def get_header_range(l, h, pars_fmt):
     else:
         raise ValueError("Variable format must be right or left justified")
     return (start, end)
+
+
+def process_sc_line(l):
+    return
+
 
 def read_filex(filexpath):
     """
@@ -873,9 +1321,13 @@ def read_filex(filexpath):
                 experiment[section_cls.__name__] = vals_dict
                 vals_dict = {}
                 del level
-            lookup = "section"
+            if lookup == "simulation controls": 
+                continue
+            else:
+                lookup = "section"
             vals = {}
             add_tier = False
+            
             continue
         elif l[0] == "!":
             continue
@@ -938,6 +1390,31 @@ def read_filex(filexpath):
                 level = int(l[:2])
                 vals[level] = vals.get(level, []) + [row]
             table_values.append(row)
+        elif lookup == "simulation controls":
+            if l[0] == "@": # Header 
+                if "AUTOMATIC" in l:
+                    continue
+                header = l.replace(".", " ").lower().split()
+                simcon_dtype = SimulationControls.dtypes[header[1]]
+                header_start_end = {
+                    h: get_header_range(
+                        l, h, simcon_dtype.pars_fmt
+                    ) 
+                    for h in header[2:]
+                }
+            else: # Values
+                vals = {
+                    key: l[header_start_end[key][0]:header_start_end[key][1]]
+                    for key in header[2:]
+                }
+                level = int(l[:2])
+                if sim_controls_dict.get(level, False):
+                    sim_controls_dict[level][header[1]] = simcon_dtype(**vals)
+                else:
+                    sim_controls_dict[level] = {
+                        header[1]: simcon_dtype(**vals)
+                    }
+            
         elif lookup == "section":
             if l[:6] == "*PLANT":
                 section_cls = Planting
@@ -961,6 +1438,10 @@ def read_filex(filexpath):
                 section_cls = Tillage
             elif l[:6] == "*FIELD": 
                 section_cls = Field
+            elif l[:6] == "*SIMUL":
+                section_cls = SimulationControls
+                sim_controls_dict = {}
+                # Simulation Controls must be the last section
             else:
                 continue
             # Some sections are only tables, for those go directly to table
@@ -971,6 +1452,8 @@ def read_filex(filexpath):
                 vals = {}
             else:
                 lookup = "header"
+                if section_cls.__name__ == "SimulationControls":
+                    lookup = "simulation controls"
         else:
             raise ValueError
     return experiment
