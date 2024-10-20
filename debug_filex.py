@@ -5,7 +5,9 @@ from DSSATTools.base.partypes import NumberType
 from datetime import date
 
 # experiment = read_filex("/home/diego/dssat-csm-data/Maize/EBPL8501.MZX")
-experiment = read_filex("/home/diego/dssat-csm-data/Soybean/UFGA8401.SBX")
+# experiment = read_filex("/home/diego/dssat-csm-data/Soybean/UFGA8401.SBX")
+experiment = read_filex("/home/diego/dssat-csm-data/Soybean/IUCA7901.SBX")
+
 field = experiment["Field"][1]
 field._write_section()
 planting = experiment["Planting"][1]

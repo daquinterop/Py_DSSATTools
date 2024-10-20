@@ -29,18 +29,19 @@ CODE_VARS = {
              'FE665', 'FE666', 'FE667', 'FE668', 'FE669', 'FE670', 'FE680',
              'FE681', 'FE682', 'FE683', 'FE684', 'FE685', 'FE700', 'FE701',
              'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900',
-             "IB002"],
+             "IB001", "IB002"],
     "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)],
     "smhb": [None] + ["SA011", "SA012"],
     "smpx": [None] + [f"SA{i:03d}" for i in range(1, 11)],
     "smke": [None] + ["SA013", "SA014", "SA015"],
-    "iame": [None] + [f"IR{i:03d}" for i in range(1, 12)],
+    "iame": [None, "IB001"] + [f"IR{i:03d}" for i in range(1, 12)],
     "rcod": [None] + [
         'RE001','RE101','RE201','RE301','RE999','RE002','RE003', 'RE004',
         'RE005','RE006','RE102','RE103','RE104','RE105','RE106', 'RE107',
         'RE108','RE109','RE110','RE111','RE202','RE203','RE204', 'RE205',
         'RE206','RE207','RE208','RE302','RE303','RE304','RE305', 'RE306',
-        'RE401','RE402','RE403','RE404'
+        'RE401','RE402','RE403','RE404', 
+        "IB001"
     ],
     "cht": [],
     "chcod": [
@@ -64,14 +65,48 @@ CODE_VARS = {
     ],
     "fldt": ["DR000", "DR001", "DR002", "DR003", "IB000"],
     "flst": [None, "00000"],
-    "flhst": [None] + ["FH101", "FH102", "FH201", "FH202", "FH301", "FH302"]
+    "flhst": [None] + ["FH101", "FH102", "FH201", "FH202", "FH301", "FH302"],
+    "start": ["S"],
+    "smodel": ["", None],
+    "switch": ["Y", "N"],
+    "co2": ["M", "D", "W"],
+    "wther": ["M", "G", "S", "W"], 
+    "incon": ["M", ], 
+    "light": ["E", ],
+    "evapo": ["R", "F", "S", "T"], 
+    "infil": ["S", "R", "N"], 
+    "photo": ["C", "L", "R"],
+    "hydro": ["R", ], 
+    "nswit": ["1", ], 
+    "mesom": ["G", "P"],
+    "mesev": ["R", "S"], 
+    "mesol": ["1", "2", "3"],
+    "plant": ["A", "F", "R", ], 
+    "irrig": ["A", "D", "F", "N", "P", "R", "W"], 
+    "ferti": ["D", "N", "R", ],
+    "resid": ["D", "N", "R", ], 
+    "harvs": ["A", "D", "M", "R", "W", "X", "Y", "Z"], 
+    "vbose": ["A", "0", "D", "N", "Y"],
+    "fmopt": ["C", "A"],
+    "naoff": ["IB001", "GS000"]
 }
-CODE_VARS["pcr"] = CODE_VARS["cr"]
+CODE_VARS["pcr"] = CODE_VARS["cr"] 
 CODE_VARS["focd"] = CODE_VARS["fmcd"]
-CODE_VARS["ioff"] = CODE_VARS['hstg']
+CODE_VARS["ioff"] = CODE_VARS['hstg'] + ["IB001"]
 CODE_VARS["irop"] = CODE_VARS["iame"]
 CODE_VARS["rmet"] = CODE_VARS["facd"]
 CODE_VARS["chme"] = CODE_VARS["facd"]
+CODE_VARS["water"] = CODE_VARS["nitro"] = CODE_VARS["symbi"] = \
+    CODE_VARS["phosp"] = CODE_VARS["potas"] = CODE_VARS["dises"] = \
+    CODE_VARS["chem"] = CODE_VARS["till"] = CODE_VARS["fname"] =  \
+    CODE_VARS["ovvew"] = CODE_VARS["sumry"] = CODE_VARS["grout"] = \
+    CODE_VARS["caout"] = CODE_VARS["waout"] = CODE_VARS["niout"] =  \
+    CODE_VARS["miout"] = CODE_VARS["diout"] = CODE_VARS["chout"] = \
+    CODE_VARS["opout"] = CODE_VARS["switch"]
+CODE_VARS["iroff"] = CODE_VARS["ioff"] # TODO: These are exactly the same!
+CODE_VARS["imeth"] = CODE_VARS["iame"] # TODO: These are exactly the same!
+CODE_VARS["ncode"] = CODE_VARS["fmcd"]
+
 PROTECTED_ATTRS = [
     "prefix", "pars_fmt", "dtypes", "table_dtype", "table_index", 
     "section_header"
@@ -385,12 +420,4 @@ class TabularRecord(Record):
     def write_section(self):
         return
 
-
-class SimulationControls:
-    def __init__(self):
-        return
-    
-class Field:
-    def __init__(self):
-        return
     
