@@ -34,11 +34,12 @@ from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection
 
 OS = platform.system().lower()
-OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg"]
+OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg", "SoilNi"]
 OUTPUT_MAP = {
     "PlantGro": "GROUT",  "SoilWat": "WAOUT", "SoilOrg": "CAOUT",
-    "Weather": "GROUT"
+    "Weather": "GROUT", "SoilNi": "NIOUT"
 }
+SOIL_LAYER_OUTPUTS = ["SoilNi"]
 
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
@@ -46,10 +47,22 @@ ROOTS = ['Potato']
 # Paths to DSSAT and Env variables
 BASE_PATH = os.path.dirname(module_path)
 STATIC_PATH = os.path.join(BASE_PATH, 'static')
-STATIC_PATH = STATIC_PATH + os.sep
-STD_PATH = os.path.join(STATIC_PATH, 'StandardData')
-CRD_PATH = os.path.join(STATIC_PATH, 'Genotype')
-SLD_PATH = os.path.join(STATIC_PATH, 'Soil')
+TMP =  tempfile.gettempdir()
+DSSAT_HOME = os.path.join(TMP, f"DSSAT{VERSION}"+os.sep)
+STD_PATH = os.path.join(DSSAT_HOME, 'StandardData')
+CRD_PATH = os.path.join(DSSAT_HOME, 'Genotype')
+SLD_PATH = os.path.join(DSSAT_HOME, 'Soil')
+
+# Creates a folder with DSSAT files. This is done to avoid long path names
+# that exceed the defined lenght for path variables in DSSAT.
+if not os.path.exists(DSSAT_HOME):
+    os.mkdir(DSSAT_HOME)
+for file in os.listdir(STATIC_PATH):
+    file_link = os.path.join(DSSAT_HOME, file)
+    if os.path.exists(file_link):
+        os.remove(file_link)
+    os.symlink(os.path.join(STATIC_PATH, file), file_link)
+
 if 'windows'in OS:
     BIN_PATH = os.path.join(STATIC_PATH, 'bin', 'dscsm048.exe')
     CONFILE = 'DSSATPRO.V48'
@@ -225,14 +238,14 @@ class DSSAT():
             else:
                 f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
             f.write(f'CRD    {CRD_PATH}\n')
-            f.write(f'PSD    {os.path.join(STATIC_PATH, "Pest")}\n')
+            f.write(f'PSD    {os.path.join(DSSAT_HOME, "Pest")}\n')
             f.write(f'SLD    {SLD_PATH}\n')
             f.write(f'STD    {STD_PATH}\n')
 
         exc_args = [BIN_PATH, 'C', os.path.basename(management_filename), '1']
         excinfo = subprocess.run(exc_args, 
             cwd=self._RUN_PATH, capture_output=True, text=True,
-            env={"DSSAT_HOME": STATIC_PATH, }
+            env={"DSSAT_HOME": DSSAT_HOME, }
         )
         excinfo.stdout = re.sub("\n{2,}", "\n", excinfo.stdout)
         excinfo.stdout = re.sub("\n$", "", excinfo.stdout)
@@ -259,16 +272,21 @@ class DSSAT():
             assert f'{file}.OUT' in OUTPUT_FILES, \
                 f'{file}.OUT does not exist in {self._RUN_PATH}'
             table_start = -1
+            init_lines = []
             with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
                 while True:
                     table_start += 1
-                    if '@' in f.readline():
+                    init_lines.append(f.readline())
+                    if '@' in init_lines[-1][:10]:
                         break
+            
             try:  
                 df = pd.read_csv(
                     os.path.join(self._RUN_PATH, f'{file}.OUT'),
                     skiprows=table_start, sep=' ', skipinitialspace=True
                 )
+                df = df.dropna(how="all", axis=1)
+
             except UnicodeDecodeError:
                 with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
                     lines = f.readlines()

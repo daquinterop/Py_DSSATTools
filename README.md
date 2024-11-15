@@ -6,7 +6,7 @@ pip install DSSATTools
 ```
 ## v2.1 Updates
 For the latest version the next changes were implemented:
-- Everything is based in the fact that each simulation includes only one treatment. That involves a single option for cultivars, irrigation, fertilizer, field, etc. 
+- The library simultes only one treatment. Therefore, only one option for cultivars, irrigation, fertilizer, field, etc. can be defined. 
 - Every set of defined crop or management parameters is a section. Each section is an attribute of the `Crop` or `Management` class. Sections won't be created by the user. The user can only modify the value of the parameters of the section, they can't create or add new parameters.
 - The weather is now managed by a single `Weather` class.
 - A `__repr__` method was implemented for the four basic classes (`Crop`, `Management`, `Weather` and `SoilProfile`), and the `Section` class. 

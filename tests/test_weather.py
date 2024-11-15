@@ -6,11 +6,9 @@ import pandas as pd
 import numpy as np
 import shutil
 import os
-import platform
-if 'windows' in platform.system().lower():
-    BASE_PATH = 'C:/Users/daqui/'
-else:
-    BASE_PATH='/home/diego'
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).parent.parent
 
 DATES = pd.date_range('2000-01-01', '2010-12-31')
 N = len(DATES)
@@ -34,7 +32,7 @@ variables={
 
 class TestWeather:  
     def test_write(self):
-        folder = os.path.join(BASE_PATH, 'Py_DSSATTools', 'wth_test')
+        folder = os.path.join(PROJECT_ROOT, 'tests', 'wth_test')
         if os.path.exists(folder): shutil.rmtree(folder)
         wth = Weather(df, variables, 4.54, -75.1, 1800)
         wth.write(folder)
