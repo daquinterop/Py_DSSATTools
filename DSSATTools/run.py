@@ -69,6 +69,7 @@ else:
     WIN_SHUTIL_KWARGS = {}
     CHMOD_MODE = 111
 
+
 class DSSAT():
     '''
     Class that represents the simulation environment for a single treatment. When
