@@ -63,7 +63,9 @@ SPE_FILES = {
     'Tomato': f'TMGRO{VERSION}.SPE',
     'Cabbage': f'CBGRO{VERSION}.SPE',
     'Sugarcane': f'SCCAN{VERSION}.SPE',
-    "Wheat": f"WHCER{VERSION}.SPE"
+    "Wheat": f"WHCER{VERSION}.SPE",
+    "Bean": f"BNGRO{VERSION}.SPE",
+    "Cassava": f"CSYCA{VERSION}.SPE"
 }
 
 DEFAULT_CULTIVARS = {
@@ -82,7 +84,9 @@ DEFAULT_CULTIVARS = {
     'Tomato': "TM0001",
     'Cabbage': "990001",
     'Sugarcane': "IB0001",
-    "Wheat": "IB1500"
+    "Wheat": "IB1500",
+    "Bean": "IB0006",
+    "Cassava": "UC0008"
 }
 
 CROP_CODES = {
@@ -101,7 +105,9 @@ CROP_CODES = {
     'Tomato': "TM",
     'Cabbage': "CB",
     'Sugarcane': "SC",
-    "Wheat": "WH"
+    "Wheat": "WH",
+    "Bean": "BN",
+    "Cassava": "CS"
 }
 
 CROPS_MODULES = {
@@ -120,7 +126,9 @@ CROPS_MODULES = {
     'Tomato': "CRGRO",
     'Cabbage': "CRGRO",
     'Sugarcane': "SCCAN",
-    "Wheat": "WHCER"
+    "Wheat": "WHCER",
+    "Bean": "BNGRO",
+    "Cassava": "CSYCA"
 }
 
 DSSAT_MODULE_PATH = os.path.dirname(module_path)
@@ -155,7 +163,9 @@ CUL_VARNAME = {
     'TM': 'VRNAME..........',
     'CB': 'VRNAME..........',
     'SC': 'VAR-NAME........',
-    "WH": "VAR-NAME........"
+    "WH": "VAR-NAME........",
+    'BN': 'VRNAME..........',
+    'CS': 'VAR-NAME........'
 }
 
 
