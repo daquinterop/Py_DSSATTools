@@ -64,7 +64,8 @@ SPE_FILES = {
     'Cabbage': f'CBGRO{VERSION}.SPE',
     'Sugarcane': f'SCCAN{VERSION}.SPE',
     "Wheat": f"WHCER{VERSION}.SPE",
-    "Bean": f"BNGRO{VERSION}.SPE"
+    "Bean": f"BNGRO{VERSION}.SPE",
+    "Cassava": f"CSYCA{VERSION}.SPE"
 }
 
 DEFAULT_CULTIVARS = {
@@ -84,7 +85,8 @@ DEFAULT_CULTIVARS = {
     'Cabbage': "990001",
     'Sugarcane': "IB0001",
     "Wheat": "IB1500",
-    "Bean": "IB0006"
+    "Bean": "IB0006",
+    "Cassava": "UC0008"
 }
 
 CROP_CODES = {
@@ -104,7 +106,8 @@ CROP_CODES = {
     'Cabbage': "CB",
     'Sugarcane': "SC",
     "Wheat": "WH",
-    "Bean": "BN"
+    "Bean": "BN",
+    "Cassava": "CS"
 }
 
 CROPS_MODULES = {
@@ -124,7 +127,8 @@ CROPS_MODULES = {
     'Cabbage': "CRGRO",
     'Sugarcane': "SCCAN",
     "Wheat": "WHCER",
-    "Bean": "BNGRO"
+    "Bean": "BNGRO",
+    "Cassava": "CSYCA"
 }
 
 DSSAT_MODULE_PATH = os.path.dirname(module_path)
@@ -160,7 +164,8 @@ CUL_VARNAME = {
     'CB': 'VRNAME..........',
     'SC': 'VAR-NAME........',
     "WH": "VAR-NAME........",
-    'BN': 'VRNAME..........'
+    'BN': 'VRNAME..........',
+    'CS': 'VAR-NAME........'
 }
 
 
