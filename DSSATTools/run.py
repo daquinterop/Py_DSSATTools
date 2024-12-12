@@ -271,7 +271,7 @@ class DSSAT():
         for file in self.OUTPUT_LIST:
             assert f'{file}.OUT' in OUTPUT_FILES, \
                 f'{file}.OUT does not exist in {self._RUN_PATH}'
-            if "OVERVIEW.OUT" in OUTPUT_FILES:
+            if "OVERVIEW" in file:
                 df=self._get_overview_stress()
                 self._output[file] = df
             else:
