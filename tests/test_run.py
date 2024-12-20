@@ -786,12 +786,15 @@ def test_outputs():
     man = Management(
         planting_date=DATES[10],
     )
+    man.simulation_controls["OVVEW"] = "N"
+    man.simulation_controls["SUMRY"] = "N"
 
     dssat = DSSAT()
     dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
+
     outputs = ['PlantGro', "Weather", "SoilWat", "SoilOrg"]
     assert all(map(lambda x: x in outputs, dssat.output))
 
