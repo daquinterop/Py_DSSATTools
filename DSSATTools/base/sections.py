@@ -22,7 +22,9 @@ CULTIVAR_HEADER_FMT = {
     'Tomato':       'A5,1X,1X,A16,1X,A5,1X,A6,18(1X,A5)',
     'Cabbage':      'A5,1X,1X,A16,1X,A5,1X,A6,18(1X,A5)',
     'Sugarcane':    'A5,1X,1X,A16,1X,A5,1X,A6,22(1X,A14)',
-    "Wheat":        "A5,1X,1X,A16,1X,A5,1X,A6,7(1X,A5)"
+    "Wheat":        "A5,1X,1X,A16,1X,A5,1X,A6,7(1X,A5)",
+    'Bean':         'A5,1X,1X,A16,1X,A5,1X,A6,18(1X,A5)',
+    'Cassava':      'A5,1X,1X,A16,1X,A5,1X,A6,15(1X,A5)'
 }
 CULTIVAR_ROWS_FMT = {
     'Maize':        'A6,1X,A16,1X,A5,1X,A6,1X,F5.1,1X,F5.3,2(1X,F5.0),2(1X,F5.2)',
@@ -40,7 +42,9 @@ CULTIVAR_ROWS_FMT = {
     'Tomato':       'A6,1X,A20,1X,A1,1X,A6,2(1X,F5.2),3(1X,F5.1),3(1X,F5.2),1X,F5.0,1X,F5.1,1X,F5.2,1X,F5.4,4(1X,F5.1),2(1X,F5.3)',
     'Cabbage':      'A6,1X,A16,1X,A5,1X,A6,1X,F5.2,1X,F5.3,3(1X,F5.1),2(1X,F5.2),1X,F5.3,1X,F5.0,1X,F5.1,1X,F5.3,1X,F5.2,1X,F5.1,1X,F5.2,2(1X,F5.1),2(1X,F5.3)',
     'Sugarcane':    'A6,1X,A16,1X,A5,1X,A6,22(1X,F14.4)',
-    "Wheat":        "A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.2,1X,F5.0"
+    "Wheat":        "A6,1X,A16,1X,A5,1X,A6,5(1X,F5.1),1X,F5.2,1X,F5.0",
+    'Bean':         'A6,1X,A16,1X,A5,1X,A6,1X,F5.2,1X,F5.3,3(1X,F5.1),2(1X,F5.2),1X,F5.2,1X,F5.0,1X,F5.1,1X,F5.2,1X,F5.3,1X,F5.1,1X,F5.2,2(1X,F5.1),2(1X,F5.3)',
+    'Cassava':      'A6,1X,A16,1X,A5,1X,A6,8(1X,F5.1),3(1X,I5),3(1X,F5.2),1X,F5.1'
 }
 ECOTYPE_HEADER_FMT = {
     'Maize':        'A5,1X,1X,A16,1X,11(1X,A5)',
@@ -58,7 +62,9 @@ ECOTYPE_HEADER_FMT = {
     'Tomato':       'A5,1X,1X,A17,2(1X,A2)17(1X,A5)',
     'Cabbage':      'A5,1X,1X,A17,2(1X,A2)16(1X,A5)',
     'Sugarcane':    'A5,1X,1X,A17,1X,49(1X,A14)',
-    "Wheat":        "A5,1X,32(1X,A5)"
+    "Wheat":        "A5,1X,32(1X,A5)",
+    'Bean':         'A5,1X,1X,A17,2(1X,A2)16(1X,A5)',
+    'Cassava':      'A5,1X,1X,A17,15(1X,A5)'
 }
 ECOTYPE_ROWS_FMT = {
     'Maize':        'A6,1X,A16,1X,8(1X,F5.1),1X,F5.2,2(1X,F5.1)',
@@ -76,7 +82,9 @@ ECOTYPE_ROWS_FMT = {
     'Tomato':       'A6,1X,A17,2(1X,A2),5(1X,F5.1),2(1X,F5.2),2(1X,F5.1),2(1X,F5.2),2(1X,F5.1),1X,F5.3,1X,F5.1,1X,F5.3,1X,F5.1',
     'Cabbage':      'A6,1X,A17,2(1X,A2),6(1X,F5.1),1X,F5.2,2(1X,F5.1),2(1X,F5.2),2(1X,F5.1),1X,F5.3,1X,F5.1,1X,F5.3',
     'Sugarcane':    'A6,1X,A17,1X,1X,F14.2,1X,F14.1,2(1X,F14.2),1X,F14.0,2(1X,F14.1),1X,F14.0,1X,F14.4,1X,F14.3,1X,F14.2,1X,F14.3,3(1X,F14.0),1X,F14.2,1X,F14.1,1X,F14.3,2(1X,F14.1),1X,F14.0,7(1X,F14.1),12(1X,F14.2),2(1X,F14.1),7(1X,F14.2)',
-    "Wheat":        "A6,1X,I5,1X,F5.2,2(1X,I5),2(1X,F5.2),1X,I5,6(1X,F5.1),2(1X,F5.2),1X,I5,9(1X,F5.1),1X,I5,1X,F5.1,1X,F5.2,1X,I5,2(1X,F5.1),1X,I5"
+    "Wheat":        "A6,1X,I5,1X,F5.2,2(1X,I5),2(1X,F5.2),1X,I5,6(1X,F5.1),2(1X,F5.2),1X,I5,9(1X,F5.1),1X,I5,1X,F5.1,1X,F5.2,1X,I5,2(1X,F5.1),1X,I5",
+    'Bean':         'A6,1X,A17,2(1X,A2),1X,F5.2,5(1X,F5.1),1X,F5.2,2(1X,F5.1),2(1X,F5.2),2(1X,F5.1),1X,F5.3,1X,F5.1,1X,F5.3',
+    'Cassava':      'A6,1X,A17,1X,F5.2,1X,F5.1,2(1X,F5.2),1X,I5,3(1X,F5.2),1X,F5.1,1X,F5.2,1X,F5.1,1X,I5,2(1X,F5.2),1X,I5'
 }#USWH01   400   .25   285   190   .25   .10   200   1.0   2.3   2.3    13   1.0   2.0  0.15  0.01   400   5.1   6.5   4.5   2.0   0.8   2.2   6.0   4.0   3.0   100   5.0   .85    30   2.2   1.9   -20
 SECTIONS_HEADER_FMT = {
     'treatments': 'A2,3(1X,A1),1X,A25,13(1X,A2)',
@@ -440,7 +448,7 @@ class Section(MutableMapping):
             for n, line in enumerate(file_lines):
                 if line[0] == '*':
                     pass
-                elif line[0] == "$":
+                elif "$" in line[0:4]:
                     self.__versionLine = line
                     pass
                 elif line[0] == '@':
