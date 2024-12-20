@@ -34,10 +34,12 @@ from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection
 
 OS = platform.system().lower()
-OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg", "SoilNi", "OVERVIEW", "Summary"]
+OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg", "SoilNi", 
+           "OVERVIEW", "Summary"]
 OUTPUT_MAP = {
     "PlantGro": "GROUT",  "SoilWat": "WAOUT", "SoilOrg": "CAOUT",
-    "Weather": "GROUT", "SoilNi": "NIOUT", "Overview":"OVVEW", "Summary":"SUMRY"
+    "Weather": "GROUT", "SoilNi": "NIOUT", "OVERVIEW": "OVVEW",
+    "Summary": "SUMRY"
 }
 SOIL_LAYER_OUTPUTS = ["SoilNi"]
 
@@ -229,8 +231,6 @@ class DSSAT():
         wth_path = os.path.join(self._RUN_PATH, 'Weather')
         weather.write(wth_path, management=management)
 
-        
-
         with open(os.path.join(self._RUN_PATH, CONFILE), 'w') as f:
             f.write(f'WED    {wth_path}\n')
             if crop._CODE in ["WH", "BA"]:
@@ -264,6 +264,11 @@ class DSSAT():
             var for var in OUTPUTS
             if management.simulation_controls.get(OUTPUT_MAP.get(var)) in ("Y", None)
         ]
+
+        # There's not overview file for perenial forages
+        if crop.crop_name in PERENIAL_FORAGES:
+            self.OUTPUT_LIST.remove("OVERVIEW")
+
         # Check for man.simulation_controls["WATER"]
         if management.simulation_controls["WATER"] == "N":
             self.OUTPUT_LIST = list(filter(lambda x: x != "SoilWat", self.OUTPUT_LIST))
@@ -272,8 +277,10 @@ class DSSAT():
             assert f'{file}.OUT' in OUTPUT_FILES, \
                 f'{file}.OUT does not exist in {self._RUN_PATH}'
             if "OVERVIEW" in file:
-                df=self._get_overview_stress()
-                self._output[file] = df
+                self.stress_table = self._get_overview_stress()
+                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 
+                          'r', encoding='cp437') as f:
+                    self._output[file] = f.readlines()
             else:
                 table_start = -1
                 init_lines = []
@@ -320,7 +327,7 @@ class DSSAT():
                 search_term="DATE"
                 data = []
                 init_lines.append(f.readline())
-                if search_term in init_lines[-1][:10]:
+                if search_term in init_lines[-1][:12]:
                     header = ['DATE', 'CROP AGE', 'GROWTH STAGE', 'BIOMASS', 'LEAF LAI', \
                               'LEAF NUM', 'N_KG', 'N_PERCENT', 'STRESS H2O', 'STRESS Nitr', \
                               'STRESS Phos1', 'STRESS Phos2', 'RSTG']
