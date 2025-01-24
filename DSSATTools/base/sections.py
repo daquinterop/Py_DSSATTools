@@ -132,7 +132,7 @@ SECTIONS_ROW_FMT = {
     'planting details': '1X,I1,2(1X,A5),2(1X,A5),2(1X,A5),3(1X,F5.1),2(1X,I5),3(1X,F5.1),1X,A29',
     # 'planting details_table': '1X,I1,2(1X,A5),2(1X,I5),2(1X,A5),7(1X,I5),1X,A5,1X,A29',
     'irrigation': '1X,I1,4(1X,I5),2(1X,A5),1X,I5,1X,A6',
-    'irrigation_table': '1X,I1,2(1X,A5),1X,I5',
+    'irrigation_table': '1X,I1,2(1X,A5),1X,F5.1',
     'fertilizers': [],
     'fertilizers_table': '1X,I1,3(1X,A5),6(1X,I5),1X,A5,1X,A6',
     'harvest details': '1X,I1,4(1X,A5),2(1X,I5),1X,A5',

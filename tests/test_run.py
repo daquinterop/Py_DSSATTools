@@ -17,7 +17,7 @@ This is the list of crops and the tested experiments:
 | Sugarbeet    | Pending
 | Rice         | Pending
 | Sweetcorn    | Pending
-| Alfalfa      | Pending
+| Alfalfa      | AGZG1501   |   1   |
 | Bermudagrass | Pending
 | Canola       | Pending
 | Sunflower    | Pending
@@ -32,7 +32,7 @@ from DSSATTools import (
     Management, DSSAT
     )
 from DSSATTools.base.sections import TabularSubsection
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 import os
@@ -297,20 +297,152 @@ def test_run_sweetcorn():
     # assert not os.path.exists(dssat._RUN_PATH)
 
 def test_run_alfalfa():
-    crop = Crop('alfalfa')
-    man = Management(
-        planting_date=DATES[10],
+    """
+    Experiment AGZG1501 Experiment 1
+    """
+    crop = Crop('alfalfa', "AL0001")
+    soil = SoilProfile("tests/input_files/AG.SOL", "AGSP209115")
+    ### Build weather from existing weather files
+    df = pd.DataFrame()
+    for year in range(15, 18):
+        df = pd.concat(
+            [
+                df, 
+                pd.read_fwf(
+                    f"tests/input_files/TARD{year}01.WTH", 
+                    skiprows=4, widths=[6]*10
+                )
+            ], 
+            ignore_index=True
+        )
+    df.index = pd.to_datetime(df["@DATE"].astype(str), format="%y%j")
+    df = df.interpolate("linear")
+    wth =  Weather(
+        df, {"TMIN": "TMIN", "SRAD": "SRAD", "RAIN": "RAIN", 
+             "TMAX": "TMAX", "EVAP": "EVAP", "RHUM": "RHUM",
+             "WIND": "WIND"},
+        lat=33.3, lon=-84.3, elev=300, tav=14.3, amp=18.2,
     )
+
+    man = Management(
+        planting_date=datetime(2015, 1, 1) + timedelta(262),
+        initial_swc=1
+    )
+    man.field["...........XCRD"] = 42
+    man.field["...........YCRD"] = 0
+    man.field[".....ELEV"] = 222
+    # *PLANTING DETAILS
+    # @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
+    #  1 15263   -99   400   400     S     R    10     0     2  2000   150    32     1     0                        209
+    pars = {
+        "PPOP": 400, "PPOE": 400, "PLME": "S", "PLDS": "R", "PLRD": 0, 
+        "PLDP": 2, "PLWT": 2000, "PAGE": 150, "PENV": 32, "PLPH": 1, 
+        "SPRL": 0 , "PLRS": 10
+    }
+    for key, val in pars.items(): man.planting_details[key] = val
+
+    # *IRRIGATION AND WATER MANAGEMENT
+    # @I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
+    #  1     1    30    50   100 GS000 IR001    10 209-a-b
+    # @I IDATE  IROP IRVAL
+    #  1 16118 IR004  17.2
+    #  1 16119 IR004  10.6
+    # ...
+    #  1 16289 IR004   5.8
+    #  1 16294 IR004   5.8
+    pars = {
+        "EFIR": 1, "IDEP": 30, "ITHR": 50, "IEPT": 100, "IOFF": "GS000", 
+        "IAME": "IR001", "IAMT": 10, 
+    }
+    for key, val in pars.items(): man.irrigation[key] = val
+    man.irrigation["table"] = TabularSubsection({
+        'IDATE': [
+            '16118', '16119', '16123', '16125', '16127', '16128', '16135', 
+            '16137', '16139', '16141', '16142', '16144', '16146', '16148', 
+            '16149', '16151', '16153', '16155', '16156', '16165', '16167', 
+            '16168', '16169', '16170', '16171', '16172', '16173', '16174', 
+            '16175', '16176', '16177', '16178', '16180', '16181', '16182', 
+            '16183', '16184', '16185', '16187', '16188', '16196', '16198', 
+            '16199', '16201', '16202', '16203', '16204', '16205', '16206', 
+            '16206', '16209', '16210', '16211', '16212', '16213', '16215', 
+            '16216', '16217', '16218', '16219', '16220', '16230', '16231', 
+            '16232', '16233', '16235', '16236', '16237', '16238', '16239', 
+            '16240', '16242', '16243', '16244', '16245', '16246', '16247', 
+            '16249', '16250', '16251', '16252', '16253', '16254', '16255', 
+            '16257', '16264', '16271', '16278', '16285', '16289', '16294'
+        ],
+        'IROP': ["IR004"]*91,
+        'IRVAL': [
+            17.2, 10.6, 3.5, 5.8, 5.8, 5.8, 5.8, 3.9, 3.9, 3.9, 3.9, 3.9, 
+            11.5, 8.6, 5.8, 5.8, 11.6, 11.7, 4.8, 5.2, 6.4, 5.2, 6.3, 5.2, 
+            5.8, 6.4, 5.2, 6.4, 5, 17.5, 6.4, 11.6, 5.2, 6.4, 5.2, 5.7, 6.4, 
+            11.4, 5.2, 12.8, 14.5, 8, 6.5, 8, 6.5, 37.9, 14.4, 7.9, 6.4, 
+            43.6, 6.4, 7.9, 6.4, 38.3, 14.3, 8, 6.5, 38.6, 7.9, 6.5, 14.5, 
+            8, 6.5, 14.4, 7.9, 6.5, 14.4, 7.9, 6.5, 5.8, 5.8, 5.8, 5.8, 5.8, 
+            5.8, 5.7, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 
+            5.8, 5.8, 5.8, 5.8
+        ],
+    })
+
+    # *FERTILIZERS (INORGANIC)
+    # @F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME
+    #  1 16119 FE001 AP001     1    63   162   -99   -99   -99   -99 209a-b
+    man.fertilizers["table"].loc[0] = (
+        "16119", "FE001", "AP001", 1, 63, 162, None, None, None, None, None
+    )
+
+    # *HARVEST DETAILS
+    # @H HDATE  HSTG  HCOM HSIZE   HPC  HBPC HNAME
+    #  1 17120 GS000     C     A   -99   -99
+    man.harvest_details["HDATE"] = "17120"
+    man.harvest_details["HSTG"] =  "GS000"
+    man.harvest_details["HCOM"] =  "C"
+    man.harvest_details["HSIZE"] =  "A"
+
+    # *SIMULATION CONTROLS
+    # @N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
+    #  1 GE              1     1     P 15001  2150 Old                       PRFRM
+    # @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
+    #  1 OP              Y     Y     Y     N     N     N     N     Y     M
+    # @N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
+    #  1 ME              M     M     E     F     S     L     R     0     P     R     2
+    # @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
+    #  1 MA              R     R     R     R     R
+    # @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT
+    #  1 OU              N     Y     Y     1     Y     Y     Y     Y     Y     Y     Y     Y     N     A
+    pars = {
+        "START": "P", "SDATE": "15001", "RSEED": 2150,
+        "WATER": "Y", "NITRO": "Y", "SYMBI": "Y", "TILL": "Y", "CO2": "M",
+        "WTHER": "M", "INCON": "M", "LIGHT": "E", "EVAPO": "F", "INFIL": "S",
+        "PHOTO": "L", "HYDRO": "R", "NSWIT": "0", "MESOM": "P", "MESEV": "R",
+        "MESOL": "2",
+        "PLANT": "R", "IRRIG": 'R', "FERTI": "R", "HARVS": "R"
+    }
+    for key, val in pars.items(): man.simulation_controls[key] = val
+
     man.mow['table'] = TabularSubsection({
-        'DATE': [DATES[300].strftime('%y%j'), DATES[340].strftime('%y%j')], 
-        'MOW': [1000, 1000], 'RSPLF': [20, 20], 'MVS': [2, 2], 'RSHT': [5, 5]
+        'DATE': [
+            '16116', '16146', '16188', '16215', '16250', '16312', '17102', 
+            '17143'
+        ], 
+        'MOW': [1000]*8, 'RSPLF': [20]*8, 'MVS': [2]*8, 'RSHT': [5]*8
     })
     dssat = DSSAT()
-    dssat.setup(cwd=os.path.join(TMP, 'test_mz'))
+    dssat.setup(cwd=os.path.join(TMP, 'test_al'))
     dssat.run(
         soil=soil, weather=wth, crop=crop, management=man,
     )
-    assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
+
+    # Open FORAGE.out
+    forage = pd.read_fwf(
+        os.path.join(dssat._RUN_PATH, 'FORAGE.OUT'),
+        skiprows=1, widths=[5, 9, 3] + [5]*18
+    )
+    dssat_gui_values = [2151, 3341, 6303, 3555, 4099, 4104, 6056]
+    assert all([
+        np.isclose(gui, i, rtol=0.01) 
+        for gui, i in zip(dssat_gui_values, forage.FHWAH)
+    ])
     # dssat.close()
     # assert not os.path.exists(dssat._RUN_PATH)
 

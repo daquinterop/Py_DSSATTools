@@ -7,12 +7,15 @@ from pandas import isna
 def soil_line_read(line, format_list):
     fmt = '1X'
     for n, field in enumerate(line.split()):
+        tmp_fmt = format_list[n]
+        if (format_list[n][0] == "F") and ("." not in field):
+            tmp_fmt = format_list[n][:2] + ".0"
         if n != 0:
             fmt += ',1X'
         if field.replace('.', '') == '-99':
             fmt += ',A5'
         else:
-            fmt += ',' + format_list[n]
+            fmt += ',' + tmp_fmt
     return ff.FortranRecordReader(fmt).read(line)
 
 

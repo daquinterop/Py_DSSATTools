@@ -175,10 +175,10 @@ class Management:
                 'ICREN': None, 'ICREP': None, 'ICRIP': None, 'ICRID': None, 
                 'ICNAME': 'DEFAULT',
                 'table': TabularSubsection({
-                    'ICBL': [15, 20, 50, 70, 100],
-                    'SH2O': [.2, .2, .2, .3, .3],
-                    'SNH4': [0., 0., 0., 0., 0.],
-                    'SNO3': [1., .5, 0., 0., 0.]
+                    'ICBL': [],
+                    'SH2O': [],
+                    'SNH4': [],
+                    'SNO3': []
                 })
             } # Fill from crp instance and set in 
         )
@@ -317,10 +317,15 @@ class Management:
         self._treatmentOptions["MI"] = min(1, self.irrigation['table']["IRVAL"].sum())
         self._treatmentOptions["MF"] = min(1, self.fertilizers["table"][["FAMN", "FAMP", "FAMK", "FAMC", "FAMO"]].values.max())
         self._treatmentOptions["MH"] = min(1, int(self.harvest_details["HDATE"] is not None))
+        self._treatmentOptions["IC"] = min(1, len(self.initial_conditions["table"]))
         outstr += f' 1 1 0 0 DEFAULT TREATMENT          {"  ".join(map(str, IMPLEMENTED_SECTIONS.values()))}\n\n'
 
         for section in SECTIONS:
             section_obj = self.__dict__[section.replace(' ', '_')]
+            # If no initial conditions profile is defined, then won't write section
+            if section_obj.name == "initial conditions":
+                if len(section_obj["table"]) == 0:
+                    continue
             outstr += SECTIONS_TITLE[section] + '\n'
             outstr += section_obj.write() + '\n'
 

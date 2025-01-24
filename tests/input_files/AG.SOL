@@ -1,0 +1,58 @@
+*SOILS: AGRIFOOD RESEARCH AND TECHNOLOGY CENTRE OF ARAGON (CITA), SPAIN 
+
+*AGSP209115  EUROFINS    SIC      120  ALFALFA, HYDRANT 209b
+@SITE        COUNTRY          LAT     LONG SCS FAMILY
+ LA VIOLADA  SPAIN             41        0 PETROCALCIC CALCIXEREPT
+@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
+     G   .13     6    .6    73     1     1 IB001 IB001 IB001
+@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC
+    30   -99  .117  .433  .497     1   .09   1.5   1.8  42.9    51   -99   -99     8   -99    16   -99
+    60   -99   .22  .449  .553  .407   .68   1.5    .5   6.4    70   -99   -99     8   -99    13   -99
+    90   -99  .219   .47  .507  .223   .68   1.5    .8  24.4    60   -99   -99     8   -99    11   -99
+   120   -99  .223  .464  .546  .122   .68   1.4    .4   5.5    67   -99   -99     8   -99    14   -99
+
+*AGSP209113  EUROFINS    SIC      120  ALFALFA, HYDRANT 209b
+@SITE        COUNTRY          LAT     LONG SCS FAMILY
+ 209         spain             -99     -99 -99
+@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
+     G   .13     6    .6    73     1     1 IB001 IB001 IB001
+@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC
+    30   -99  .225  .439  .497     1   .09   1.5   1.4    38    54   -99   -99     8   -99    16   -99
+    60   -99  .243  .407  .553  .407   .68   1.5    .6    26    58   -99   -99     8   -99    13   -99
+    90   -99  .278  .398  .507  .223   .68   1.5    .3    12    64   -99   -99     8   -99    11   -99
+   120   -99  .268  .373  .546  .122   .68   1.4    .3     9    60   -99   -99     8   -99    14   -99
+
+*AGSP209112  eurofins    L        120  alfalfa finca-cavero
+@SITE        COUNTRY          LAT     LONG SCS FAMILY
+ fin         spain             -99     -99 -99
+@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
+     G   .13     6    .6    73     1     1 IB001 IB001 IB001
+@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC
+    30   -99  .111  .244  .497     1   .09   1.5    .7    13    37   -99   -99     8   -99    16   -99
+    60   -99  .086  .218  .553  .607   .68   1.5    .3    12    33   -99   -99     8   -99    13   -99
+    90   -99  .083  .218  .507  .423   .68   1.5    .3    11    35   -99   -99     8   -99    11   -99
+   120   -99  .086  .237  .546  .322   .68   1.4    .3    11    43   -99   -99     8   -99    14   -99
+
+*AGfincaa16  eurofins    L        120  alfalfa finca
+@SITE        COUNTRY          LAT     LONG SCS FAMILY
+ fin         spain             -99     -99 -99
+@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
+     G   .13     6    .6    73     1     1 IB001 IB001 IB001
+@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC
+    30   -99  .111  .244  .497     1   .09   1.5    .7    13    37   -99   -99     8   -99    16   -99
+    60   -99  .086  .218  .553  .607   .68   1.5    .3    12    33   -99   -99     8   -99    13   -99
+    90   -99  .083  .218  .507  .423   .68   1.5    .3    11    35   -99   -99     8   -99    11   -99
+   120   -99  .086  .237  .546  .322   .68   1.4    .3    11    43   -99   -99     8   -99    14   -99
+
+*AGcavero12  eurofins       C     160  alfalfa cavero
+@SITE        COUNTRY          LAT     LONG SCS FAMILY
+ fin         spain             -99     -99 -99
+@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
+    BN   .13     6    .6    73     1     1 IB001 IB001 IB001
+@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC
+    30   -99  .174  .338  .497     1   .09   1.5  1.04    51    28   -99   .12     8   -99    16   -99
+    60   -99   .19   .35  .453  .407   .68   1.5   .71    50    31   -99    .1     8   -99    13   -99
+    90   -99  .189  .356  .407  .223   .68   1.5   .54    55    31   -99   .08     8   -99    11   -99
+   120   -99  .199  .362  .446  .122   .68   1.4   .48    53    33   -99   .07     8   -99    14   -99
+   160   -99  .185  .348   .45  .061   .06  1.32   .45    53    30   -99   .07     8   -99   -99   -99
+
