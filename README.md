@@ -58,7 +58,7 @@ https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
 | Sorghum*     | CERES               |
 | Sweetcorn    | CERES               |
 | Wheat*       | CERES               |
-| Alfalfa      | FORAGE-Alfalfa      |
+| Alfalfa*     | FORAGE-Alfalfa      |
 | Bermudagrass | FORAGE-Bermudagrass |
 | Soybean*     | CROPGRO             |
 | Canola       | CROPGRO             |
@@ -67,6 +67,7 @@ https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
 | Cabbage      | CROPGRO             |
 | Potato       | SUBSTOR             |
 | Sugarcane    | CANEGRO             |
+| Bean (Dry)*  | CROPGRO             |
 
 (*) Only a those crops have been validated. During the validation one DSSAT experiment was run using DSSATTools and the results were compared with those obtained using DSSAT desktop. I'll be validating more crops as long as a I have time to do it.
 

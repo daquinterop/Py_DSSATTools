@@ -64,7 +64,7 @@ SPE_FILES = {
     'Cabbage': f'CBGRO{VERSION}.SPE',
     'Sugarcane': f'SCCAN{VERSION}.SPE',
     "Wheat": f"WHCER{VERSION}.SPE",
-    "Bean": f"BNGRO{VERSION}.SPE",
+    "Bean": f"CRGRO{VERSION}.SPE",
     "Cassava": f"CSYCA{VERSION}.SPE"
 }
 
@@ -127,7 +127,7 @@ CROPS_MODULES = {
     'Cabbage': "CRGRO",
     'Sugarcane': "SCCAN",
     "Wheat": "WHCER",
-    "Bean": "BNGRO",
+    "Bean": "CRGRO",
     "Cassava": "CSYCA"
 }
 

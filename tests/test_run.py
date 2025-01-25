@@ -13,11 +13,12 @@ This is the list of crops and the tested experiments:
 | Tomato       | UFBR9401   |   4   |
 | Soybean      | CLMO8501   |   1   |
 | Sorghum      | ITHY8001   |   2   |
+| Alfalfa      | AGZG1501   |   1   |
+| Dry Bean     | CCPA8629   |   1   |
 | Millet       | Pending
 | Sugarbeet    | Pending
 | Rice         | Pending
 | Sweetcorn    | Pending
-| Alfalfa      | AGZG1501   |   1   |
 | Bermudagrass | Pending
 | Canola       | Pending
 | Sunflower    | Pending
@@ -298,7 +299,7 @@ def test_run_sweetcorn():
 
 def test_run_alfalfa():
     """
-    Experiment AGZG1501 Experiment 1
+    Experiment AGZG1501 Treatment 1
     """
     crop = Crop('alfalfa', "AL0001")
     soil = SoilProfile("tests/input_files/AG.SOL", "AGSP209115")
@@ -839,6 +840,141 @@ def test_run_wheat():
     assert os.path.exists(os.path.join(dssat._RUN_PATH, 'Summary.OUT'))
     harwt = int(dssat.stdout.split("\n")[-1].split()[6])
     assert np.isclose(2417, harwt, rtol=0.01)
+
+def test_run_dry_bean():
+    """
+    Experiment CCPA8629 Treatment 1
+    """
+    crop = Crop('bean', "IB0001")
+    soil = SoilProfile("tests/input_files/SOIL.SOL", "IBBN910030")
+    ### Build weather from existing weather files
+    df = pd.DataFrame()
+    for year in range(86, 88):
+        df = pd.concat([
+                df, 
+                pd.read_csv(f"tests/input_files/CCPA{year}01.WTH", 
+                            skiprows=4, sep="\s+")
+            ], ignore_index=True
+        )
+    df.index = pd.to_datetime(df["@DATE"].astype(str), format="%y%j")
+    wth =  Weather(
+        df, {"TMIN": "TMIN", "SRAD": "SRAD", "RAIN": "RAIN", 
+             "TMAX": "TMAX"},
+        lat=3.48, lon=-76.35, elev=965, tav=24.3, amp=10.3,
+    )
+
+    man = Management(
+        planting_date=datetime(1986, 1, 1) + timedelta(268),
+        initial_swc=1
+    )
+
+    # *FIELDS
+    # @L ID_FIELD WSTA....  FLSA  FLOB  FLDT  FLDD  FLDS  FLST SLTX  SLDP  ID_SOIL    FLNAME
+    #  1 CCPA0001 CCPA8601   -99     0 DR000     0     0 00000 -99    209  IBBN910030 -99
+    # @L ...........XCRD ...........YCRD .....ELEV .............AREA .SLEN .FLWR .SLAS FLHST FHDUR
+    #  1               0               0         0                 0     0     0     0   -99   -99
+    pars = {
+        "FLOB": 0, "FLDT": "DR000", "FLDD": 0, "FLDS": 0, "FLST": "00000", 
+        "SLDP": 209, "...........XCRD": 0, "...........YCRD": 0, ".....ELEV": 0
+    }
+    for key, val in pars.items(): man.field[key] = val
+
+    # *INITIAL CONDITIONS
+    # @C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME
+    #  1    BN 86239     1   -99     1     1   -99     0     0     0   100    15 -99
+    # @C  ICBL  SH2O  SNH4  SNO3
+    #  1     5   .34     2    15
+    #  1    15   .34     2    15
+    #  1    25  .345     2    15
+    #  1    35  .345     2    15
+    #  1    50  .335     2    15
+    #  1    65  .323     1     4
+    #  1    80  .323     1     4
+    #  1    99  .328     7     4
+    #  1   122  .325     7     4
+    #  1   137  .288     7     4
+    #  1   159  .242     7     4
+    #  1   184  .177     7     4
+    #  1   209  .193     7     4
+    pars = {
+        "PCR": "BN", "ICDAT": "86239", "ICRT": 1, "ICRN": 1, "ICRE": 1, 
+        "ICRES": 0, "ICREN": 0, "ICREP": 0, "ICRIP": 100, "ICRID": 15,
+    }
+    for key, val in pars.items(): man.initial_conditions[key] = val
+    man.initial_conditions["table"] = TabularSubsection({
+        "ICBL": [5, 15, 25, 35, 50, 65, 80, 99, 122, 137, 159, 184, 209],
+        "SH2O": [
+            0.34, 0.34, 0.345, 0.345, 0.335, 0.323, 0.323, 0.328, 0.325, 
+            0.288, 0.242, 0.177, 0.193
+        ],
+        "SNH4": [2, 2, 2, 2, 2, 1, 1, 7, 7, 7, 7, 7, 7],
+        "SNO3": [15, 15, 15, 15, 15, 4, 4, 4, 4, 4, 4, 4, 4]
+    })
+
+    # *PLANTING DETAILS
+    # @P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
+    #  1 86269   -99    15    15     S     R    30     0     2   -99   -99   -99   -99     0                        -99
+    pars = {
+        "EDATE": None, "PPOP": 15, "PPOE": 15, "PLME": "S", "PLDS": "R", 
+        "PLRS": 30, "PLRD": 0, "PLDP": 2, "SPRL": 0,
+    }
+    for key, val in pars.items(): man.planting_details[key] = val
+
+    # *IRRIGATION AND WATER MANAGEMENT
+    # @I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
+    #  1     1   -99   -99   -99   -99   -99   -99 -99
+    # @I IDATE  IROP IRVAL
+    #  1 86269 IR001    30
+    #  1 86324 IR001    25
+    pars = {
+        "EFIR": 1, "IDEP": None, "ITHR": None, "IEPT": None, "IOFF": None, 
+        "IAME": None, "IAMT": None, 
+    }
+    for key, val in pars.items(): man.irrigation[key] = val
+    man.irrigation["table"] = TabularSubsection({
+        'IDATE': ["86269", "86324"],
+        'IROP': ["IR001", "IR001"],
+        'IRVAL': [30, 25],
+    })
+
+    # *FERTILIZERS (INORGANIC)
+    # @F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME
+    #  1 86269 FE009   -99     4    15   -99   -99   -99   -99   -99 -99
+    #  2 86269 FE009   -99     4     7   -99   -99   -99   -99   -99 -99
+    man.fertilizers["table"] = TabularSubsection({
+        "FDATE": ["86269"], "FMCD": ["FE009"], "FACD": [None], "FDEP": [4],
+        "FAMN": [15], "FAMP": [0], "FAMK": [0], "FAMC": [0], 
+        "FAMO": [0], "FOCD": [None], "FERNAME": [None]
+    })
+
+    # *SIMULATION CONTROLS
+    # @N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
+    #  1 GE              1     1     S 86239  2150 3 CULTIVARS, 2 ROW WIDTH
+    # @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
+    #  1 OP              Y     Y     Y     N     N     N     N     Y     M
+    # @N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
+    #  1 ME              M     M     E     R     S     L     R     1     G     R     2
+    # @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
+    #  1 MA              R     R     R     R     M
+    # @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT
+    #  1 OU              N     Y     Y     1     Y     Y     Y     Y     N     N     Y     N     N     A
+    pars = {
+        "START": "S", "SDATE": "86239", "RSEED": 2150,
+        "WATER": "Y", "NITRO": "Y", "SYMBI": "Y", "TILL": "Y", "CO2": "M",
+        "WTHER": "M", "INCON": "M", "LIGHT": "E", "EVAPO": "R", "INFIL": "S",
+        "PHOTO": "L", "HYDRO": "R", "NSWIT": "1", "MESOM": "G", "MESEV": "R",
+        "MESOL": "2",
+        "PLANT": "R", "IRRIG": 'R', "FERTI": "R", "HARVS": "M"
+    }
+    for key, val in pars.items(): man.simulation_controls[key] = val
+    dssat = DSSAT()
+    dssat.setup(cwd=os.path.join(TMP, 'test_bn'))
+    dssat.run(
+        soil=soil, weather=wth, crop=crop, management=man,
+    )
+    gui_value = 3171
+    harwt = int(dssat.stdout.split("\n")[-1].split()[6])
+    assert np.isclose(gui_value, harwt, rtol=0.01)
 
 def test_close():
     crop = Crop('cabbage')
