@@ -14,5 +14,5 @@ treatments = read_filex("SAMPLE.fileX")
 Crop("Maize", "990002")
 
 
-print(ic.table)
-print(ic)
+# print(ic.table)
+# print(ic)

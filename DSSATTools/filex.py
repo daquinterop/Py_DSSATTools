@@ -1117,8 +1117,13 @@ class AMIrrigation(Record):
         'iroff': ">5", 'imeth': ">5", 'iramt': ">5.0f", 
         'ireff': ">5.2f",
     }
+<<<<<<< HEAD
     def __init__(self, imdep:float=30, ithrl:float=50, ithru:float=100, 
                  iroff:str="IB001", imeth:str="IB001", iramt:float=10,
+=======
+    def __init__(self, imdep:float, ithrl:float, ithru:float, 
+                 iroff:str, imeth:str, iramt:float,
+>>>>>>> 09811206e7ff9b3f122a7d1725ea77b3ca6c0c13
                  ireff:float=1.):
         """
         Initializes a Automatic Management Irrigation section. 
@@ -1226,7 +1231,11 @@ class AMHarvest(Record):
         'hfrst': ">5.0f", 'hlast': "%y%j", 'hpcnp': ">5.0f", 
         'hpcnr': ">5.0f"
     }
+<<<<<<< HEAD
     def __init__(self, hfrst:date, hlast:date, hpcnp:float=100, hpcnr:float=0):
+=======
+    def __init__(self, hfrst:date, hlast:date, hpcnp:float, hpcnr:float):
+>>>>>>> 09811206e7ff9b3f122a7d1725ea77b3ca6c0c13
         """
         Initializes a Automatic Management Harvest section. 
 
@@ -1258,6 +1267,7 @@ class SimulationControls:
         "irrigation": AMIrrigation, "nitrogen": AMNitrogen,
         "residues": AMResidues, "harvest": AMHarvest
     }
+<<<<<<< HEAD
     def __init__(self, general:SCGeneral, options:SCOptions=None, 
                  methods:SCMethods=None, management: SCManagement=None, 
                  outputs:SCOutputs=None, planting:AMPlanting=None, 
@@ -1301,6 +1311,13 @@ class SimulationControls:
         if not harvest:
             harvest = AMHarvest(hfrst=general["sdate"], hlast=general["sdate"])
         
+=======
+    def __init__(self, general:SCGeneral, options:SCOptions, 
+                 methods:SCMethods, management: SCManagement, 
+                 outputs:SCOutputs, planting:AMPlanting, 
+                 irrigation:AMIrrigation, nitrogen:AMNitrogen,
+                 residues:AMResidues, harvest:AMHarvest):
+>>>>>>> 09811206e7ff9b3f122a7d1725ea77b3ca6c0c13
         self.__data = {
             "general": general, "options": options, "methods": methods,
             "management": management, "outputs": outputs, "planting": planting,
