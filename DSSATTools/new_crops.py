@@ -64,30 +64,7 @@ SPE_FILES = {
     'Tomato': f'TMGRO{VERSION}.SPE',
     'Cabbage': f'CBGRO{VERSION}.SPE',
     'Sugarcane': f'SCCAN{VERSION}.SPE',
-    "Wheat": f"WHCER{VERSION}.SPE",
-    "Bean": f"CRGRO{VERSION}.SPE",
-    "Cassava": f"CSYCA{VERSION}.SPE"
-}
-
-DEFAULT_CULTIVARS = {
-    "Maize": "990002",
-    'Millet': "990002",
-    'Sugarbeet': "CR0001",
-    'Rice': "990002",
-    'Sorghum': "990002",
-    'Sweetcorn': "SW0001",
-    'Alfalfa': "AL0001",
-    'Bermudagrass': "UF0001",
-    'Soybean': "990011",
-    'Canola': "000001",
-    'Sunflower': "IB0001",
-    'Potato': "IB0003",
-    'Tomato': "TM0001",
-    'Cabbage': "990001",
-    'Sugarcane': "IB0001",
-    "Wheat": "IB1500",
-    "Bean": "IB0006",
-    "Cassava": "UC0008"
+    "Wheat": f"WHCER{VERSION}.SPE"
 }
 
 CROP_CODES = {
@@ -106,9 +83,7 @@ CROP_CODES = {
     'Tomato': "TM",
     'Cabbage': "CB",
     'Sugarcane': "SC",
-    "Wheat": "WH",
-    "Bean": "BN",
-    "Cassava": "CS"
+    "Wheat": "WH"
 }
 
 CROPS_MODULES = {
@@ -127,9 +102,7 @@ CROPS_MODULES = {
     'Tomato': "CRGRO",
     'Cabbage': "CRGRO",
     'Sugarcane': "SCCAN",
-    "Wheat": "WHCER",
-    "Bean": "CRGRO",
-    "Cassava": "CSYCA"
+    "Wheat": "WHCER"
 }
 
 DSSAT_MODULE_PATH = os.path.dirname(module_path)
@@ -164,9 +137,7 @@ CUL_VARNAME = {
     'TM': 'VRNAME..........',
     'CB': 'VRNAME..........',
     'SC': 'VAR-NAME........',
-    "WH": "VAR-NAME........",
-    'BN': 'VRNAME..........',
-    'CS': 'VAR-NAME........'
+    "WH": "VAR-NAME........"
 }
 
 
@@ -186,6 +157,40 @@ def available_cultivars(crop_name):
     lines = [l for l in lines if l[:1] not in ["@", "*", "!", "$"]]
     lines = [l for l in lines if len(l) > 5]
     return [l.split()[0] for l in lines if len(l.strip()) > 6]
+
+
+def load_cultivar(crop_name, cultivar_code):
+    crop_name = crop_name.title()
+    assert crop_name in CROPS_MODULES.keys(), \
+        f'{crop_name} is not a valid crop'
+    SMODEL = CROPS_MODULES[crop_name]
+    CODE = CROP_CODES[crop_name]
+    SPE_FILE = f'{CODE}{SMODEL[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, SPE_FILE)
+    cultivar_code = cultivar_code 
+
+    # Read cultivar
+    cul_file = spe_path[:-3] + 'CUL'
+    with open(cul_file, 'r') as f:
+        file_lines = f.readlines()
+    file_lines = clean_comments(file_lines)
+    cultivar = Section(
+        name="cultivar", file_lines=file_lines, crop_name=self._crop_name,
+        code=cultivar_code
+    )
+    cultivar_code = cultivar["@VAR#"]
+
+    # Read ecotype if assigned
+    eco_file = spe_path[:-3] + 'ECO'
+    try:
+        with open(eco_file, 'r') as f:
+            file_lines = f.readlines()
+        file_lines = clean_comments(file_lines)
+        ecotype = Section(
+            name="ecotype", file_lines=file_lines, crop_name=_crop_name,
+            code=cultivar["ECO#"]
+        )
+
 
 class Crop:
     def __init__(self, crop_name:str='Maize', cultivar_code:str=None):

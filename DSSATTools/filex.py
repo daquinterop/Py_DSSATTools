@@ -25,7 +25,7 @@ classes that are used to construct all the sections:
 from datetime import date
 from .base.partypes import (
     DateType, CodeType, NumberType, Record, TabularRecord, DescriptionType,
-    TableType, FACTOR_LEVELS
+    FACTOR_LEVELS
 )
 
 class Planting(Record):
@@ -1117,8 +1117,8 @@ class AMIrrigation(Record):
         'iroff': ">5", 'imeth': ">5", 'iramt': ">5.0f", 
         'ireff': ">5.2f",
     }
-    def __init__(self, imdep:float, ithrl:float, ithru:float, 
-                 iroff:str, imeth:str, iramt:float,
+    def __init__(self, imdep:float=30, ithrl:float=50, ithru:float=100, 
+                 iroff:str="IB001", imeth:str="IB001", iramt:float=10,
                  ireff:float=1.):
         """
         Initializes a Automatic Management Irrigation section. 
@@ -1226,7 +1226,7 @@ class AMHarvest(Record):
         'hfrst': ">5.0f", 'hlast': "%y%j", 'hpcnp': ">5.0f", 
         'hpcnr': ">5.0f"
     }
-    def __init__(self, hfrst:date, hlast:date, hpcnp:float, hpcnr:float):
+    def __init__(self, hfrst:date, hlast:date, hpcnp:float=100, hpcnr:float=0):
         """
         Initializes a Automatic Management Harvest section. 
 
@@ -1258,11 +1258,49 @@ class SimulationControls:
         "irrigation": AMIrrigation, "nitrogen": AMNitrogen,
         "residues": AMResidues, "harvest": AMHarvest
     }
-    def __init__(self, general:SCGeneral, options:SCOptions, 
-                 methods:SCMethods, management: SCManagement, 
-                 outputs:SCOutputs, planting:AMPlanting, 
-                 irrigation:AMIrrigation, nitrogen:AMNitrogen,
-                 residues:AMResidues, harvest:AMHarvest):
+    def __init__(self, general:SCGeneral, options:SCOptions=None, 
+                 methods:SCMethods=None, management: SCManagement=None, 
+                 outputs:SCOutputs=None, planting:AMPlanting=None, 
+                 irrigation:AMIrrigation=None, nitrogen:AMNitrogen=None,
+                 residues:AMResidues=None, harvest:AMHarvest=None):
+        """
+        Initializes a SimulationControls instance. If one of the arguments is 
+        missing, it assumes default options.
+
+        Arguments
+        ----------
+        general:SCGeneral, 
+        options:SCOptions, 
+        methods:SCMethods, 
+        management: SCManagement, 
+        outputs:SCOutputs, 
+        planting:AMPlanting, 
+        irrigation:AMIrrigation,
+        nitrogen:AMNitrogen,
+        residues:AMResidues
+        harvest:AMHarvest
+        """
+        # Set default values if not passed as parameters
+        if not options: 
+            options = SCOptions()
+        if not methods: 
+            methods = SCMethods()
+        if not management: 
+            management = SCManagement()
+        if not outputs: 
+            outputs = SCOutputs()
+        # Same with Automatic management
+        if not planting: 
+            planting = AMPlanting(pfrst=general["sdate"], plast=general["sdate"])
+        if not irrigation:
+            irrigation = AMIrrigation()
+        if not nitrogen:
+            nitrogen = AMNitrogen()
+        if not residues:
+            residues = AMResidues()
+        if not harvest:
+            harvest = AMHarvest(hfrst=general["sdate"], hlast=general["sdate"])
+        
         self.__data = {
             "general": general, "options": options, "methods": methods,
             "management": management, "outputs": outputs, "planting": planting,
