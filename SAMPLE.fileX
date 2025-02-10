@@ -1,0 +1,213 @@
+*EXP.DETAILS: LQPI1602SB EVAPOTRANSPIRATION AND CROP WATER PRODUCTIVITY
+
+*GENERAL
+@PEOPLE
+Silva, E.H.F.M., Hoogenboom, G., Boote, K.J., Goncalves, A.O., Marin, F.
+@ADDRESS
+Luiz de Queiroz College of Agriculture- University of Sao Paulo
+@SITE
+Piracicaba, SP - Brazil
+@ PAREA  PRNO  PLEN  PLDR  PLSP  PLAY HAREA  HRNO  HLEN  HARM.........
+     52    12     9   -99   150   -99     9     3     9   -99
+@NOTES
+Moura da Silva, E.H.F., K.J. Boote, G. Hoogenboom, A.O. Goncalves, and F.R. Marin. 2022. 
+Predicting soybean evapotranspiration and crop water productivity for a tropical
+environment using the CSM-CROPGRO-Soybean model.
+Agricultural and Forest Meteorology 323 (2022) 109075.
+https://doi.org/10.1016/j.agrformet.2022.109075. 
+
+
+*TREATMENTS                        -------------FACTOR LEVELS------------
+@N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM
+ 1 1 0 0 2016 PT_SR                 1  1  1  1  1  1  1  0  0  1  0  0  1
+ 2 1 0 0 2016 PM_SR                 1  2  2  2  2  1  2  1  0  1  0  0  3
+ 3 1 0 0 2016 PT_RC                 2  1  0  2  1  2  0  2  1  2  0  0  2
+
+*CULTIVARS
+@C CR INGENO CNAME
+ 1 SB 990248 BRS 399
+ 2 SB IB0003 WAYNE
+
+*FIELDS
+@L ID_FIELD WSTA....  FLSA  FLOB  FLDT  FLDD  FLDS  FLST SLTX  SLDP  ID_SOIL    FLNAME
+ 1 FSFS0002 PIR2       -99   -99 DR000   -99   -99     0 SL     120  UPNITOSSO3 Eutric Rhodic Ferralic Nitisol
+ 2 FSFS0003 PIR2       -99     0 IB000     0     0 00000 -99    180  IBSB910026 -99
+@L ...........XCRD ...........YCRD .....ELEV .............AREA .SLEN .FLWR .SLAS FLHST FHDUR
+ 1           47.63           22.72       524                 0     0     0     0   -99   -99
+ 2            42.2          -82.37         0                 0     0     0     0   -99   -99
+
+*SOIL ANALYSIS
+@A SADAT  SMHB  SMPX  SMKE  SANAME
+ 1 16336 SA011 SA005 SA013  -99
+@A  SABL  SADM  SAOC  SANI SAPHW SAPHB  SAPX  SAKE  SASC
+ 1    10    .9  1.18    .1   5.8   -99  20.6    .2   -99
+ 1    20   1.1    86   .04   5.3   -99  15.7    .2   -99
+ 1    30    .9   .55   .03   4.9   -99  10.6    .2   -99
+ 1    50   1.1   .39   .02     5   -99   9.6    .2   -99
+ 1    70   1.2    .2   .01     5   -99   6.6    .1   -99
+@A SADAT  SMHB  SMPX  SMKE  SANAME
+ 2 17236 SA011 SA005 SA013  -99
+@A  SABL  SADM  SAOC  SANI SAPHW SAPHB  SAPX  SAKE  SASC
+ 2    10    .9  1.18    .1   5.8   -99  20.6    .2   -99
+ 2    20   1.1    86   .04   5.3   -99  15.7    .2   -99
+ 2    30    .9   .55   .03   4.9   -99  10.6    .2   -99
+
+*INITIAL CONDITIONS
+@C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME
+ 1    FA 16288   -99   -99     1     1   -99     0   -99   -99   -99   -99 Experiment 1
+@C  ICBL  SH2O  SNH4  SNO3
+ 1    10  .273    .1   1.3
+ 1    20  .273    .1   1.3
+ 1    30  .267    .1   1.3
+ 1    40  .314    .1   1.3
+ 1    50  .314    .1   1.3
+ 1    60  .342    .1   1.3
+ 1   140  .342    .1   1.3
+ 1   150  .325    .1   1.3
+@C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME
+ 2    WH 17330   -99   -99     1     1   -99  4000   -99   -99   -99   -99 Experiment 2
+@C  ICBL  SH2O  SNH4  SNO3
+ 2    10  .273    .1   1.3
+ 2    20  .273    .1   1.3
+ 2    30  .267    .1   1.3
+ 2    40  .314    .1   1.3
+ 2    50  .314    .1   1.3
+ 2    60  .342    .1   1.3
+ 2   140  .342    .1   1.3
+ 2   150  .325    .1   1.3
+
+*PLANTING DETAILS
+@P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME
+ 1 16319   -99  35.5  35.5     S     R    45     0     4   -99   -99   -99   -99   -99                        2016
+ 2 17360   -99  35.5  35.5     S     R    45     0     4   -99   -99   -99   -99   -99                        2017
+
+*IRRIGATION AND WATER MANAGEMENT
+@I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
+ 1    .8    30    50   100 GS000 IR001    10 PI-1
+@I IDATE  IROP IRVAL
+ 1 16325 IR004    16
+ 1 16329 IR004    16
+ 1 17001 IR004    16
+ 1 17005 IR004    16
+ 1 17036 IR004    16
+ 1 17039 IR004    24
+ 1 17042 IR004    24
+ 1 17044 IR004    16
+ 1 17046 IR004    16
+ 1 17048 IR004    22
+ 1 17051 IR004    16
+ 1 17053 IR004    22
+@I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
+ 2    .8    30    50   100 GS000 IR001    10 PI-2
+@I IDATE  IROP IRVAL
+ 2 17360 IR004    24
+ 2 17362 IR004    24
+ 2 18033 IR004    24
+ 2 18037 IR004    24
+ 2 18040 IR004    24
+ 2 18053 IR004    24
+ 2 18056 IR004    24
+ 2 18070 IR004    24
+ 2 18073 IR004    24
+ 2 18077 IR004    24
+ 2 18080 IR004    14
+ 2 18083 IR004    24
+ 2 18089 IR004    25
+
+*FERTILIZERS (INORGANIC)
+@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME
+ 1 19204 FE005 AP008     0     0   -99   -99   -99   -99   -99 N - BR8980
+ 2 19204 FE005 AP008     0    30   -99   -99   -99   -99   -99 N - BR8981
+
+*RESIDUES AND ORGANIC FERTILIZER
+@R RDATE  RCOD  RAMT  RESN  RESP  RESK  RINP  RDEP  RMET RENAME
+ 1 19205 IB001  4000   .53   -99   -99   -99    15   -99 -99
+ 2 19205 IB001  3000   .53   -99   -99   -99    15   -99 -99
+
+*CHEMICAL APPLICATIONS
+@C CDATE CHCOD CHAMT  CHME CHDEP   CHT..CHNAME
+ 1 16288   -99   -99   -99   -99   -99  -99
+
+*TILLAGE AND ROTATIONS
+@T TDATE TIMPL  TDEP TNAME
+ 1 16290 TI010    45 TILLAGE
+ 1 16292 TI019     4 TILLAGE
+ 1 16292 TI033     8 TILLAGE
+ 1 16292 TI014    15 TILLAGE
+ 2 19360 TI019     8 NO TILL
+ 2 19360 TI034     4 NO TILL
+
+*HARVEST DETAILS
+@H HDATE  HSTG  HCOM HSIZE   HPC  HBPC HNAME
+ 1 19294 GS000     H     S   -99   -99 Soybean - BONUS
+ 2 19301 GS000     H     S   -99   -99 Soybean - 8990
+
+*SIMULATION CONTROLS
+@N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
+ 1 GE              1     1     S 16288  2150 Exp1_PT_SR                CRGRO
+@N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
+ 1 OP              Y     N     Y     N     N     N     N     Y     D
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
+ 1 ME              M     M     E     R     S     L     R     1     P     S     2
+@N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
+ 1 MA              R     R     R     N     M
+@N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT
+ 1 OU              N     Y     Y     1     Y     Y     Y     Y     Y     Y     Y     Y     Y     A
+
+@  AUTOMATIC MANAGEMENT
+@N PLANTING    PFRST PLAST PH2OL PH2OU PH2OD PSTMX PSTMN
+ 1 PL          10274 10335    70   100    30    40    10
+@N IRRIGATION  IMDEP ITHRL ITHRU IROFF IMETH IRAMT IREFF
+ 1 IR             30    50   100 IB001 IB001    10    .8
+@N NITROGEN    NMDEP NMTHR NAMNT NCODE NAOFF
+ 1 NI             30    50    25 IB001 IB001
+@N RESIDUES    RIPCN RTIME RIDEP
+ 1 RE            100     1    20
+@N HARVEST     HFRST HLAST HPCNP HPCNR
+ 1 HA              0 79166   100     0
+
+@N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
+ 2 GE              1     1     S 16288  2150 Exp1_PT_RC                CRGRO
+@N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
+ 2 OP              Y     N     Y     N     N     N     N     Y     D
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
+ 2 ME              M     M     E     R     S     L     R     1     P     R     2
+@N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
+ 2 MA              R     R     R     N     M
+@N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT
+ 2 OU              N     Y     Y     1     Y     Y     Y     N     N     N     Y     N     N     A
+
+@  AUTOMATIC MANAGEMENT
+@N PLANTING    PFRST PLAST PH2OL PH2OU PH2OD PSTMX PSTMN
+ 2 PL          10274 10335    70   100    30    40    10
+@N IRRIGATION  IMDEP ITHRL ITHRU IROFF IMETH IRAMT IREFF
+ 2 IR             30    50   100 IB001 IB001    10    .8
+@N NITROGEN    NMDEP NMTHR NAMNT NCODE NAOFF
+ 2 NI             30    50    25 IB001 IB001
+@N RESIDUES    RIPCN RTIME RIDEP
+ 2 RE            100     1    20
+@N HARVEST     HFRST HLAST HPCNP HPCNR
+ 2 HA              0 79166   100     0
+
+@N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL
+ 3 GE              1     1     S 16288  2150 Exp1_PM_SR                CRGRO
+@N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
+ 3 OP              Y     N     Y     N     N     N     N     Y     D
+@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
+ 3 ME              M     M     E     F     S     L     R     1     P     S     2
+@N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
+ 3 MA              R     R     R     N     M
+@N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT
+ 3 OU              N     Y     Y     1     Y     Y     Y     N     N     N     Y     N     N     A
+
+@  AUTOMATIC MANAGEMENT
+@N PLANTING    PFRST PLAST PH2OL PH2OU PH2OD PSTMX PSTMN
+ 3 PL          10274 10335    70   100    30    40    10
+@N IRRIGATION  IMDEP ITHRL ITHRU IROFF IMETH IRAMT IREFF
+ 3 IR             30    50   100 IB001 IB001    10    .8
+@N NITROGEN    NMDEP NMTHR NAMNT NCODE NAOFF
+ 3 NI             30    50    25 IB001 IB001
+@N RESIDUES    RIPCN RTIME RIDEP
+ 3 RE            100     1    20
+@N HARVEST     HFRST HLAST HPCNP HPCNR
+ 3 HA              0 79166   100     0
