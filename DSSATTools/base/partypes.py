@@ -6,6 +6,7 @@ from collections.abc import MutableMapping, MutableSequence
 from pandas import DataFrame
 import numpy as np
 from typing import Union, Type
+from DSSATTools.crop import CROPS_MODULES
 
 CODE_VARS = {
     "plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V"],
@@ -50,7 +51,7 @@ CODE_VARS = {
         'CH026', 'CH027', 'CH028', 'CH029', 'CH030', 'CH031', 'CH032', 'CH033', 
         'CH034', 'CH035', 'CH036', 'CH037', 'CH038', 'CH039', 'CH040', 'CH041', 
         'CH042', 'CH043', 'CH044', 'CH045', 'CH051', 'CH052', 'CH053', 'CH054', 
-        'CH055', 'CH056', 'CH057', 'CH100', 'CH101', 'CH102', 
+        'CH055', 'CH056', 'CH057', 'CH100', 'CH101', 'CH102',  None
     ],
     "timpl": [None] + [
         'TI001', 'TI002', 'TI003', 'TI004', 'TI005', 'TI006', 'TI007', 'TI008', 
@@ -64,10 +65,10 @@ CODE_VARS = {
         "SL", "SA"
     ],
     "fldt": ["DR000", "DR001", "DR002", "DR003", "IB000"],
-    "flst": [None, "00000"],
+    "flst": [None, "00000", "0"],
     "flhst": [None] + ["FH101", "FH102", "FH201", "FH202", "FH301", "FH302"],
     "start": ["S"],
-    "smodel": ["", None],
+    "smodel": ["", None] + list(CROPS_MODULES.values()),
     "switch": ["Y", "N"],
     "co2": ["M", "D", "W"],
     "wther": ["M", "G", "S", "W"], 
@@ -112,8 +113,34 @@ PROTECTED_ATTRS = [
     "section_header"
     ]
 SECTION_HEADERS = {
-    "Planting": "*PLANTING DETAILS"
+    "Planting": "*PLANTING DETAILS",
+    "Cultivar": "*CULTIVARS",
+    "Harvest": "*HARVEST DETAILS",
+    "InitialConditions": "*INITIAL CONDITIONS",
+    "Fertilizer": "*FERTILIZERS (INORGANIC)",
+    "SoilAnalysis": "*SOIL ANALYSIS",
+    "Irrigation": "*IRRIGATION AND WATER MANAGEMENT",
+    "Residue": "*RESIDUES AND ORGANIC FERTILIZER",
+    "Chemical": "*CHEMICAL APPLICATIONS",
+    "Tillage": "*TILLAGE AND ROTATIONS",
+    "Field": "*FIELDS",
+    "Treatment": "*TREATMENTS                        -------------FACTOR LEVELS------------"
 }
+FACTOR_LEVELS = {
+    "Cultivar": "cu",
+    "Field": "fl",
+    "SoilAnalysis": "sa",
+    "InitialConditions": "ic",
+    "Planting": "mp",
+    "Irrigation": "mi",
+    "Fertilizer": "mf",
+    "Residue": "mr",
+    "Chemical": "mc",
+    "Tillage": "mt",
+    "Harvest": "mh",
+    "SimulationControls": "sc"
+}
+
 
 class CodeType(str):
     def __new__(cls, name, value, fmt):
@@ -147,7 +174,8 @@ class CodeType(str):
             return format(-99, f'{self.fmt[:2]}.0f')
         else:
             return format(self, self.fmt)
-            
+
+
 class DateType(date):
     def __new__(cls, name, value, fmt):
         if isinstance(value, (date, datetime)):
@@ -182,7 +210,8 @@ class DateType(date):
             return format(-99, f'>{len_fmt}.0f')
         else:
             return format(self, self.fmt)
-    
+
+
 class NumberType(float):
     def __new__(cls, name, value, fmt):
         if value is None:
@@ -207,6 +236,7 @@ class NumberType(float):
             return format(-99, f'{self.fmt.split(".")[0]}.0f')
         else:
             return format(self, self.fmt)
+
         
 class DescriptionType(str):
     def __new__(cls, name, value, fmt):
@@ -244,13 +274,15 @@ class TableType(MutableSequence):
         fertilizer table will contain only fertilizer records and not
         irrigation records or some other record.
         - Table index is unique. e.g. Initial conditions won't have the
-        same soil layer defined more than once. 
+        same soil layer defined more than once. This only for soil layers.
+        Schedules can have more than one value the same day (Multiple tillage
+        events the same day)
     '''
     def __init__(self, values, dtype):
         if values is None:
             super().__init__()
             self.__data_dtype = dtype
-            self.__data = {}
+            self.__data = []
             return
         # If values is a dataframe
         # TODO:
@@ -262,56 +294,73 @@ class TableType(MutableSequence):
             raise TypeError(
                 f"Records in table must be {dtype.__name__} type"
             )
-        # Raise if repeteaded ids
-        unique_ids = set([val[dtype.table_index] for val in values])
-        if len(unique_ids) != len(values):
-            raise ValueError(
-                f"Repeteaded values of {dtype.table_index} where found. "
-                f"{dtype.table_index} values must be unique"
-            )
+        # # Raise if repeteaded ids
+        # unique_ids = set([val[dtype.table_index] for val in values])
+        # if len(unique_ids) != len(values):
+        #     raise ValueError(
+        #         f"Repeteaded values of {dtype.table_index} where found. "
+        #         f"{dtype.table_index} values must be unique"
+        #     )
         super().__init__()
         self.__data_dtype = dtype
-        self.__data = {
-            val[self.__data_dtype.table_index]: 
+        self.__data = [
             val for val in values
-        }
+        ]
+        self.__checkindex__()
+        
+    def __checkindex__(self):
+        if self.__data_dtype.table_index is not None: 
+            idx = self.__data_dtype.table_index
+            assert len(set([v[idx] for v in self.__data])) \
+                == len(self.__data), \
+                f"{idx} values must be unique"
 
-    def __getitem__(self, key):
-        return self.__data[key]
+    def __getitem__(self, idx):
+        return self.__data[idx]
     
-    def __setitem__(self, key, value):
-        if not isinstance(value, self.__data_dtype):
-            raise TypeError(f"Value must be {self.__data_dtype.__name__} type")
-        assert key == value[self.__data_dtype.table_index], (
-            f"key does not correspont to {self.__data_dtype.table_index} in"
-            f"the value to set ({key}!={value[self.__data_dtype.table_index]})"
-        )
-        self.__data[key] = value
+    def __setitem__(self):
+        raise NotImplementedError
+        # if not isinstance(value, self.__data_dtype):
+        #     raise TypeError(f"Value must be {self.__data_dtype.__name__} type")
+        # assert idx == value[self.__data_dtype.table_index], (
+        #     f"key does not correspont to {self.__data_dtype.table_index} in"
+        #     f"the value to set ({idx}!={value[self.__data_dtype.table_index]})"
+        # )
+        # self.__data[idx] = value
     
-    def __delitem__(self, key):
-        del self.__data[key]
+    def __delitem__(self, idx):
+        self.__data.pop(idx)
         
     def __len__(self):
         return len(self)
+
+    def append(self, item):
+        self.__data.append(item)
     
     def insert(self):
         raise NotImplementedError
     
-    def write(self):
+    def _write_table(self):
         out_str = ""
-        for n, (_, record) in enumerate(self.__data.items()):
+        for n, record in enumerate(self.__data):
             if n == 0:
                 for var in record.dtypes.keys():
                     var = record[var]
+                    fmt = var.fmt.split('.')[0]
+                    if fmt == "%y%j":
+                        fmt = ">5"
                     out_str += \
-                        f"{format(var.name.upper(), var.fmt.split('.')[0])} "
+                        f"{format(var.name.upper(), fmt)} "
                 out_str += "\n"
-            out_str += f"{record.write()}\n"
+            out_str += f"{record._write_row()}"
         return out_str
     
     def __repr__(self):
-        kws = [f"{key}={value!r}" for key, value in self.__data.items()]
+        kws = [f"{value!r}" for value in self.__data]
         return "{}({})".format(type(self).__name__, ", ".join(kws))
+    
+    def __len__(self):
+        return len(self.__data)
     
 
 class Record(MutableMapping):
@@ -381,6 +430,7 @@ class Record(MutableMapping):
                 fmt = ">5"
             if fmt[0] == ".":
                 leading = "."
+                fmt = fmt[1:]
             else:
                 leading = ""
             fmt = leading + fmt.split(".")[0]
@@ -417,7 +467,18 @@ class TabularRecord(Record):
         else:
             super().__setattr__(name, value)
 
-    def write_section(self):
-        return
+    def _write_section(self):
+        out_str = super()._write_section()
+        if len(self.dtypes) == 0:
+            out_str = out_str.split("\n")[0]
+            out_str += "\n"
+        table_str = self.table._write_table().split("\n")
+        out_str += f"@{self.prefix.upper()} {table_str[0]}\n"
+        for row in table_str[1:-1]: # Table string ends with \n
+            out_str += f" 1 {row}\n"
+        return out_str
+    
+    def __bool__(self):
+        return len(self.table) > 0
 
     

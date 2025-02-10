@@ -8,7 +8,7 @@ classes that are used to construct all the sections:
     Record: 
     It is to be interpreted as a single row in the FileX. There
     are three sections that are built based only in this class: Planting, 
-    Cultivars, and Harvest. Those are basically the sections that can only
+    Cultivar, and Harvest. Those are basically the sections that can only
     contain a single row per treatment.
 
     TabularRecord: 
@@ -17,17 +17,17 @@ classes that are used to construct all the sections:
     than one row per treatment. Overall, there are two types of 
     TabularRecords defined. Soil Tables (Soil Analysis, Initial
     Conditions), and Schedule Tables (Fertilizer, Irrigation, Residue,
-    Chemicals, Tillage). 
+    Chemical, Tillage). 
 
-    SimulationOptions and Field:
+    SimulationOptions and Treatment:
     They are only to represent those sections.
 """
 from datetime import date
 from .base.partypes import (
     DateType, CodeType, NumberType, Record, TabularRecord, DescriptionType,
-    TableType
+    TableType, FACTOR_LEVELS
 )
-    
+
 class Planting(Record):
     '''
     Class to define a single planting event
@@ -98,7 +98,7 @@ class Planting(Record):
             super().__setitem__(name, value)
 
 
-class Cultivars(Record):
+class Cultivar(Record):
     prefix = "c"
     dtypes = {
         "cr": CodeType, "ingeno": DescriptionType, "cname": DescriptionType
@@ -178,7 +178,7 @@ class InitialConditionsLayer(Record):
         "sno3": NumberType
     }
     pars_fmt = {
-        "icbl": ">4.0f", "sh2o": ">4.0f", "snh4": ">4.0f", "sno3": ">4.0f"
+        "icbl": ">5.0f", "sh2o": ">5.3f", "snh4": ">5.1f", "sno3": ">5.1f"
     }
     table_index = "icbl" # Index when buliding table
     def __init__(self, icbl:float, sh2o:float, snh4:float=None, 
@@ -284,7 +284,7 @@ class FertilizerEvent(Record):
         "famn": ">5.1f", "famp": ">5.1f", "famk": ">5.1f", "famc": ">5.1f",
         "famo": ">5.1f", "focd": ">5", "fername": "<16"
     }
-    table_index = "fdate" # Index when buliding table
+    table_index = None
     def __init__(self, fdate:date, fmcd:str, facd:str, fdep:float, famn:float, 
                  famp:float, famk:float=None, famc:float=None, famo:float=None,
                  focd:str=None, fername:str=None):
@@ -327,7 +327,7 @@ class FertilizerEvent(Record):
         return
 
 class Fertilizer(TabularRecord):
-    prefix = "c"
+    prefix = "f"
     dtypes = {}
     pars_fmt = {}
     table_dtype = FertilizerEvent
@@ -352,7 +352,7 @@ class SoilAnalysisLayer(Record):
         "sapx": NumberType, "sake": NumberType, "sasc": NumberType
     }
     pars_fmt = {
-        "sabl": ">4.0f", "sadm": ">5.1f", "saoc": ">5.2f", "sani": ">5.2f",
+        "sabl": ">5.0f", "sadm": ">5.1f", "saoc": ">5.2f", "sani": ">5.2f",
         "saphw": ">5.1f", "saphb": ">5.1f", "sapx": ">5.1f", "sake": ">5.1f",
         "sasc": ">5.2f"
     }
@@ -441,7 +441,7 @@ class IrrigationEvent(Record):
     pars_fmt = {
         "idate": "%y%j", "irop": ">5", "irval": ">5.1f"
     }
-    table_index = "idate" # Index when buliding table
+    table_index = None
     def __init__(self, idate:date, irval:float, irop:str=None):
         """
         Initializes a irrigation event instance.
@@ -469,8 +469,8 @@ class Irrigation(TabularRecord):
         "iamt": NumberType, "irname": DescriptionType
     }
     pars_fmt = {
-        "efir": ">5.2f", "idep": ">5.1f", "ithr": ">5.1f", "iept": ">5.1f",
-        "ioff": ">5", "iame": ">5", "iamt": ">5.1f", "irname": "<16"
+        "efir": ">5.2f", "idep": ">5.0f", "ithr": ">5.0f", "iept": ">5.0f",
+        "ioff": ">5", "iame": ">5", "iamt": ">5.0f", "irname": "<16"
     }
     table_dtype = IrrigationEvent
     def __init__(self, table=list[IrrigationEvent], efir:float=1,
@@ -504,7 +504,7 @@ class Irrigation(TabularRecord):
         super().__init__()
         kwargs = {
             "efir": efir, "idep": idep, "ithr": ithr, "iept": iept,
-            "ioff": ioff, "iame": iame, "iamt": iamt, 
+            "ioff": ioff, "iame": iame, "iamt": iamt, "irname": irname
         }
         for name, value in kwargs.items():
             super().__setitem__(name, value)
@@ -524,7 +524,7 @@ class ResidueEvent(Record):
         "resp": ">5.2f", "resk": ">5.2f", "rinp": ">5.0f", "rdep": ">5.0f",
         "rmet": ">5", "rename": "<16"
     }
-    table_index = "rdate" # Index when buliding table
+    table_index = None
     def __init__(self, rdate:date, rcod:str, ramt:float, resn:float,
                  resp:float, resk:float, rinp:float, rdep:float, rmet:str,
                  rename:str=None):
@@ -581,7 +581,7 @@ class Residue(TabularRecord):
         self.table = table
     
 
-class ChemicalsEvent(Record):
+class ChemicalEvent(Record):
     prefix = "c"
     dtypes = {
         "cdate": DateType, "chcod": CodeType, "chamt": NumberType,
@@ -592,7 +592,7 @@ class ChemicalsEvent(Record):
         "cdate": "%y%j", "chcod": ">5", "chamt": ">5.2f", "chme": ">5",
         "chdep": ">5.0f", "cht": ">5", "chname": "<16"
     }
-    table_index = "cdate" # Index when buliding table
+    table_index = None
     def __init__(self, cdate:date, chcod:str, chamt:float, chme:str,
                  chdep:float=None, cht:str=None, chname:str=None):
         """
@@ -623,12 +623,12 @@ class ChemicalsEvent(Record):
         for name, value in kwargs.items():
             super().__setitem__(name, value)
     
-class Chemicals(TabularRecord):
+class Chemical(TabularRecord):
     prefix = "c"
     dtypes = {}
     pars_fmt = {}
-    table_dtype = ChemicalsEvent
-    def __init__(self, table=list[ChemicalsEvent]):
+    table_dtype = ChemicalEvent
+    def __init__(self, table=list[ChemicalEvent]):
         """
         Initializes a chemicals application section. 
 
@@ -650,7 +650,7 @@ class TillageEvent(Record):
     pars_fmt = {
         "tdate": "%y%j", "timpl": ">5", "tdep": ">5.0f", "tname": "<16"
     }
-    table_index = "tdate" # Index when buliding table
+    table_index = None
     def __init__(self, tdate:date, timpl:str=None, tdep:float=None, 
                  tname:str=None):
         """
@@ -711,7 +711,7 @@ class Field(Record):
     pars_fmt = {
         "id_field": ">8", "wsta": ".<8", "flsa": ">5.0f", "flob": ">5.0f", 
         "fldt": ">5", "fldd": ">5.0f", "flds": ">5.0f", "flst": ">5", 
-        "sltx": "<5", "sldp": ">5.0f", "id_soil": "<10", "flname": "<16", 
+        "sltx": "<5", "sldp": ">5.0f", "id_soil": "<10", "flname": "<32", 
         "xcrd": ".>15.2f", "ycrd": ".>15.2f", "elev": ".>9.0f", 
         "area": ".>17.0f", "slen": ".>5.0f", "flwr": ".>5.1f", 
         "slas": ".>5.0f", "flhst": ">5", "fhdur": ">5.0f"
@@ -786,8 +786,8 @@ class Field(Record):
         for name, value in kwargs.items():
             super().__setitem__(name, value)
         self.__tier1 = [
-            "id_field", "wsta", "flsa", "flob", "fldt", "fldd", "flst", "sltx",
-            "sldp", "id_soil", "flname"
+            "id_field", "wsta", "flsa", "flob", "fldt", "fldd", "flds", 
+            "flst", "sltx", "sldp", "id_soil", "flname"
         ]
         self.__tier2 = [
             "xcrd", "ycrd", "elev", "area", "slen", "flwr", "slas", "flhst",
@@ -824,7 +824,7 @@ class SCGeneral(Record):
     }
     pars_fmt = {
         "nyers": ">5.0f", "nreps": ">5.0f", "start": ">5",
-        "sdate": ">5.0f", "rseed": ">5.0f", "sname": "<25",
+        "sdate": "%y%j", "rseed": ">5.0f", "sname": "<25",
         "smodel": ">6"
     }
     def __init__(self, sdate:date, nyers:int=1, nreps:int=1, start:str="S", 
@@ -849,7 +849,7 @@ class SCGeneral(Record):
         """
         super().__init__()
         kwargs = {
-            "sdate": sdate, "nyers": nyers, "nreps": nreps, "start": start,
+            "nyers": nyers, "nreps": nreps, "start": start, "sdate": sdate,
             "rseed": rseed, "sname": sname, "smodel": smodel
         }
         for name, value in kwargs.items():
@@ -1226,14 +1226,16 @@ class AMHarvest(Record):
         'hfrst': ">5.0f", 'hlast': "%y%j", 'hpcnp': ">5.0f", 
         'hpcnr': ">5.0f"
     }
-    def __init__(self, hlast:date, hpcnp:float, hpcnr:float):
+    def __init__(self, hfrst:date, hlast:date, hpcnp:float, hpcnr:float):
         """
         Initializes a Automatic Management Harvest section. 
 
         Arguments
          ----------
+        hfrst: date
+            First day of harvest window
         hlast: date
-            Last day of harvest
+            Last day of harvest window
         hpcnp: float
             Percentage of product harvested
         hpcnr: float
@@ -1256,9 +1258,83 @@ class SimulationControls:
         "irrigation": AMIrrigation, "nitrogen": AMNitrogen,
         "residues": AMResidues, "harvest": AMHarvest
     }
-    def __init__(self):
+    def __init__(self, general:SCGeneral, options:SCOptions, 
+                 methods:SCMethods, management: SCManagement, 
+                 outputs:SCOutputs, planting:AMPlanting, 
+                 irrigation:AMIrrigation, nitrogen:AMNitrogen,
+                 residues:AMResidues, harvest:AMHarvest):
+        self.__data = {
+            "general": general, "options": options, "methods": methods,
+            "management": management, "outputs": outputs, "planting": planting,
+            "irrigation": irrigation, "nitrogen": nitrogen, "residues": residues,
+            "harvest": harvest
+        }
         return
+    
+    def __setitem__(self, key, value):
+        if key not in self.__data.keys():
+            raise KeyError
+        if not isinstance(value, self.dtypes[key]):
+            raise TypeError
+        self.__data[key] = value
+    
+    def __repr__(self):
+        kws = [f"{key}={value!r}" for key, value in self.__data.items()]
+        return "{}({})".format(type(self).__name__, ", ".join(kws))
+    
+    def _write_section(self):
+        out_str = "*SIMULATION CONTROLS\n"
+        out_str += "@N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL\n"
+        out_str += f" 1 GE          {self.__data['general']._write_row()}"
+        out_str += "@N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2\n"
+        out_str += f" 1 OP          {self.__data['options']._write_row()}"
+        out_str += "@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL\n"
+        out_str += f" 1 ME          {self.__data['methods']._write_row()}"
+        out_str += "@N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS\n"
+        out_str += f" 1 MA          {self.__data['management']._write_row()}"
+        out_str += "@N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT\n"
+        out_str += f" 1 OU          {self.__data['outputs']._write_row()}"
+        out_str += f"\n@  AUTOMATIC MANAGEMENT\n"
+        out_str += "@N PLANTING    PFRST PLAST PH2OL PH2OU PH2OD PSTMX PSTMN\n"
+        out_str += f" 1 PL          {self.__data['planting']._write_row()}"
+        out_str += "@N IRRIGATION  IMDEP ITHRL ITHRU IROFF IMETH IRAMT IREFF\n"
+        out_str += f" 1 IR          {self.__data['irrigation']._write_row()}"
+        out_str += "@N NITROGEN    NMDEP NMTHR NAMNT NCODE NAOFF\n"
+        out_str += f" 1 NI          {self.__data['nitrogen']._write_row()}"
+        out_str += "@N RESIDUES    RIPCN RTIME RIDEP\n"
+        out_str += f" 1 RE          {self.__data['residues']._write_row()}"
+        out_str += "@N HARVEST     HFRST HLAST HPCNP HPCNR\n"
+        out_str += f" 1 HA          {self.__data['harvest']._write_row()}"
+        return out_str
+    
 
+class Treatment(Record):
+    prefix = "n"
+    dtypes = {
+        'r': NumberType, 'o': NumberType, "c": NumberType,
+        'tname': DescriptionType, "cu": NumberType, "fl": NumberType,
+        "sa": NumberType, "ic": NumberType, "mp": NumberType, "mi": NumberType,
+        "mf": NumberType, "mr": NumberType, "mc": NumberType, "mt": NumberType,
+        "me": NumberType, "mh": NumberType, "sm": NumberType
+    }
+    pars_fmt = {
+        'r': ">1.0f", 'o': ">1.0f", "c": ">1.0f",
+        'tname': ".<25", "cu": ">2.0f", "fl": ">2.0f",
+        "sa": ">2.0f", "ic": ">2.0f", "mp": ">2.0f", "mi": ">2.0f",
+        "mf": ">2.0f", "mr": ">2.0f", "mc": ">2.0f", "mt": ">2.0f",
+        "me": ">2.0f", "mh": ">2.0f", "sm": ">2.0f"
+    }
+    def __init__(self, **kwargs):
+        """
+        Initializes a Treatment section. This class is not to be used by the 
+        user. Therefore, no specific input parameters are defined.
+        """
+        assert all([par in kwargs for par in self.pars_fmt.keys()])
+        super().__init__()
+        kwargs = {par: kwargs[par] for par in self.pars_fmt.keys()}
+        kwargs["o"] = kwargs["c"] = kwargs["me"] = 0
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
 
 def get_header_range(l, h, pars_fmt):
     """Get variable start and index in the header line"""
@@ -1280,13 +1356,11 @@ def get_header_range(l, h, pars_fmt):
         raise ValueError("Variable format must be right or left justified")
     return (start, end)
 
-
-def process_sc_line(l):
-    return
-
-
 def read_filex(filexpath):
     """
+    It reads a FILEX and returns a dictionary where the keys are the treatments,
+    and the values are the level objects. 
+
     Asumptions:
     Some of the assumptions are needed to deal with description fields 
     that can contain spaces, such as Cultivar name.
@@ -1334,10 +1408,17 @@ def read_filex(filexpath):
         elif lookup == "header":
             if l[0] == "@":
                 header = l.replace(".", " ").lower().split()
-                header_start_end = {
-                    h: get_header_range(l, h, section_cls.pars_fmt) 
-                    for h in header[1:]
-                }
+                header_start_end = {}
+                start_i = 0
+                for h in header[1:]:
+                    header_start_end[h] = get_header_range(
+                        l[start_i:], h, section_cls.pars_fmt
+                    )
+                    header_start_end[h] = (
+                        header_start_end[h][0] + start_i,
+                        header_start_end[h][1] + start_i
+                    )
+                    start_i = header_start_end[h][1]
                 lookup = "values"
                 continue
         elif lookup == "table header":
@@ -1383,7 +1464,7 @@ def read_filex(filexpath):
                 continue
             row = section_cls.table_dtype(**{
                 key: l[table_header_start_end[key][0]:
-                       table_header_start_end[key][1]]
+                    table_header_start_end[key][1]]
                 for key in table_header[1:]
             })
             if only_table:
@@ -1416,10 +1497,12 @@ def read_filex(filexpath):
                     }
             
         elif lookup == "section":
-            if l[:6] == "*PLANT":
+            if l[:6] == "*TREAT":
+                section_cls = Treatment
+            elif l[:6] == "*PLANT":
                 section_cls = Planting
             elif l[:6] == "*CULTI":
-                section_cls = Cultivars
+                section_cls = Cultivar
             elif l[:6] == "*HARVE":
                 section_cls = Harvest
             elif l[:6] == "*INITI":
@@ -1433,7 +1516,7 @@ def read_filex(filexpath):
             elif l[:6] == "*RESID":
                 section_cls = Residue
             elif l[:6] == "*CHEMI":
-                section_cls = Chemicals
+                section_cls = Chemical
             elif l[:6] == "*TILLA":
                 section_cls = Tillage
             elif l[:6] == "*FIELD": 
@@ -1456,5 +1539,19 @@ def read_filex(filexpath):
                     lookup = "simulation controls"
         else:
             raise ValueError
-    return experiment
     
+    # Build the treatments dictionary
+    treatments = {}
+    for n, treatment in experiment["Treatment"].items():
+        treatments[n] = {}
+        for factor, f in FACTOR_LEVELS.items():
+            if factor in experiment:
+                level = experiment[factor].get(treatment[f], False)
+                if level:
+                    treatments[n][factor] = level
+        treatments[n]["SimulationControls"] = sim_controls_dict.get(
+            treatment["sm"], False
+        )
+        assert treatments[n]["SimulationControls"]
+    return treatments
+        
