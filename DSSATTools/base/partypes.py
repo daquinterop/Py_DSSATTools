@@ -5,9 +5,29 @@ from datetime import date, datetime
 from collections.abc import MutableMapping, MutableSequence
 from pandas import DataFrame
 import numpy as np
-from typing import Union, Type
-from DSSATTools.crop import CROPS_MODULES
+from typing import Type
+import re
 
+CROPS_MODULES = {
+    "Maize": "MZCER",
+    'Millet': "MLCER",
+    'Sugarbeet': "BSCER",
+    'Rice': "RICER",
+    'Sorghum': "SGCER",
+    'Sweetcorn': "SWCER",
+    'Alfalfa': "PRFRM",
+    'Bermudagrass': "PRFRM",
+    'Soybean': "CRGRO",
+    'Canola': "CRGRO",
+    'Sunflower': "CRGRO",
+    'Potato': "PTSUB",
+    'Tomato': "CRGRO",
+    'Cabbage': "CRGRO",
+    'Sugarcane': "SCCAN",
+    "Wheat": "WHCER",
+    "Bean": "CRGRO",
+    "Cassava": "CSYCA"
+}
 CODE_VARS = {
     "plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V"],
     "plds": ["H", "R", "U"],
@@ -110,7 +130,8 @@ CODE_VARS["ncode"] = CODE_VARS["fmcd"]
 
 PROTECTED_ATTRS = [
     "prefix", "pars_fmt", "dtypes", "table_dtype", "table_index", 
-    "section_header"
+    "section_header", "code", "smodel", "spe_file", "spe_path", "cul_dtypes",
+    "cul_pars_fmt", "eco_dtypes", "eco_pars_fmt"
     ]
 SECTION_HEADERS = {
     "Planting": "*PLANTING DETAILS",
@@ -141,6 +162,25 @@ FACTOR_LEVELS = {
     "SimulationControls": "sc"
 }
 
+def _format(s, fmt):
+    """
+    Formats and trim the string to match the specific width
+    """
+    if fmt == "%y%j":
+        width = 5
+    else:
+        width = int(re.findall("\d+", fmt.split(".")[0])[0])
+    return format(s, fmt)[:width]
+
+def clean_comments(lines):
+    clean_lines = []
+    for line in lines:
+        if '!' in line[:3]:
+            continue
+        if len(line) < 2:
+            continue
+        clean_lines.append(line)
+    return clean_lines
 
 class CodeType(str):
     def __new__(cls, name, value, fmt):
@@ -171,9 +211,9 @@ class CodeType(str):
     @property
     def str(self):
         if (self is None) or (self == ""):
-            return format(-99, f'{self.fmt[:2]}.0f')
+            return _format(-99, f'{self.fmt[:2]}.0f')
         else:
-            return format(self, self.fmt)
+            return _format(self, self.fmt)
 
 
 class DateType(date):
@@ -207,9 +247,9 @@ class DateType(date):
     def str(self):
         if self.year == 9999 :
             len_fmt = len(self.strftime(self.fmt))
-            return format(-99, f'>{len_fmt}.0f')
+            return _format(-99, f'>{len_fmt}.0f')
         else:
-            return format(self, self.fmt)
+            return _format(self, self.fmt)
 
 
 class NumberType(float):
@@ -233,9 +273,9 @@ class NumberType(float):
     @property
     def str(self):
         if np.isnan(self):
-            return format(-99, f'{self.fmt.split(".")[0]}.0f')
+            return _format(-99, f'{self.fmt.split(".")[0]}.0f')
         else:
-            return format(self, self.fmt)
+            return _format(self, self.fmt)
 
         
 class DescriptionType(str):
@@ -261,9 +301,9 @@ class DescriptionType(str):
     @property
     def str(self):
         if (self is None) or (self == ""):
-            return format(-99, f'{self.fmt}.0f')
+            return _format(-99, f'{self.fmt}.0f')
         else:
-            return format(self, self.fmt)
+            return _format(self, self.fmt)
         
 
 class TableType(MutableSequence):
@@ -320,13 +360,6 @@ class TableType(MutableSequence):
     
     def __setitem__(self):
         raise NotImplementedError
-        # if not isinstance(value, self.__data_dtype):
-        #     raise TypeError(f"Value must be {self.__data_dtype.__name__} type")
-        # assert idx == value[self.__data_dtype.table_index], (
-        #     f"key does not correspont to {self.__data_dtype.table_index} in"
-        #     f"the value to set ({idx}!={value[self.__data_dtype.table_index]})"
-        # )
-        # self.__data[idx] = value
     
     def __delitem__(self, idx):
         self.__data.pop(idx)
@@ -350,7 +383,7 @@ class TableType(MutableSequence):
                     if fmt == "%y%j":
                         fmt = ">5"
                     out_str += \
-                        f"{format(var.name.upper(), fmt)} "
+                        f"{_format(var.name.upper(), fmt)} "
                 out_str += "\n"
             out_str += f"{record._write_row()}"
         return out_str
@@ -367,8 +400,10 @@ class Record(MutableMapping):
     """
     Generic class to handle a single fileX row. The name and type of 
     variables contained in the record are defined in the child object.
+
+    This is also used for a row of ECO or CUL parmeters
     """ 
-    prefix:dict # Prefix on FILEX
+    prefix:dict # Prefix on FILEX/CUL/ECO
     dtypes:dict # Data type of each parameter in the record
     pars_fmt:dict # Format of each parameter
     n_tiers:int = 1 # Number of tiers. Sections like Field have more than one
@@ -386,13 +421,13 @@ class Record(MutableMapping):
         key = key.lower()
         if key not in self.dtypes:
             raise KeyError(key)
-        if "ECO#" in key: 
-            raise Exception(
-                "The ecotype code can't be changed. If any change is to be done in the ecotype modify the ecotype parameters directly"
+        if (self.dtypes[key] is Record):
+            assert isinstance(value, Record)
+            self.__data[key] = value
+        else:
+            self.__data[key] = self.dtypes[key](
+                f'{key}', value, self.pars_fmt[key]
             )
-        self.__data[key] = self.dtypes[key](
-            f'{key}', value, self.pars_fmt[key]
-        )  
 
     def __delitem__(self, k):
         raise NotImplementedError
@@ -411,7 +446,7 @@ class Record(MutableMapping):
             super().__setattr__(name, value)
     
     def __repr__(self):
-        kws = [f"{key}={value!r}" for key, value in self.__data.items()]
+        kws = [f"{key}={self[key]!r}" for key in self.dtypes.keys()]
         return "{}({})".format(type(self).__name__, ", ".join(kws))
     
     def parameters(self):
@@ -419,7 +454,7 @@ class Record(MutableMapping):
     
     def _write_row(self):
         return " ".join([
-            par.str for name, par in self.items()
+            self[name].str for name in self.dtypes.keys()
             if name != "table"
         ]) + "\n"
     
@@ -434,7 +469,7 @@ class Record(MutableMapping):
             else:
                 leading = ""
             fmt = leading + fmt.split(".")[0]
-            header.append(format(key.upper(), fmt))
+            header.append(_format(key.upper(), fmt))
         out_str = SECTION_HEADERS[type(self).__name__] + "\n"
         out_str += " ".join(header) + "\n" + " 1 " + self._write_row()
         return out_str
@@ -481,4 +516,157 @@ class TabularRecord(Record):
     def __bool__(self):
         return len(self.table) > 0
 
+def parse_pars_line(line, fmt):
+    """
+    A Parser for crop parameters 
+    """
+    line = line[:]
+    pars = {}
+    for par, f in fmt.items():
+        if f[0] == ".":
+            f = f[1:] # Remove point
+        f = f[1:] # Remove right or left justifier
+        width = int(f.split(".")[0])
+        pars[par] = line[:width].strip()
+        line = line[width+1:]
+    return pars
+
+def _get_croppars(spe_path, code, dtypes_dict, pars_fmt_dict, par_prefix):
+    """
+    It constructs and returns a CropPars class for the Cultivar and Ecotype
+    parameters
+    """
+    assert par_prefix in ("var#", "eco#")
+    class CropPars(Record):
+        """
+        Generic class for Crop parameters
+        """
+        prefix = par_prefix
+        _code = code
+        dtypes = dtypes_dict
+        pars_fmt = pars_fmt_dict
+        def __init__(self):
+            if self.prefix == "var#":
+                file_path = spe_path[:-3] + "CUL"
+            else: 
+                file_path = spe_path[:-3] + "ECO"
+
+            with open(file_path, 'r') as f:
+                file_lines = f.readlines()
+            self._file_header = filter(
+                lambda x: x[0] == "*", file_lines
+            ).__next__()
+            file_lines = clean_comments(file_lines)
+
+            try:
+                line = filter(lambda x: code in x[:10], file_lines).__next__()
+            except StopIteration:
+                raise RuntimeError({
+                    "var#": f"Cultivar {code} not in {file_path} file",
+                    "eco#": f"Ecotype {code} not in {file_path} file"
+                }[self.prefix])
+            
+            kwargs = parse_pars_line(line[7:], self.pars_fmt)
+            super().__init__()
+            for name, value in kwargs.items():
+                if name != "eco#":
+                    super().__setitem__(name, value)
+                else:
+                    self._ecocode = value.strip()
+
+        def _write_section(self):
+            raise NotImplementedError
+
+        def _write_file(self):
+            out_str = self._file_header
+            out_str += f"@{self.prefix.upper()} "
+            for key, fmt in self.pars_fmt.items():
+                if fmt[0] == ".":
+                    leading = "."
+                    fmt = fmt[1:]
+                else:
+                    leading = ""
+                fmt = leading + fmt.split(".")[0]
+                out_str += f" {format(key.upper(), fmt)}"
+            out_str += f"\n{self._code} "
+            out_str += self._write_row()
+            return out_str
+
+        @property
+        def str(self):
+            return str(self._code)
+    
+    return CropPars()
+
+
+class Crop(MutableMapping):
+    """
+    Generic class for crops
+    """
+    code:str
+    smodel:str 
+    spe_file:str
+    spe_path:str 
+    cul_dtypes:dict
+    cul_pars_fmt:dict
+    eco_dtypes:dict
+    eco_pars_fmt:dict
+    def __init__(self, cultivar_code):
+        self.__cultivar = _get_croppars(
+            self.spe_path, cultivar_code, self.cul_dtypes, self.cul_pars_fmt, 
+            "var#"
+        )
+        self.__cultivar["eco#"] = _get_croppars(
+            self.spe_path, self.__cultivar._ecocode, self.eco_dtypes, 
+            self.eco_pars_fmt, "eco#"
+        )
+        return
+    
+    def __repr__(self):
+        print(self.__cultivar)
+
+    def __len__(self):
+        return len(self.__cultivar)
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __setitem__(self, key, value):
+        key = key.lower()
+        self.__cultivar[key] = value
+
+    def __delitem__(self, k):
+        raise NotImplementedError
+
+    def __getitem__(self, key):
+        key = key.lower()
+        return self.__cultivar[key]
+
+    def __contains__(self, k):
+        raise NotImplementedError
+    
+    def __setattr__(self, name, value):
+        if name in PROTECTED_ATTRS:
+            raise AttributeError(f"Can't modify {name} attribute")
+        else:
+            super().__setattr__(name, value)
+    
+    def _write_section(self):
+        out_str = "*CULTIVARS\n@C CR INGENO CNAME\n"
+        cr = self.code
+        ingeno = self.__cultivar.str
+        if "vrname" in self.__cultivar:
+            cname = self.__cultivar['vrname']
+        elif "var-name" in self.cultivar:
+            cname = self.__cultivar['var-name']
+        else:
+            raise RuntimeError
+        out_str += f" 1 {cr:>2} {ingeno:>6} {cname:<16}\n"
+        return out_str
+    
+    def _write_eco(self):
+        return self.__cultivar["eco#"]._write_file()
+    
+    def _write_cul(self):
+        return self.__cultivar._write_file()
     

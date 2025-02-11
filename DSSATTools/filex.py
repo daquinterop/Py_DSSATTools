@@ -27,6 +27,13 @@ from .base.partypes import (
     DateType, CodeType, NumberType, Record, TabularRecord, DescriptionType,
     FACTOR_LEVELS
 )
+from .crop import (
+    Maize
+)
+
+CROP_OBJECTS = {
+    "MZ": Maize
+}
 
 class Planting(Record):
     '''
@@ -125,6 +132,8 @@ class Cultivar(Record):
         }
         for name, value in kwargs.items():
             super().__setitem__(name, value)
+        # The crop attribute stores the Crop object
+        self.crop = CROP_OBJECTS[cr.upper()](ingeno)
 
 
 class Harvest(Record):
@@ -1591,5 +1600,8 @@ def read_filex(filexpath):
             treatment["sm"], False
         )
         assert treatments[n]["SimulationControls"]
+        treatments[n]["SimulationControls"] = SimulationControls(
+            **treatments[n]["SimulationControls"]
+        )
     return treatments
         
