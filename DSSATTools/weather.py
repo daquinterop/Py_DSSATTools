@@ -42,9 +42,13 @@ for the weather instance created in the previous example:
 import os
 import pandas as pd
 from pandas import DataFrame
-from datetime import datetime
+from io import StringIO
+from datetime import datetime, date
 from pandas import NA, isna
 from DSSATTools.base.formater import weather_data, weather_data_header, weather_station
+from DSSATTools.base.partypes import (
+    DateType, NumberType, Record, TabularRecord, DescriptionType
+)
 
 PARS_DESC = {
     # Station parameters
@@ -89,141 +93,156 @@ def list_weather_variables():
         if key in PARS_DATA:
             print(key + ': ' + value)
 
-
-class Weather():
-    def __init__(self, df:DataFrame, pars:dict, lat:float=None, lon:float=None, 
-                 elev:float=None, tav:float=None, amp:float=None, co2:float=None,
-                 refht:float=None, wndht:float=None):
-        '''
-        Initialize a Weather instance. This instance contains the weather data,
-        as well as the parameters that define the weather station that the data
-        represents, such as the latitude, longitude and elevation.
-
-        Arguments
-        ----------
-        df: DataFrame
-            pandas DataFrame with the weather data. The index of the dataframe
-            must be datetime. A simple quality control check is performed for
-            data. 
-        pars: dict
-            A dictionary mapping the data columns to the Weather variables
-            required by DSSAT. Use `DSSATTools.weather.list_weather_variables` function to
-            have a detailed description of the DSSAT weather variables.
-        lat, lon, elev: float
-            Latitude, longitude and elevation of the weather station
-        amp: float
-            Amplitude of temperature function used to calculate soil temperatures (°C)
-        tav: float
-            Average annual soil temperature, used with TAMP to calculate soil temperature. (°C)
-        refht: float
-            Reference height for temperature (m)
-        wndht: float
-            Reference height for wind speed (m)
-        co2: float
-            CO2 concentration (vpm). management.simulation_controls["CO2"] must 
-            be set to "W" to use this value.
-        '''
-        self.description = "Weather station"
-        self.INSI = 'WSTA'
-        self.LAT = lat
-        self.LON = lon
-        self.ELEV = elev 
-        self.TAV = tav 
-        self.AMP = amp 
-        self.REFHT = refht
-        self.WNDHT = wndht
-        data = df.copy()
-        self.CO2 = co2
-        
-        cols = []
-        for key, value in pars.items():
-            assert value in PARS_DATA, \
-                f'{value} is not a valid variable name'
-            if (value in PARS_DATA):
-                data[value] = data[key]
-                cols.append(value)
-                if (key not in PARS_DATA):
-                    data.drop(columns=[key], inplace=True)
-        data = data[cols]
-
-
-        assert all(map(lambda x: x in data.columns, MANDATORY_DATA)), \
-            f'Data must contain at least {", ".join(MANDATORY_DATA)} variables'
-
-        # A really quick QC check
-        TEMP_QC = all(data.TMIN <= data.TMAX)
-        assert TEMP_QC, 'TMAX < TMIN at some point in the series'
-        if 'RHUM' in data.columns:
-            RHUM_QC = all((data.RHUM >= 0) & (data.RHUM <= 100))
-            assert RHUM_QC, '0 <= RHUM <= 100 must be accomplished'
-        RAIN_QC = all(data.RAIN >= 0)
-        assert RAIN_QC, '0 <= RAIN must be accomplished'
-        if 'SRAD' in data.columns:
-            SRAD_QC = all(data.SRAD >= 0)
-            assert SRAD_QC, '0 <= SRAD must be accomplished'
-
-        # Check date column
-        DATE_COL = False
-        for col in data.columns:
-            if pd.api.types.is_datetime64_any_dtype(data[col]):
-                DATE_COL = col
-        if pd.api.types.is_datetime64_any_dtype(data.index):
-            DATE_COL = True
-        assert DATE_COL, 'At least one of the data columns must be a date'
-
-        if isinstance(DATE_COL, str):
-            data.set_index(DATE_COL, inplace=True)
-        
-        self.INSI = self.INSI[:4].upper()
-
-        assert isinstance(data, DataFrame), \
-            'wthdata must be a DataFrame instance'
-        self.data = data.sort_index()
-
-        first_year = self.data.index[0].year
-        total_years = self.data.index[-1].year - self.data.index[0].year + 1
-        self._name = f'{self.INSI}{str(first_year)[2:]}{total_years:02d}'
-
-
-    def write(self, folder:str='', **kwargs):
-        '''
-        Writes the weather files in the provided folder. The name is defined by the dates and the Institute code (INSI).
+class WeatherRecord(Record):
+    prefix=None
+    dtypes={
+        'date': DateType, 'srad': NumberType, 'tmax': NumberType, 
+        'tmin': NumberType, 'rain': NumberType, 'dewp': NumberType,
+        'wind': NumberType, 'par': NumberType, 'evap': NumberType, 
+        'rhum': NumberType,
+    }
+    pars_fmt = {
+        'date': "%Y%j", 'srad': '>5.1f', 'tmax': '>5.1f', 'tmin': '>5.1f', 
+        'rain': '>5.1f', 'dewp': '>5.1f', 'wind': '>5.1f', 'par': '>5.1f', 
+        'evap': '>5.1f', 'rhum': '>5.1f',
+    }
+    table_index = "date"
+    def __init__(self, date:date, srad:float, tmax:float, tmin:float, rain:float,
+                 dewp:float=None, wind:float=None, par:float=None, evap:float=None,
+                 rhum:float=None):
+        """
+        Initializes a weather record.
 
         Arguments
         ----------
-        folder: str
-            Path to the folder the files will be saved.
-            
-        '''
-        if not os.path.exists(folder):
-            os.mkdir(folder)
-        man = kwargs.get('management', False)
-        if man:
-            sim_start = datetime(man.sim_start.year, man.sim_start.month, man.sim_start.day)
-            # self.data = self.data.loc[self.data.index >= sim_start]
+        date: date
+            Date
+        srad: float
+            Daily solar radiation, MJ m-2 day-1
+        tmax: float
+            Daily temperature maximum, C
+        tmin: float
+            Daily temperature minimum, C
+        rain: float
+            Daily rainfall (incl. snow), mm day-1
+        dewp: float
+            Daily dewpoint temperature average, C
+        wind: float
+            Daily wind speed (km d-1)
+        par: float
+            Daily photosynthetic radiation, moles m-2 day-1
+        evap: float
+            Daily pan evaporation (mm d-1)
+        rhum: float
+            Relative humidity average, %
+        """
+        super().__init__()
+        kwargs = {
+            'date': date, 'srad': srad, 'tmax': tmax, 'tmin': tmin, 
+            'rain': rain, 'dewp': dewp, 'wind': wind, 'par': par, 
+            'evap': evap, 'rhum': rhum,
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
 
-        filename = f'{self._name}.WTH'
-        outstr = f'$WEATHER DATA : {self.description}\n\n'
-        outstr += '@ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT  CCO2\n'
-        outstr += weather_station([
-            self.INSI, self.LAT, self.LON, self.ELEV,
-            self.TAV, self.AMP, self.REFHT, self.WNDHT,
-            self.CO2
-        ])
-        outstr += weather_data_header(self.data.columns)
 
-        df = self.data.map(lambda x: f"{x:5.1f}")
-        df['day'] = df.index.strftime("%Y%j")
-        df = df [["day"]+list(self.data.columns)]
-        outstr += "\n".join(map(lambda x: " ".join(x), df.values))
+class WeatherStation(TabularRecord):
+    table_dtype = WeatherRecord
+    dtypes = {
+        "insi": DescriptionType, 'lat': NumberType, 'long': NumberType, 
+        'elev': NumberType, 'tav': NumberType, 'amp': NumberType,  
+        'refht': NumberType, 'wndht': NumberType, "cco2": NumberType
+    }
+    pars_fmt = {
+        "insi": '>4', 'lat': '>8.3f', 'long': '>8.3f', 'elev': '>5.0f', 
+        'tav': '>5.1f', 'amp': '>5.1f', 'refht': '>5.1f', 'wndht': '>5.1f',
+        'cco2': '>5.1f'
+    }
+    def __init__(self, table:list[WeatherRecord], lat:float, long:float, 
+                 insi:str="WSTA", elev:float=None, tav:float=None, amp:float=None,
+                 refht:float=None, wndht:float=None, cco2:float=None):
+        super().__init__()
+        kwargs = {
+            "insi": insi, 'lat': lat, 'long': long, 'elev': elev, 'tav': tav, 
+            'amp': amp, 'refht': refht, 'wndht': wndht, 'cco2': cco2
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value)
+        self.table = table
+
+    def _write_wth(self):
+        out_str = f'$WEATHER DATA : Created with DSSATTools\n\n'
+        out_str += '@ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT  CCO2\n'
+        out_str += "  "+self._write_row()
+        table_str = self.table._write_table().split("\n")
+        header_str = table_str[0]
+        table_str = f"@{header_str[1:]}\n" + "\n".join(table_str[1:])
+        out_str += table_str
+        return out_str
+    
+    def _write_section(self):
+        raise NotImplementedError
+    
+    def __setitem__(self, key, value):
+        if key == "insi":
+            assert len(value.strip()) == 4, "INSI must be a 4-character code"
+        super().__setitem__(key, value)
         
-        with open(os.path.join(folder, filename), 'w') as f:
-            f.write(outstr)
 
-    def __repr__(self):
-        repr_str = f"Weather data at {self.LON:.3f}°, {self.LAT:.3f}°\n"
-        repr_str += f"  Date start: {self.data.index.min().strftime('%Y-%m-%d')}\n"
-        repr_str += f"  Date end: {self.data.index.max().strftime('%Y-%m-%d')}\n"
-        repr_str += "Average values:\n" + self.data.mean().__repr__()
-        return repr_str
-        
+def read_wth(files:list[str]):
+    """
+    Reads a WTH file or file, and returns a WeatherStation object
+    """
+    assert len(files) > 0, "files can't be an empty list"
+    assert isinstance(files, (list, tuple, set)), \
+        "Input must be a list of paths to WTH files"
+    assert len({os.path.basename(f)[:4] for f in files}) == 1, \
+        "You must provide paths to the same weather station"
+    insi = os.path.basename(files[0])[:4]
+    files = sorted(files)
+    df_list = []
+    for file in files:
+        with open(file, "r") as f:
+            lines = []
+            for line in f:
+                if "@ INSI" in line:
+                    insi, lat, long, elev, tav, amp, refht, wndth = \
+                        f.readline().split()
+                elif ("@DATE" in line):
+                    date_fmt = "%y%j"
+                    lines.append(line)
+                    lines += f.readlines()
+                elif("@  DATE" in line):
+                    line = line.replace("@  DATE", "@DATE")
+                    date_fmt = "%Y%j"
+                    lines.append(line)
+                    lines += f.readlines()
+                else:
+                    continue
+        tmp_df = pd.read_csv(StringIO("".join(lines)), sep="\s+")
+        df_list.append(tmp_df)
+    
+    table_df = pd.concat(df_list, ignore_index=True)
+    table_df.columns = [
+        col.replace("@", "").strip().lower()
+        for col in table_df.columns
+    ]
+    table_df["date"] = pd.to_datetime(table_df.date, format=date_fmt)
+    table_df = table_df.set_index("date")
+    table_df = table_df.sort_index()
+    table_df = table_df.dropna(how="all", axis=1)
+    tmp_df = pd.DataFrame(
+        index=pd.date_range(table_df.index[0], table_df.index[-1])
+    )
+    for col in table_df.columns: tmp_df[col] = table_df[col]
+    assert not tmp_df.isna().any(axis=0).any(), \
+        "The files generate a timeseries with missing data"
+    table_df = tmp_df.copy()
+    table_df.index.name = "date"
+    table_df = table_df.reset_index()
+    
+    weather = WeatherStation(
+        lat=lat, long=long, insi=insi, elev=elev, tav=tav, amp=amp,
+        refht=refht, wndht=wndth, table=table_df
+    )
+    return weather

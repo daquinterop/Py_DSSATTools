@@ -28,7 +28,7 @@ import re
 from DSSATTools import __file__ as module_path
 from DSSATTools import VERSION
 from DSSATTools.soil import SoilProfile
-from DSSATTools.weather import Weather
+from DSSATTools.weather import WeatherStation
 from DSSATTools.crop import Crop, CUL_VARNAME
 from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection
@@ -136,7 +136,7 @@ class DSSAT():
 
     def run(self, 
             soil:SoilProfile,
-            weather:Weather,
+            weather:WeatherStation,
             crop:Crop,
             management:Management,
             verbose=True

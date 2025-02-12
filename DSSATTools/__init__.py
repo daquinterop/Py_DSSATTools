@@ -71,14 +71,13 @@ Sugarcane            CANEGRO
 '''
 VERSION = '048'
 
-from DSSATTools.crop import Crop, available_cultivars
+from DSSATTools import crop
 from DSSATTools.soil import SoilProfile, SoilLayer
-from DSSATTools.weather import Weather
+from DSSATTools.weather import WeatherStation
 from DSSATTools.management import Management
 from DSSATTools.run import DSSAT
 from DSSATTools.base.sections import TabularSubsection
 
 __all__ = [
-    'Crop', 'SoilProfile', 'SoilLayer', 'Weather', 'Management', 'DSSAT', 
-    'TabularSubsection', "available_cultivars"
+    'Crop', 'SoilProfile', 'SoilLayer', 'WeatherStation', 'Management', 'DSSAT', 
     ] 

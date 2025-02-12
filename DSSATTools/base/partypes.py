@@ -168,6 +168,8 @@ def _format(s, fmt):
     """
     if fmt == "%y%j":
         width = 5
+    elif fmt == "%Y%j":
+        width = 7
     else:
         width = int(re.findall("\d+", fmt.split(".")[0])[0])
     return format(s, fmt)[:width]
@@ -325,7 +327,18 @@ class TableType(MutableSequence):
             self.__data = []
             return
         # If values is a dataframe
-        # TODO:
+        # TODO: Implement DataFrame input
+        if isinstance(values, DataFrame):
+            tmp_values = []
+            for _, row in values.iterrows():
+                tmp_values.append(
+                    dtype(**{
+                        par: row.to_dict().get(par, None)
+                        for par in dtype.dtypes.keys()
+                    })
+                )
+            values = tmp_values
+
         # Verify that values is a list, tuple, or set
         assert isinstance(values, (list, set, tuple)), \
             f"Table must be a list of {dtype.__name__} records"
@@ -334,13 +347,6 @@ class TableType(MutableSequence):
             raise TypeError(
                 f"Records in table must be {dtype.__name__} type"
             )
-        # # Raise if repeteaded ids
-        # unique_ids = set([val[dtype.table_index] for val in values])
-        # if len(unique_ids) != len(values):
-        #     raise ValueError(
-        #         f"Repeteaded values of {dtype.table_index} where found. "
-        #         f"{dtype.table_index} values must be unique"
-        #     )
         super().__init__()
         self.__data_dtype = dtype
         self.__data = [
@@ -351,9 +357,17 @@ class TableType(MutableSequence):
     def __checkindex__(self):
         if self.__data_dtype.table_index is not None: 
             idx = self.__data_dtype.table_index
+            # Check if index is unique
             assert len(set([v[idx] for v in self.__data])) \
                 == len(self.__data), \
                 f"{idx} values must be unique"
+            # Sort indexes
+            self.__data = sorted(
+                self.__data, 
+                key=lambda x: x[self.__data_dtype.table_index]
+            )
+
+
 
     def __getitem__(self, idx):
         return self.__data[idx]
@@ -382,15 +396,32 @@ class TableType(MutableSequence):
                     fmt = var.fmt.split('.')[0]
                     if fmt == "%y%j":
                         fmt = ">5"
-                    out_str += \
-                        f"{_format(var.name.upper(), fmt)} "
+                    if fmt == "%Y%j":
+                        fmt = ">7"
+                    out_str += f"{_format(var.name.upper(), fmt)} "
                 out_str += "\n"
             out_str += f"{record._write_row()}"
         return out_str
     
     def __repr__(self):
-        kws = [f"{value!r}" for value in self.__data]
-        return "{}({})".format(type(self).__name__, ", ".join(kws))
+        out_str = "\n"
+        for n, record in enumerate(self.__data):
+            if n == 0:
+                for var in record.dtypes.keys():
+                    var = record[var]
+                    fmt = var.fmt.split('.')[0]
+                    if fmt == "%y%j":
+                        fmt = ">5"
+                    if fmt == "%Y%j":
+                        fmt = ">7"
+                    out_str += \
+                        f"{_format(var.name.upper(), fmt)} "
+                out_str += "\n"
+            out_str += f"{record._write_row()}"
+            if n >= 5:
+                out_str += "...\n..."
+                break
+        return out_str
     
     def __len__(self):
         return len(self.__data)
@@ -463,6 +494,8 @@ class Record(MutableMapping):
         for key, fmt in self.pars_fmt.items():
             if fmt == "%y%j":
                 fmt = ">5"
+            if fmt == "%Y%j":
+                fmt = ">7"
             if fmt[0] == ".":
                 leading = "."
                 fmt = fmt[1:]
@@ -481,7 +514,6 @@ class TabularRecord(Record):
     table is list of Records.
     '''
     table_dtype:Type # Data type contained in the table
-    table_index:str # Unique id for the table
     table:TableType # The table
     def __init__(self):
         super().__init__()
@@ -496,7 +528,6 @@ class TabularRecord(Record):
     
     def __setattr__(self, name, value):
         if name == "table":
-            # TODO: Implement DataFrame input
             table = TableType(value, self.table_dtype)
             super().__setattr__(name, table)
         else:
