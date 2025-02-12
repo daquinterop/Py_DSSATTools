@@ -327,17 +327,13 @@ class TableType(MutableSequence):
             self.__data = []
             return
         # If values is a dataframe
-        # TODO: Implement DataFrame input
         if isinstance(values, DataFrame):
-            tmp_values = []
-            for _, row in values.iterrows():
-                tmp_values.append(
-                    dtype(**{
-                        par: row.to_dict().get(par, None)
-                        for par in dtype.dtypes.keys()
-                    })
-                )
-            values = tmp_values
+            values = list(values.apply(
+                lambda row: dtype(**{
+                    par: row.get(par)
+                    for par in dtype.dtypes.keys()
+                }), axis=1
+            ))
 
         # Verify that values is a list, tuple, or set
         assert isinstance(values, (list, set, tuple)), \

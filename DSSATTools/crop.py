@@ -35,7 +35,6 @@ Genotype files located in `DSSATTools.crop.GENOTYPE_PATH`
 '''
 import os
 
-from DSSATTools.base.sections import Section, clean_comments
 from DSSATTools import VERSION
 from DSSATTools.base.partypes import (
     CROPS_MODULES, NumberType, DescriptionType, Crop, Record

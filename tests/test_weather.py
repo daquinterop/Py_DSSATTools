@@ -6,7 +6,7 @@ import numpy as np
 import shutil
 import os
 from pathlib import Path
-from DSSATTools.weather import read_wth, WeatherStation
+from DSSATTools.weather import WeatherStation
 
 WEATHER_PATH = "/home/diego/dssat-csm-data/Weather/"
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -14,17 +14,17 @@ PROJECT_ROOT = Path(__file__).parent.parent
 def test_read_wth_notlist():
     files = os.path.join(WEATHER_PATH, "CORD8601.WTH")
     with pytest.raises(AssertionError) as excinfo:
-        read_wth(files)
+        WeatherStation.from_files(files)
         assert 'Input must be a list of paths to WTH files' in str(excinfo.value)
 
 def test_read_wth_different_stations():
     files = ([
         os.path.join(WEATHER_PATH, "UAFD9001.WTH"),
-        os.path.join(WEATHER_PATH, "UAFD9001.WTH"),
+        os.path.join(WEATHER_PATH, "UAGR9001.WTH"),
         os.path.join(WEATHER_PATH, "UAFD9001.WTH")
     ])
     with pytest.raises(AssertionError) as excinfo:
-        read_wth(files)
+        WeatherStation.from_files(files)
         assert 'You must provide paths to the same weather' in str(excinfo.value)
 
 def test_read_wth_2yk():
@@ -32,14 +32,14 @@ def test_read_wth_2yk():
         os.path.join(WEATHER_PATH, "UAFD9001.WTH"),
         os.path.join(WEATHER_PATH, "UAFD9101.WTH"),
     ])
-    weather = read_wth(files)
+    weather = WeatherStation.from_files(files)
     assert len(weather.table) == 365*2
 
 def test_read_wth_4yk():
     files = ([
         os.path.join(WEATHER_PATH, "GAPL9626.WTH"),
     ])
-    weather = read_wth(files)
+    weather = WeatherStation.from_files(files)
     assert len(weather.table) == 9296
 
 def test_read_wth_missing():
@@ -48,7 +48,7 @@ def test_read_wth_missing():
         os.path.join(WEATHER_PATH, "UAFD9201.WTH")
     ])
     with pytest.raises(AssertionError) as excinfo:
-        read_wth(files)
+        WeatherStation.from_files(files)
         assert 'generates a timeseries with missing data' in str(excinfo.value) 
 
 def test_create_sucessful():

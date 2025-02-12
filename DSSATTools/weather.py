@@ -1,7 +1,3 @@
-# TODO: There are different ET methods, so this should be included here, I mean,
-#  the minimum data requirement must deppend on the ET method
-# TODO: consider definning two sections for Weather: parameters and data.
-
 '''
 This module hosts the `Weather` class. It also contains the
 `list_station_parameters` and `list_weather_variables` which return a list of the
@@ -49,49 +45,6 @@ from DSSATTools.base.formater import weather_data, weather_data_header, weather_
 from DSSATTools.base.partypes import (
     DateType, NumberType, Record, TabularRecord, DescriptionType
 )
-
-PARS_DESC = {
-    # Station parameters
-    'INSI': 'Institute and site code',
-    'LAT': 'Latitude, degrees (decimals)',
-    'LONG': 'Longitude, degrees (decimals)',
-    'ELEV': 'Elevation, m',
-    'TAV': 'Temperature average for whole year [long-term], C',
-    'AMP': 'Temperature amplitude (range), monthly averages [long-term], C',
-    'REFHT': 'Reference height for weather measurements, m',
-    'WNDHT': 'Reference height for windspeed measurements, m',
-    'CO2': 'CO2 (vpm)',
-    # Data parameters
-    'DATE': 'Date, year + days from Jan. 1',
-    'SRAD': 'Daily solar radiation, MJ m-2 day-1',
-    'TMAX': 'Daily temperature maximum, C',
-    'TMIN': 'Daily temperature minimum, C',
-    'RAIN': 'Daily rainfall (incl. snow), mm day-1',
-    'DEWP': 'Daily dewpoint temperature average, C',
-    'WIND': 'Daily wind speed (km d-1)',
-    'PAR': 'Daily photosynthetic radiation, moles m-2 day-1',
-    'EVAP': 'Daily pan evaporation (mm d-1)',
-    'RHUM': 'Relative humidity average, %',
-}
-PARS_STATION = ['INSI', 'LAT', 'LONG', 'ELEV', 'TAV', 'AMP', 'REFHT', 'WNDHT', "CO2"]
-PARS_DATA = [i for i in PARS_DESC.keys() if i not in PARS_STATION]
-MANDATORY_DATA = ['TMIN', 'TMAX', 'RAIN', 'SRAD']
-
-def list_station_parameters():
-    '''
-    Print a list of the weather station parameters
-    '''
-    for key, value in PARS_DESC.items():
-        if key in PARS_STATION:
-            print(key + ': ' + value)
-
-def list_weather_variables():
-    '''
-    Print a list of the weather data parameters
-    '''
-    for key, value in PARS_DESC.items():
-        if key in PARS_DATA:
-            print(key + ': ' + value)
 
 class WeatherRecord(Record):
     prefix=None
@@ -147,6 +100,9 @@ class WeatherRecord(Record):
 
 
 class WeatherStation(TabularRecord):
+    """
+    A class to represent the DSSAT WTH file/s.
+    """
     table_dtype = WeatherRecord
     dtypes = {
         "insi": DescriptionType, 'lat': NumberType, 'long': NumberType, 
@@ -161,6 +117,35 @@ class WeatherStation(TabularRecord):
     def __init__(self, table:list[WeatherRecord], lat:float, long:float, 
                  insi:str="WSTA", elev:float=None, tav:float=None, amp:float=None,
                  refht:float=None, wndht:float=None, cco2:float=None):
+        """
+        Initializes a WeatherStation class. It represents the Weather file
+        of DSSAT.
+
+        Arguments
+        ----------
+        table: DataFrame or list[WeatherRecord]
+            The weather data table. It can be a DataFrame or a list of 
+            WeatherRecords objects. If it's a dataframe, the columnn names must 
+            match the DSSAT weather variables standards.
+        insi: str
+            Institute and site code (4 characters)
+        lat: float
+            Latitude, degrees (decimals)
+        long: float
+            Longitude, degrees (decimals)
+        elev: float
+            Elevation, m
+        tav: float
+            Temperature average for whole year [long-term], C
+        amp: float
+            Temperature amplitude (range), monthly averages [long-term], C
+        refht: float
+            Reference height for weather measurements, m
+        wndht: float
+            Reference height for windspeed measurements, m
+        cco2: float
+            CO2 (vpm),
+        """
         super().__init__()
         kwargs = {
             "insi": insi, 'lat': lat, 'long': long, 'elev': elev, 'tav': tav, 
@@ -188,61 +173,62 @@ class WeatherStation(TabularRecord):
             assert len(value.strip()) == 4, "INSI must be a 4-character code"
         super().__setitem__(key, value)
         
-
-def read_wth(files:list[str]):
-    """
-    Reads a WTH file or file, and returns a WeatherStation object
-    """
-    assert len(files) > 0, "files can't be an empty list"
-    assert isinstance(files, (list, tuple, set)), \
-        "Input must be a list of paths to WTH files"
-    assert len({os.path.basename(f)[:4] for f in files}) == 1, \
-        "You must provide paths to the same weather station"
-    insi = os.path.basename(files[0])[:4]
-    files = sorted(files)
-    df_list = []
-    for file in files:
-        with open(file, "r") as f:
-            lines = []
-            for line in f:
-                if "@ INSI" in line:
-                    insi, lat, long, elev, tav, amp, refht, wndth = \
-                        f.readline().split()
-                elif ("@DATE" in line):
-                    date_fmt = "%y%j"
-                    lines.append(line)
-                    lines += f.readlines()
-                elif("@  DATE" in line):
-                    line = line.replace("@  DATE", "@DATE")
-                    date_fmt = "%Y%j"
-                    lines.append(line)
-                    lines += f.readlines()
-                else:
-                    continue
-        tmp_df = pd.read_csv(StringIO("".join(lines)), sep="\s+")
-        df_list.append(tmp_df)
-    
-    table_df = pd.concat(df_list, ignore_index=True)
-    table_df.columns = [
-        col.replace("@", "").strip().lower()
-        for col in table_df.columns
-    ]
-    table_df["date"] = pd.to_datetime(table_df.date, format=date_fmt)
-    table_df = table_df.set_index("date")
-    table_df = table_df.sort_index()
-    table_df = table_df.dropna(how="all", axis=1)
-    tmp_df = pd.DataFrame(
-        index=pd.date_range(table_df.index[0], table_df.index[-1])
-    )
-    for col in table_df.columns: tmp_df[col] = table_df[col]
-    assert not tmp_df.isna().any(axis=0).any(), \
-        "The files generate a timeseries with missing data"
-    table_df = tmp_df.copy()
-    table_df.index.name = "date"
-    table_df = table_df.reset_index()
-    
-    weather = WeatherStation(
-        lat=lat, long=long, insi=insi, elev=elev, tav=tav, amp=amp,
-        refht=refht, wndht=wndth, table=table_df
-    )
-    return weather
+    @classmethod
+    def from_files(cls, files:list[str]):
+        """
+        Reads a set of WTH files, and returns a WeatherStation object with the
+        data and parameters of those files.
+        """
+        assert len(files) > 0, "files can't be an empty list"
+        assert isinstance(files, (list, tuple, set)), \
+            "Input must be a list of paths to WTH files"
+        assert len({os.path.basename(f)[:4] for f in files}) == 1, \
+            "You must provide paths to the same weather station"
+        insi = os.path.basename(files[0])[:4]
+        files = sorted(files)
+        df_list = []
+        for file in files:
+            with open(file, "r") as f:
+                lines = []
+                for line in f:
+                    if "@ INSI" in line:
+                        insi, lat, long, elev, tav, amp, refht, wndth = \
+                            f.readline().split()
+                    elif ("@DATE" in line):
+                        date_fmt = "%y%j"
+                        lines.append(line)
+                        lines += f.readlines()
+                    elif("@  DATE" in line):
+                        line = line.replace("@  DATE", "@DATE")
+                        date_fmt = "%Y%j"
+                        lines.append(line)
+                        lines += f.readlines()
+                    else:
+                        continue
+            tmp_df = pd.read_csv(StringIO("".join(lines)), sep="\s+")
+            df_list.append(tmp_df)
+        
+        table_df = pd.concat(df_list, ignore_index=True)
+        table_df.columns = [
+            col.replace("@", "").strip().lower()
+            for col in table_df.columns
+        ]
+        table_df["date"] = pd.to_datetime(table_df.date, format=date_fmt)
+        table_df = table_df.set_index("date")
+        table_df = table_df.sort_index()
+        table_df = table_df.dropna(how="all", axis=1)
+        tmp_df = pd.DataFrame(
+            index=pd.date_range(table_df.index[0], table_df.index[-1])
+        )
+        for col in table_df.columns: tmp_df[col] = table_df[col]
+        assert not tmp_df.isna().any(axis=0).any(), \
+            "The files generate a timeseries with missing data"
+        table_df = tmp_df.copy()
+        table_df.index.name = "date"
+        table_df = table_df.reset_index()
+        
+        weather = cls(
+            lat=lat, long=long, insi=insi, elev=elev, tav=tav, amp=amp,
+            refht=refht, wndht=wndth, table=table_df
+        )
+        return weather
