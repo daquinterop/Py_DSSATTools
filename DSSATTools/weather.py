@@ -37,12 +37,9 @@ for the weather instance created in the previous example:
 '''
 import os
 import pandas as pd
-from pandas import DataFrame
 from io import StringIO
-from datetime import datetime, date
-from pandas import NA, isna
-from DSSATTools.base.formater import weather_data, weather_data_header, weather_station
-from DSSATTools.base.partypes import (
+from datetime import date
+from .base.partypes import (
     DateType, NumberType, Record, TabularRecord, DescriptionType
 )
 

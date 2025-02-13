@@ -52,9 +52,9 @@ CODE_VARS = {
              'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900',
              "IB001", "IB002"],
     "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)],
-    "smhb": [None] + ["SA011", "SA012"],
-    "smpx": [None] + [f"SA{i:03d}" for i in range(1, 11)],
-    "smke": [None] + ["SA013", "SA014", "SA015"],
+    "smhb": [None, "IB001"] + [f"SA{i:03d}" for i in range(15)],
+    "smpx": [None, "IB001"] + [f"SA{i:03d}" for i in range(15)],
+    "smke": [None, "IB001"] + [f"SA{i:03d}" for i in range(15)],
     "iame": [None, "IB001"] + [f"IR{i:03d}" for i in range(1, 12)],
     "rcod": [None] + [
         'RE001','RE101','RE201','RE301','RE999','RE002','RE003', 'RE004',
@@ -109,7 +109,12 @@ CODE_VARS = {
     "harvs": ["A", "D", "M", "R", "W", "X", "Y", "Z"], 
     "vbose": ["A", "0", "D", "N", "Y"],
     "fmopt": ["C", "A"],
-    "naoff": ["IB001", "GS000"]
+    "naoff": ["IB001", "GS000"],
+    'scom': ['BN', 'G', 'Y', 'BL', 'R', None],
+    "soil_clasification": [
+        'C', 'CL', 'L', 'LS', 'S', 'SC', 'SCL', 'SI', 'SIC', 'SICL', 
+        'SIL', 'SL'
+    ]
 }
 CODE_VARS["pcr"] = CODE_VARS["cr"] 
 CODE_VARS["focd"] = CODE_VARS["fmcd"]
@@ -363,8 +368,6 @@ class TableType(MutableSequence):
                 key=lambda x: x[self.__data_dtype.table_index]
             )
 
-
-
     def __getitem__(self, idx):
         return self.__data[idx]
     
@@ -434,6 +437,7 @@ class Record(MutableMapping):
     dtypes:dict # Data type of each parameter in the record
     pars_fmt:dict # Format of each parameter
     n_tiers:int = 1 # Number of tiers. Sections like Field have more than one
+    table_index:str = None # Needed for records within tables
     def __init__(self):
         self.__data = {}
         super().__init__()

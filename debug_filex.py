@@ -10,9 +10,9 @@ from DSSATTools.crop import Maize
 # experiment = FileX("/home/diego/dssat-csm-data/Soybean/IUCA7901.SBX")
 treatments = read_filex("SAMPLE.fileX")
 # print(experiment["Irrigation"][1].table._write_table())
-# for t, treat in treatments.items():
-#     for _, sec in treat.items():
-#         print(sec._write_section())
+for t, treat in treatments.items():
+    for _, sec in treat.items():
+        print(sec._write_section())
 
 cultivar = Maize("IB0009")
 exit()
