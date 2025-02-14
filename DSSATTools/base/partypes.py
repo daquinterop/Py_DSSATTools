@@ -1,5 +1,8 @@
 """
-Parameter types
+Parameter types.
+
+The order of the elements in the pars_fmt and dtype dictionaries is extremely
+important. They must follow the order of the columns in the DSSAT files.
 """
 from datetime import date, datetime
 from collections.abc import MutableMapping, MutableSequence
@@ -52,10 +55,10 @@ CODE_VARS = {
              'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900',
              "IB001", "IB002"],
     "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)],
-    "smhb": [None, "IB001"] + [f"SA{i:03d}" for i in range(15)],
-    "smpx": [None, "IB001"] + [f"SA{i:03d}" for i in range(15)],
-    "smke": [None, "IB001"] + [f"SA{i:03d}" for i in range(15)],
-    "iame": [None, "IB001"] + [f"IR{i:03d}" for i in range(1, 12)],
+    "smhb": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
+    "smpx": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
+    "smke": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
+    "iame": [None, "IB001", "IB00", 'B001'] + [f"IR{i:03d}" for i in range(1, 12)],
     "rcod": [None] + [
         'RE001','RE101','RE201','RE301','RE999','RE002','RE003', 'RE004',
         'RE005','RE006','RE102','RE103','RE104','RE105','RE106', 'RE107',
@@ -110,10 +113,10 @@ CODE_VARS = {
     "vbose": ["A", "0", "D", "N", "Y"],
     "fmopt": ["C", "A"],
     "naoff": ["IB001", "GS000"],
-    'scom': ['BN', 'G', 'Y', 'BL', 'R', None],
+    'scom': ['BN', 'G', 'Y', 'BL', 'R', 'BROWN', 'BK', 'YR', None],
     "soil_clasification": [
         'C', 'CL', 'L', 'LS', 'S', 'SC', 'SCL', 'SI', 'SIC', 'SICL', 
-        'SIL', 'SL'
+        'SIL', 'SL', None
     ]
 }
 CODE_VARS["pcr"] = CODE_VARS["cr"] 
@@ -452,7 +455,7 @@ class Record(MutableMapping):
         key = key.lower()
         if key not in self.dtypes:
             raise KeyError(key)
-        if (self.dtypes[key] is Record):
+        if issubclass(self.dtypes[key], Record):
             assert isinstance(value, Record)
             self.__data[key] = value
         else:
@@ -502,7 +505,7 @@ class Record(MutableMapping):
             else:
                 leading = ""
             fmt = leading + fmt.split(".")[0]
-            header.append(_format(key.upper(), fmt))
+            header.append(format(key.upper(), fmt))
         out_str = SECTION_HEADERS[type(self).__name__] + "\n"
         out_str += " ".join(header) + "\n" + " 1 " + self._write_row()
         return out_str
@@ -610,7 +613,7 @@ def _get_croppars(spe_path, code, dtypes_dict, pars_fmt_dict, par_prefix):
 
         def _write_file(self):
             out_str = self._file_header
-            out_str += f"@{self.prefix.upper()} "
+            out_str += f"\n@{self.prefix.upper()} "
             for key, fmt in self.pars_fmt.items():
                 if fmt[0] == ".":
                     leading = "."

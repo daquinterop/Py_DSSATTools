@@ -30,6 +30,8 @@ from .base.partypes import (
 from .crop import (
     Maize
 )
+from .weather import WeatherStation
+from .soil import SoilProfile
 
 CROP_OBJECTS = {
     "MZ": Maize
@@ -48,10 +50,10 @@ class Planting(Record):
         "plph": NumberType, "sprl": NumberType, "plname": DescriptionType
     }
     pars_fmt = {
-        "pdate": "%y%j", "edate": "%y%j", "ppop": ">5.1f", "plrs": ">5.0f", 
-        "ppoe": ">5.1f", "plds": ">5", "plrd": ">5.0f", "plme": ">5", 
+        "pdate": "%y%j", "edate": "%y%j", "ppop": ">5.1f", "ppoe": ">5.1f", 
+        "plme": ">5", "plds": ">5", "plrs": ">5.0f", "plrd": ">5.0f", 
         "pldp": ">5.0f", "plwt": ">5.1f", "page": ">5.0f", "penv": ">5.1f", 
-        "plph": ">5.0f", "sprl": ">5.0f", "plname": ">25"
+        "plph": ">5.0f", "sprl": ">5.0f", "plname": ">29"
     }
     # Typehints must be in order following DSSAT column order
     def __init__(self, pdate:date, ppop:float, plrs:float, 
@@ -224,7 +226,7 @@ class InitialConditions(TabularRecord):
     pars_fmt = {
         "pcr": ">5", "icdat": "%y%j", "icrt": ">5.0f", "icnd": ">5.0f", 
         "icrn": ">5.0f", "icre": ">5.0f", "icwd": ">5.0f", "icres": ">5.0f", 
-        "icren": ">5.0f", "icrep": ">5.0f", "icrip": ">5.0f", "icrid": ">5.0f",
+        "icren": ">5.1f", "icrep": ">5.0f", "icrip": ">5.0f", "icrid": ">5.0f",
         "icname": "<25"
     }
     table_dtype = InitialConditionsLayer
@@ -822,6 +824,18 @@ class Field(Record):
                 values.append(self[key].str)
             out_str += " ".join(header) + "\n" + " 1 " + " ".join(values) + "\n"
         return out_str
+    
+    def __setitem__(self, key, value):
+        if key == "id_field":
+            assert len(value) == 8, "id_field must be a 8 character string"
+        if (key == "wsta") and isinstance(value, WeatherStation):
+            self.dtypes["wsta"] = WeatherStation
+            # value = {**{k: v for k, v in value.items()}, "table": value.table}
+        if (key == "id_soil") and isinstance(value, SoilProfile):
+            self.dtypes["id_soil"] = SoilProfile
+            self["sldp"] = value.table[-1]["slb"]
+            # value = {**{k: v for k, v in value.items()}, "table": value.table}
+        super().__setitem__(key, value)
 
 
 class SCGeneral(Record):
@@ -1324,6 +1338,10 @@ class SimulationControls:
         if not isinstance(value, self.dtypes[key]):
             raise TypeError
         self.__data[key] = value
+
+    def __getitem__(self, key):
+        key = key.lower()
+        return self.__data[key]
     
     def __repr__(self):
         kws = [f"{key}={value!r}" for key, value in self.__data.items()]
@@ -1356,6 +1374,10 @@ class SimulationControls:
     
 
 class Treatment(Record):
+    """
+    This class is not suposed to be used by users. This is for library internal
+    use.
+    """
     prefix = "n"
     dtypes = {
         'r': NumberType, 'o': NumberType, "c": NumberType,
@@ -1403,6 +1425,17 @@ def get_header_range(l, h, pars_fmt):
         raise ValueError("Variable format must be right or left justified")
     return (start, end)
 
+
+class Mow(TabularRecord):
+    """
+    
+    """
+    def __init__(self):
+        """
+        Initialize a Mow class
+        """
+        super().__init__()
+
 def read_filex(filexpath):
     """
     It reads a FILEX and returns a dictionary where the keys are the treatments,
@@ -1426,7 +1459,7 @@ def read_filex(filexpath):
     add_tier = False
     for l in lines:
         l = l.replace("\n", "")
-        if len(l.strip()) == 0:
+        if len(l.strip()) < 2:
             if lookup == "table values":
                 if only_table:
                     for level, val in vals.items():
@@ -1605,3 +1638,44 @@ def read_filex(filexpath):
         )
     return treatments
         
+def write_filex(field:Field, cultivar:Cultivar, planting:Planting, 
+                simulation_controls:SimulationControls, harvest:Harvest=None,
+                initial_conditions:InitialConditions=None, 
+                fertilizer:Fertilizer=None, soil_analysis:SoilAnalysis=None, 
+                irrigation:Irrigation=None, residue:Residue=None, 
+                chemical:Chemical=None, tillage:Tillage=None):
+    """
+    Returns the FileX string
+    """
+    experiment_name = field["id_field"][:4] +\
+        simulation_controls["general"]["sdate"].strftime('%y01') + cultivar.code
+    out_str = f"*EXP.DETAILS: {experiment_name}\n\n"
+    treatment = Treatment(**{
+        "r": 1, "o": 0, "c": 0, "tname": "DSSATTools", "cu": 1, "fl": 1, 
+        "mp": 1, 'sm': 1, 'me': 0,
+        "sa": 1 if soil_analysis else 0,  
+        "ic": 1 if initial_conditions else 0,
+        'mi': 1 if irrigation else 0,
+        'mf': 1 if fertilizer else 0,
+        'mr': 1 if residue else 0,
+        'mc': 1 if chemical else 0,
+        'mt': 1 if tillage else 0,
+        'mh': 1 if harvest else 0
+    })
+    out_str += treatment._write_section() + "\n"
+    out_str += cultivar._write_section() + "\n"
+    out_str += field._write_section() + "\n"
+    out_str += planting._write_section() + "\n"
+    if soil_analysis: out_str += soil_analysis._write_section() + "\n"
+    if initial_conditions: out_str += initial_conditions._write_section() + "\n"
+    if irrigation: out_str += irrigation._write_section() + "\n"
+    if fertilizer: out_str += fertilizer._write_section() + "\n"
+    if residue: out_str += residue._write_section() + "\n"
+    if chemical: out_str += chemical._write_section() + "\n"
+    if tillage: out_str += tillage._write_section() + "\n"
+    if harvest: out_str += harvest._write_section() + "\n"
+    out_str += simulation_controls._write_section()
+
+    return out_str
+    
+    

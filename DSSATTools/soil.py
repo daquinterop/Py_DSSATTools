@@ -7,7 +7,7 @@ properties using soil texture.
 
 from DSSATTools.base.partypes import (
     NumberType, DescriptionType, Record, TabularRecord,
-    CodeType, parse_pars_line
+    CodeType, parse_pars_line, clean_comments
 )
 from DSSATTools import __file__ as module_path
 import os
@@ -250,10 +250,10 @@ class SoilProfile(TabularRecord):
     prefix = None
     dtypes = {
         'name': DescriptionType, 'soil_data_source': DescriptionType, 
-        'soil_clasification': CodeType, 'soil_depth': NumberType, 
+        'soil_clasification': DescriptionType, 'soil_depth': NumberType, 
         'soil_series_name': DescriptionType, 'site': DescriptionType, 
         'country': DescriptionType, 'lat': NumberType, 'long': NumberType, 
-        'scs_family': DescriptionType, 'scom': CodeType, 'salb': NumberType, 
+        'scs_family': DescriptionType, 'scom': DescriptionType, 'salb': NumberType, 
         'slu1': NumberType, 'sldr': NumberType, 'slro': NumberType, 
         'slnf': NumberType, 'slpf': NumberType, 'smhb': CodeType, 
         'smpx': CodeType, 'smke': CodeType
@@ -354,7 +354,7 @@ class SoilProfile(TabularRecord):
         return
     
     def _write_sol(self):
-        out_str = "*SOILS: General DSSAT Soil Input File\n"
+        out_str = "*SOILS: General DSSAT Soil Input File\n\n"
         out_str += "*"+" ".join([
             self[name].str for name in SURF_PARS_1
             if name != "table"
@@ -384,6 +384,10 @@ class SoilProfile(TabularRecord):
             ])
             out_str += "\n"
         return out_str
+    
+    @property
+    def str(self):
+        return self['name']
 
     @classmethod
     def from_file(cls, profile:str, file:str=SOIL_PATH):
@@ -398,6 +402,8 @@ class SoilProfile(TabularRecord):
                     continue
                 if profile_lines and (not line.strip()):
                     break
+                if line[0] == "!":
+                    continue
                 if profile_lines:
                     profile_lines.append(line)
             assert profile_lines, f"{profile} profile not in {file} file"
@@ -420,7 +426,7 @@ class SoilProfile(TabularRecord):
         )}
         # Soil profile values
         level_1_index = profile_lines.index(
-            filter(lambda x: '@  SLB  SLMH ' in x, profile_lines).__next__()
+            filter(lambda x: 'SLLL  SDUL  SSAT' in x, profile_lines).__next__()
         )
         try:
            level_2_index = profile_lines.index(

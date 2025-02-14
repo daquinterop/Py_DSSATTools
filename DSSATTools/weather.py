@@ -169,6 +169,10 @@ class WeatherStation(TabularRecord):
         if key == "insi":
             assert len(value.strip()) == 4, "INSI must be a 4-character code"
         super().__setitem__(key, value)
+
+    @property
+    def str(self):
+        return format(self['insi'], '<8')
         
     @classmethod
     def from_files(cls, files:list[str]):
@@ -210,6 +214,7 @@ class WeatherStation(TabularRecord):
             col.replace("@", "").strip().lower()
             for col in table_df.columns
         ]
+        table_df["date"] = table_df.date.map(lambda x: f'{int(x):05d}')
         table_df["date"] = pd.to_datetime(table_df.date, format=date_fmt)
         table_df = table_df.set_index("date")
         table_df = table_df.sort_index()

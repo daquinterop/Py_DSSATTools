@@ -27,11 +27,12 @@ import re
 # Libraries for second version
 from DSSATTools import __file__ as module_path
 from DSSATTools import VERSION
-from DSSATTools.soil import SoilProfile
-from DSSATTools.weather import WeatherStation
-from DSSATTools.crop import Crop, CUL_VARNAME
-from DSSATTools.management import Management
-from DSSATTools.base.sections import TabularSubsection
+from DSSATTools.crop import Crop
+from DSSATTools.filex import(
+    Planting, Cultivar, Harvest, InitialConditions, Fertilizer,
+    SoilAnalysis, Irrigation, Residue, Chemical, Tillage, Field,
+    SimulationControls, Mow, Treatment, write_filex
+)
 
 OS = platform.system().lower()
 OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg", "SoilNi"]
@@ -43,6 +44,8 @@ SOIL_LAYER_OUTPUTS = ["SoilNi"]
 
 PERENIAL_FORAGES = ['Alfalfa', 'Bermudagrass', 'Brachiaria', 'Bahiagrass']
 ROOTS = ['Potato']
+PROTECTED_ATTRS = []
+TMP_BASE = tempfile.gettempdir()
 
 # Paths to DSSAT and Env variables
 BASE_PATH = os.path.dirname(module_path)
@@ -83,7 +86,7 @@ else:
     CHMOD_MODE = 111
 
 
-class DSSAT():
+class DSSAT:
     '''
     Class that represents the simulation environment for a single treatment. When
     initializing and seting up the environment, a new folder is created (usually
@@ -91,219 +94,224 @@ class DSSAT():
 
     After the model runs, the output is saved in the output property. 
     '''
-    def __init__(self):   
-        self._isAllSet = False
-        self._input = {
-            'crop': None, 'wheater': None, 'soil': None, 'management': None 
-        }
-
-        self._output = {}
-
-    def setup(self, cwd=None, **kwargs):
-        '''
-        Setup a simulation environment. Creates a tmp folder to run the simulations
-        and move all the required files to run the model. Some rguments are 
-        optional, if those aren't provided, then standard files location will be
-        used. Running this method is not longer needed after version 2.1.1
+    run_path:str=None
+    output:dict=None
+    def __init__(self, run_path:str=None):   
+        """
+        Initializes the simulation environment. run_path is the only parameter. 
+        That parameter is the path to the directory where the environment will
+        be set, therefore, all simulations will be run in that environment.
 
         Arguments
         ----------
-        cwd: str
+        run_path: str
             Working directory. The model will be run in that directory. 
             If None, then a tmp directory will be created.
-        '''
-        if (cwd is None) and (not kwargs.get("fromRunMethod", False)):
-            warnings.warn(
-                "calling setup method is not longer needed. You should only use it if defining a custom directory for running DSSAT", 
-                DeprecationWarning
-            )
-            return
-
-        TMP_BASE = tempfile.gettempdir()
-        if cwd:
-            self._RUN_PATH = cwd
-            if not os.path.exists(self._RUN_PATH):
-                os.mkdir(self._RUN_PATH)
-        else:
-            self._RUN_PATH = os.path.join(
+        """
+        self._output = {}
+        if not run_path:
+            run_path = os.path.join(
                 TMP_BASE, 
                 'dssat'+''.join(random.choices(string.ascii_lowercase, k=8))
             )
-            os.mkdir(self._RUN_PATH)
-        sys.stdout.write(f'{self._RUN_PATH} created.\n')
-        self._isAllSet = True
+        if not os.path.exists(run_path):
+            os.mkdir(run_path)
+        if not os.path.exists(os.path.join(run_path, "Weather")):
+            os.mkdir(os.path.join(run_path, "Weather"))
+        sys.stdout.write(f'{run_path} created.\n')
+        self.run_path = run_path
 
 
-    def run(self, 
-            soil:SoilProfile,
-            weather:WeatherStation,
-            crop:Crop,
-            management:Management,
-            verbose=True
-        ):
+    def run_treatment(self, field:Field, cultivar:Cultivar, planting:Planting, 
+                      simulation_controls:SimulationControls, harvest:Harvest=None,
+                      initial_conditions:InitialConditions=None, 
+                      fertilizer:Fertilizer=None, soil_analysis:SoilAnalysis=None, 
+                      irrigation:Irrigation=None, residue:Residue=None, 
+                      chemical:Chemical=None, tillage:Tillage=None, mow:Mow=None,
+                      verbose=True):
         '''
-        Start the simulation and runs until the end or failure. It will return
-        None, but the simulation outputs will be assigned to self.output. The 
-        summary output from DSSAT is printed and saved as a string in self.stdout.
+        Run a single treatment. 
 
         Arguments
         ----------
-        soil: DSSATTools.SoilProfile
-            SoilProfile instance
-        weather: DSSATTools.Weather
-            Weather instance
-        crop: DSSATTools.Crop
-            Crop instance
-        managment: DSSATTools.Management
-            Management instance
-        '''
-        if not self._isAllSet:
-            self.setup(fromRunMethod=True)
-        
+        field:Field
+        cultivar:Cultivar
+        planting:Planting
+        simulation_controls:SimulationControls
+        harvest:Harvest
+        initial_conditions:InitialConditions         
+        fertilizer:Fertilizer
+        soil_analysis:SoilAnalysis
+        irrigation:Irrigation
+        residue:Residue
+        chemical:Chemical
+        tillage:Tillage
+        verbose: bool
+            Whether to display the model std out or not
+        ''' 
+        assert isinstance(field, Field), "field parameter must be a Field instance."
+        assert isinstance(cultivar, Cultivar) or issubclass(type(cultivar), Crop), \
+            "cultivar parameter must be a Culvivar or Crop instance."
+        assert isinstance(planting, Planting), \
+            "planting parameter must be a Planting instance."
+        assert isinstance(simulation_controls, SimulationControls), \
+            "simulation_controls parameter must be a SimulationControls instance."
+        assert not harvest or isinstance(harvest, Harvest), \
+            "harvest parameter must be a Harvest instance."
+        assert not initial_conditions or isinstance(initial_conditions, InitialConditions), \
+            "initial_conditions parameter must be a InitialConditions instance."
+        assert not fertilizer or isinstance(fertilizer, Fertilizer), \
+            "fertilizer parameter must be a Fertilizer instance."
+        assert not soil_analysis or isinstance(soil_analysis, SoilAnalysis), \
+            "soil_analysis parameter must be a SoilAnalysis instance."
+        assert not irrigation or isinstance(irrigation, Irrigation), \
+            "irrigation parameter must be a Irrigation instance."
+        assert not residue or isinstance(residue, Residue), \
+            "residue parameter must be a Residue instance."
+        assert not chemical or isinstance(chemical, Chemical), \
+            "chemical parameter must be a Chemical instance."
+        assert not tillage or isinstance(tillage, Tillage), \
+            "tillage parameter must be a Tillage instance."
+        assert not mow or isinstance(mow, Mow), \
+            "mow parameter must be a Mow instance"
         # Remove previous outputs and inputs
-        OUTPUT_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] == 'OUT']
-        INP_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] in ['INP', 'INH']]
+        OUTPUT_FILES = [i for i in os.listdir(self.run_path) if i[-3:] == 'OUT']
+        INP_FILES = [i for i in os.listdir(self.run_path) if i[-3:] in ['INP', 'INH']]
         self._output = {}
-        
         for file in (OUTPUT_FILES + INP_FILES):
-            os.remove(os.path.join(self._RUN_PATH, file))
+            os.remove(os.path.join(self.run_path, file))
 
-        # Fill Managament fields
-        management._Management__cultivars['CR'] = crop._CODE
-        management._Management__cultivars['INGENO'] = crop.cultivar["@VAR#"]
-        management._Management__cultivars['CNAME'] = \
-            crop.cultivar[CUL_VARNAME[crop._CODE]]
+        # Assign a generic code for all elements
+        # field["id_field"] = "ABCD0001"
+        # field["wsta"]["insi"] = "ABCD"
+        # field['id_soil'] = "ABCD000001"
 
-        management.field['WSTA....'] = weather._name
-        management.field['SLDP'] = soil.total_depth
-        management.field['ID_SOIL'] = soil.id
-        if management.field["...........XCRD"] is None:
-            management.field["...........XCRD"] = weather.LON
-        if management.field["...........YCRD"] is None:
-            management.field["...........YCRD"] = weather.LAT
-        if management.field[".....ELEV"] is None:
-            management.field[".....ELEV"] = weather.ELEV
-
-        management.initial_conditions['PCR'] = crop._CODE
-        if not management.initial_conditions['ICDAT']:
-            management.initial_conditions['ICDAT'] = management.sim_start.strftime('%y%j')
-
-        if management.initial_conditions["ICDAT"] is None:
-            initial_swc = []
-            for depth, layer in soil.layers.items():
-                initial_swc.append((
-                    depth, 
-                    layer['SLLL'] + management.initial_swc \
-                        * (layer['SDUL'] - layer['SLLL'])
-                ))
-            table = TabularSubsection(initial_swc)
-            table.columns = ['ICBL', 'SH2O']
-            table = table.sort_values(by='ICBL').reset_index(drop=True)
-            table['SNH4'] = [0.01]*len(table) # DSSAT default values
-            table['SNO3'] = [0.01]*len(table)
-            management.initial_conditions['table'] = table
-
-        if crop.crop_name in ROOTS:
-            assert not any(pd.isna([management.planting_details['PLWT'], management.planting_details['SPRL']])), \
-                f"PLWT, SPRL transplanting parameters are mandatory for {crop.crop_name} crop, you must "\
-                "define those parameters in management.planting_details"
+        simulation_controls["general"]["smodel"] = cultivar.smodel
+        # Check for Roots'parameters
+        if type(cultivar).__name__ in ROOTS:
+            assert not any((pd.isna(planting["plwt"]), pd.isna(planting["sprl"]))), \
+                f"PLWT, SPRL transplanting parameters are mandatory for "+\
+                f"{type(cultivar).__name__} crop, you must define those "+\
+                "parameters in management.planting_details"
         
-
-        management.simulation_controls['SMODEL'] = crop._SMODEL        
-        
-        management_filename = weather.INSI \
-            + management.sim_start.strftime('%y01') \
-            + f'.{crop._CODE}X'
-        management_filename = os.path.join(self._RUN_PATH, management_filename) 
-        management.write(filename=management_filename)
-
-        if crop.crop_name in PERENIAL_FORAGES:
-            if len(management.mow['table']) < 1:
+        # Write files
+        # File X
+        filex_name = field["id_field"][:4] +\
+            simulation_controls["general"]["sdate"].strftime('%y01') +\
+            f'.{cultivar.code}X'
+        filex_name = os.path.join(self.run_path, filex_name)
+        with open(filex_name, "w") as f:
+            lines = write_filex(
+                field, cultivar, planting, simulation_controls, harvest, 
+                initial_conditions, fertilizer, soil_analysis, irrigation,
+                residue, chemical, tillage
+            )
+            f.write(lines)
+        # Cultivar and ecotype
+        cul_filename = os.path.join(self.run_path, cultivar.spe_file[:-3]+"CUL") 
+        with open(cul_filename, "w") as f:
+            lines = cultivar._write_cul()
+            f.write(lines)
+        eco_filename = os.path.join(self.run_path, cultivar.spe_file[:-3]+"ECO") 
+        with open(eco_filename, "w") as f:
+            lines = cultivar._write_eco()
+            f.write(lines)
+        # Soil
+        sol_filename = os.path.join(self.run_path, "SOIL.SOL")
+        with open(sol_filename, "w") as f:
+            lines = field["id_soil"]._write_sol()
+            f.write(lines)
+        # Weather
+        wth_year = field["wsta"].table[0]["date"].year
+        wth_len = field["wsta"].table[-1]["date"].year - wth_year + 1
+        wth_filename = f'{field["wsta"]["insi"]}{str(wth_year)[2:]}{wth_len:02d}.WTH'
+        wth_filename = os.path.join(self.run_path, "Weather", wth_filename)
+        with open(wth_filename, "w") as f:
+            lines = field["wsta"]._write_wth()
+            f.write(lines)
+        # Mow
+        if type(cultivar).__name__ in PERENIAL_FORAGES:
+            if len(mow.table) < 1:
                 warnings.warn('No mow was defined. Define it at the Management.mow attribute')
-            management.write_mow(f'{management_filename[:-4]}.MOW')
-
-        crop.write(self._RUN_PATH)
-
-        soil.write(os.path.join(self._RUN_PATH, 'SOIL.SOL'))
-
-        wth_path = os.path.join(self._RUN_PATH, 'Weather')
-        weather.write(wth_path, management=management)
-
-        
-
-        with open(os.path.join(self._RUN_PATH, CONFILE), 'w') as f:
-            f.write(f'WED    {wth_path}\n')
-            if crop._CODE in ["WH", "BA"]:
-                f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 CSCER{VERSION}\n')
+            mow._write_mow(f'{filex_name[:-4]}.MOW')
+        # Configuration file
+        with open(os.path.join(self.run_path, CONFILE), 'w') as f:
+            f.write(f'WED    {os.path.join(self.run_path, "Weather")}\n')
+            if cultivar.code in ["WH", "BA"]:
+                f.write(f'M{cultivar.code}    {self.run_path} dscsm048 CSCER{VERSION}\n')
             else:
-                f.write(f'M{crop._CODE}    {self._RUN_PATH} dscsm048 {crop._SMODEL}{VERSION}\n')
+                f.write(f'M{cultivar.code}    {self.run_path} dscsm048 {cultivar.smodel}{VERSION}\n')
             f.write(f'CRD    {CRD_PATH}\n')
             f.write(f'PSD    {os.path.join(DSSAT_HOME, "Pest")}\n')
             f.write(f'SLD    {SLD_PATH}\n')
             f.write(f'STD    {STD_PATH}\n')
 
-        exc_args = [BIN_PATH, 'C', os.path.basename(management_filename), '1']
+        # Run the model
+        exc_args = [BIN_PATH, 'C', os.path.basename(filex_name), '1']
         excinfo = subprocess.run(exc_args, 
-            cwd=self._RUN_PATH, capture_output=True, text=True,
+            cwd=self.run_path, capture_output=True, text=True,
             env={"DSSAT_HOME": DSSAT_HOME, }
         )
         excinfo.stdout = re.sub("\n{2,}", "\n", excinfo.stdout)
         excinfo.stdout = re.sub("\n$", "", excinfo.stdout)
-        self.stdout = excinfo.stdout
+        self.stdout = excinfo.stdout.strip()
 
         if verbose:
             for line in excinfo.stdout.split("\n"):
                 sys.stdout.write(line + '\n')
 
-        assert excinfo.returncode == 0, 'DSSAT execution Failed, check '\
-            + f'{os.path.join(self._RUN_PATH, "ERROR.OUT")} file for a'\
-            + ' detailed report'
+        if excinfo.returncode != 0:
+            with open(os.path.join(self.run_path, "ERROR.OUT"), "r") as f:
+                for line in f:
+                    print(line)
+            raise RuntimeError("DSSAT execution Failed. Check the ERROR.OUT file")
 
-        OUTPUT_FILES = [i for i in os.listdir(self._RUN_PATH) if i[-3:] == 'OUT']
-        self.OUTPUT_LIST = [
-            var for var in OUTPUTS
-            if management.simulation_controls.get(OUTPUT_MAP.get(var)) in ("Y", None)
-        ]
-        # Check for man.simulation_controls["WATER"]
-        if management.simulation_controls["WATER"] == "N":
-            self.OUTPUT_LIST = list(filter(lambda x: x != "SoilWat", self.OUTPUT_LIST))
+        # Get the output files
+        # OUTPUT_FILES = [i for i in os.listdir(self.run_path) if i[-3:] == 'OUT']
+        # self.OUTPUT_LIST = [
+        #     var for var in OUTPUTS
+        #     if management.simulation_controls.get(OUTPUT_MAP.get(var)) in ("Y", None)
+        # ]
+        # # Check for man.simulation_controls["WATER"]
+        # if management.simulation_controls["WATER"] == "N":
+        #     self.OUTPUT_LIST = list(filter(lambda x: x != "SoilWat", self.OUTPUT_LIST))
         
-        for file in self.OUTPUT_LIST:
-            assert f'{file}.OUT' in OUTPUT_FILES, \
-                f'{file}.OUT does not exist in {self._RUN_PATH}'
-            table_start = -1
-            init_lines = []
-            with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
-                while True:
-                    table_start += 1
-                    init_lines.append(f.readline())
-                    if '@' in init_lines[-1][:10]:
-                        break
+        # for file in self.OUTPUT_LIST:
+        #     assert f'{file}.OUT' in OUTPUT_FILES, \
+        #         f'{file}.OUT does not exist in {self.run_path}'
+        #     table_start = -1
+        #     init_lines = []
+        #     with open(os.path.join(self.run_path, f'{file}.OUT'), 'r', encoding='cp437') as f:
+        #         while True:
+        #             table_start += 1
+        #             init_lines.append(f.readline())
+        #             if '@' in init_lines[-1][:10]:
+        #                 break
             
-            try:  
-                df = pd.read_csv(
-                    os.path.join(self._RUN_PATH, f'{file}.OUT'),
-                    skiprows=table_start, sep=' ', skipinitialspace=True
-                )
-                df = df.dropna(how="all", axis=1)
+        #     try:  
+        #         df = pd.read_csv(
+        #             os.path.join(self.run_path, f'{file}.OUT'),
+        #             skiprows=table_start, sep=' ', skipinitialspace=True
+        #         )
+        #         df = df.dropna(how="all", axis=1)
 
-            except UnicodeDecodeError:
-                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
-                    lines = f.readlines()
-                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'w', encoding='utf-8') as f:
-                    f.writelines(lines[table_start:])
-                df = pd.read_csv(
-                    os.path.join(self._RUN_PATH, f'{file}.OUT'),
-                    skiprows=0, sep=' ', skipinitialspace=True
-                )
-            if all(('@YEAR' in df.columns, 'DOY' in df.columns)):
-                df['DOY'] = df.DOY.astype(int).map(lambda x: f'{x:03d}')
-                df['@YEAR'] = df['@YEAR'].astype(str)
-                df.index = pd.to_datetime(
-                    (df['@YEAR'] + df['DOY']),
-                    format='%Y%j'
-                )
-            self._output[file] = df
+        #     except UnicodeDecodeError:
+        #         with open(os.path.join(self.run_path, f'{file}.OUT'), 'r', encoding='cp437') as f:
+        #             lines = f.readlines()
+        #         with open(os.path.join(self.run_path, f'{file}.OUT'), 'w', encoding='utf-8') as f:
+        #             f.writelines(lines[table_start:])
+        #         df = pd.read_csv(
+        #             os.path.join(self.run_path, f'{file}.OUT'),
+        #             skiprows=0, sep=' ', skipinitialspace=True
+        #         )
+        #     if all(('@YEAR' in df.columns, 'DOY' in df.columns)):
+        #         df['DOY'] = df.DOY.astype(int).map(lambda x: f'{x:03d}')
+        #         df['@YEAR'] = df['@YEAR'].astype(str)
+        #         df.index = pd.to_datetime(
+        #             (df['@YEAR'] + df['DOY']),
+        #             format='%Y%j'
+        #         )
+        #     self._output[file] = df
 
         return
 
@@ -311,8 +319,8 @@ class DSSAT():
         '''
         Removes the simulation environment (tmp folder and files).
         '''
-        shutil.rmtree(self._RUN_PATH, **WIN_SHUTIL_KWARGS)
-        sys.stdout.write(f'{self._RUN_PATH} and its content has been removed.\n')
+        shutil.rmtree(self.run_path, **WIN_SHUTIL_KWARGS)
+        sys.stdout.write(f'{self.run_path} and its content has been removed.\n')
 
     @property
     def output(self):
@@ -320,6 +328,13 @@ class DSSAT():
             warnings.warn("No output has been saved")
             return None
         return self._output
+
+    def __setattr__(self, name, value):
+        if name in PROTECTED_ATTRS:
+            raise AttributeError(f"Can't modify {name} attribute")
+        if (name == "run_path") and self.run_path:
+            raise RuntimeError("run_path attribute can't be modified by the user")
+        super().__setattr__(name, value)
 
     
 
