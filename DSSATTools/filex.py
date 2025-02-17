@@ -297,7 +297,7 @@ class FertilizerEvent(Record):
     }
     table_index = None
     def __init__(self, fdate:date, fmcd:str, facd:str, fdep:float, famn:float, 
-                 famp:float, famk:float=None, famc:float=None, famo:float=None,
+                 famp:float=None, famk:float=None, famc:float=None, famo:float=None,
                  focd:str=None, fername:str=None):
         """
         Initializes a fertilizer application event.
@@ -795,7 +795,7 @@ class Field(Record):
             "fhdur": fhdur
         }
         for name, value in kwargs.items():
-            super().__setitem__(name, value)
+            self.__setitem__(name, value)
         self.__tier1 = [
             "id_field", "wsta", "flsa", "flob", "fldt", "fldd", "flds", 
             "flst", "sltx", "sldp", "id_soil", "flname"
@@ -856,7 +856,7 @@ class SCGeneral(Record):
         Initializes a Simulation Controls General section. 
 
         Arguments
-         ----------
+        ----------
         nyers: int
             Number of years in Seasonal analysis
         nreps: int
@@ -899,7 +899,7 @@ class SCOptions(Record):
         Initializes a Simulation Controls Options section. 
 
         Arguments
-         ----------
+        ----------
         water: str
             Water effect switch (Y or N)
         nitro: str
@@ -1005,7 +1005,7 @@ class SCManagement(Record):
         Initializes a Simulation Controls Mangement section. 
 
         Arguments
-         ----------
+        ----------
         plant: str
             Planting option (A: Automatic window,  F: Automatic force in the 
             last day of window, R: On reported date)
@@ -1059,7 +1059,7 @@ class SCOutputs(Record):
         Initializes a Simulation Controls Output section. 
 
         Arguments
-         ----------
+        ----------
         fname: str
             Use experiment name in output files (Y or N)
         ovvew, sumry, grout, caout, waout, niout, miout, diout,
@@ -1102,7 +1102,7 @@ class AMPlanting(Record):
         Initializes a Automatic Management Planting section. 
 
         Arguments
-         ----------
+        ----------
         pfrst: date
             Start of planting window
         plast: date
@@ -1147,7 +1147,7 @@ class AMIrrigation(Record):
         Initializes a Automatic Management Irrigation section. 
 
         Arguments
-         ----------
+        ----------
         imdep: float
             Management depth (cm)
         ithrl: float
@@ -1189,7 +1189,7 @@ class AMNitrogen(Record):
         Initializes a Automatic Management Nitrogen section. 
 
         Arguments
-         ----------
+        ----------
         nmdep: float
             Management depth (cm)
         nmthr: float
@@ -1254,7 +1254,7 @@ class AMHarvest(Record):
         Initializes a Automatic Management Harvest section. 
 
         Arguments
-         ----------
+        ----------
         hfrst: date
             First day of harvest window
         hlast: date
@@ -1357,7 +1357,7 @@ class SimulationControls:
         out_str += f" 1 ME          {self.__data['methods']._write_row()}"
         out_str += "@N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS\n"
         out_str += f" 1 MA          {self.__data['management']._write_row()}"
-        out_str += "@N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT\n"
+        out_str += "@N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT\n"
         out_str += f" 1 OU          {self.__data['outputs']._write_row()}"
         out_str += f"\n@  AUTOMATIC MANAGEMENT\n"
         out_str += "@N PLANTING    PFRST PLAST PH2OL PH2OU PH2OD PSTMX PSTMN\n"

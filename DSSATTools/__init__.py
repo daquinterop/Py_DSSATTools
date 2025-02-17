@@ -1,49 +1,66 @@
 '''
 DSSATTools library allows the user to create low-code scripts to run simulations
-using the DSSAT modeling framework. The library structure allows to executes DSSAT
-based on four input classes: `Crop`, `SoilProfile`, `Weather` and `Management`.
-The simulation environment is managed by the `DSSAT` Class. There are three stages
-for the simulation to be performed: 
+using the DSSAT modeling framework. DSSATTools version 2.2.0 includes significant
+changes when compared to previous versions. The newer is more intuitive for the 
+users familiar with the model, the DSSAT GUI, and the DSSAT file creation tools.
+Therefore, if you are new to DSSAT I highly recommend you to familiarize yourself
+with the model, the GUI, and the file creation Tools before jumping into using 
+this library.
 
-1. Initialize a `DSSAT` instance. 
+DSSATTools implements an object-based approach to define DSSAT simulation input. 
+This aims to mimic the process of creating the DSSAT input files (SOL, WTH, FileX)
+using the DSSAT GUI Tools. Then, the same way that XBuild has one menu for each 
+FileX section (e.g. Cultivar, Soil Analysis, Planting Date, etc.), there is one 
+DSSATTools class for each section of the FileX. Also, there is one class for the 
+WTH file, and one class for the SOL file. 
 
-2. setup the simulation environment by using the `DSSAT.setup` method. When that 
-method is called a new directory is created in the provided location (a tmp 
-directory is default) and all the files that are necessary to run the model are 
-copied in that folder.
+The filex module contains all the classes that represent each of the FileX sections.
+The crop module contains the Crop classes, one per crop. Such classes represent
+the crop and their cultivar and ecotype parameters. The soil module contains the
+SoilProfile class, which represents a single soil profile. The weather module
+hosts the WeatherStation class, which represents the Weather Station file (WTH).
 
-3. run the simulation calling `DSSAT.run` method. That method needs four 
-parameters to be pased. Each parameter indicates the crop, soil, weather, and management.
-This step can be performed as many times as one wants. 
+Here is one example on how the package is used to run a simple simulation:
 
-4. close the environment using `DSSAT.close`. This removes the directory and the
-files created during the environment setup.
-
-The next simple example illustrates how to run a simulation using the five 
-aforementioned classes:
-
-    >>> crop = Crop('maize')
-    >>> weather = Weather(
-            df, # Weather data with a datetime index
-            {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", "rh": "RHUM", "TMAX": "TMAX"},
-            4.54, -75.1, 1800
-        )
-    >>> soil = SoilProfile(default_class='SIL')
-    >>> man = Management(planting_date=datetime(12, 3, 2020))
+    >>> from DSSATTools.crop import Sorghum
+    >>> from DSSATTools.weather import WeatherStation
+    >>> from DSSATTools.soil import SoilProfile
+    >>> from DSSATTools.filex import (
+    >>>     Planting, SimulationControls, Fertilizer, Field
+    >>> )
+    >>> cultivar = Sorghum('IB0026')
+    >>> weather_station = WeatherStation(
+    >>>     insi='UNCU', lat=4.34, long=-74.40, elev=1800, 
+    >>>     table=df_with_data
+    >>> )
+    >>> soil = SoilProfile.from_file('IBSG910085')
+    >>> field = Field(
+    >>>     id_field='ITHY0001', wsta=weather_station, flob=0, 
+    >>>     fldd=0, flds=0, id_soil=soil, fldt='DR000'
+    >>> )
+    >>> planting = planting = Planting(
+    >>>     pdate=date(1980, 6, 17), ppop=18, ppoe=18,
+    >>>     plme='S', plds='R', plrs=45, plrd=0, pldp=5
+    >>> )
+    >>> fertilizer = Fertilizer(table=[
+    >>>     FertilizerEvent(
+    >>>         fdate=date(1980, 7, 4), fmcd='FE005', fdep=5,
+    >>>         famn=80, facd='AP002'
+    >>>     )
+    >>> ])
+    >>> simulation_controls = SimulationControls(
+    >>>     general=SCGeneral(sdate=date(1980, 1, 1) + timedelta(164))
+    >>> )
     >>> dssat = DSSAT()
-    >>> dssat.setup()
-    >>> dssat.run(soil, wth, crop, man)
-    >>> growth = dssat.output["PlantGro"] 
+    >>> results = dssat.run_treatment(
+    >>>     field=field, cultivar=cultivar, planting=planting, 
+    >>>     fertilizer=fertilizer, simulation_controls=simulation_controls
+    >>> )
     >>> dssat.close() # Terminate the simulation environment
 
-The parameters for ecach class are described in their doucmentation. It is very 
-important to highlight that this library will allow the user to run only one treatment
-at a time. If the users are familiar to DSSAT, they must know that DSSAT allows to
-define multiple treatments in the same experimental file.
-
-All of the parameters for the four basic clases have the same names you find in 
-the DSSAT files (Take a look at the .CDE files in 
-https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
+The parameters for ecach class are described in their doucmentation. As now, the
+`DSSAT.run_treatment` is the only function available to run the model. This 
+function runs the CSM in the 'C' mode (one treatment at a time).
 
 Up to date next crops and models are included:
 
@@ -65,8 +82,10 @@ Sunflower            CROPGRO
 Potato               SUBSTOR
 Tomato               CROPGRO
 Cabbage              CROPGRO
+Bean                 CROPGRO
 Potato               SUBSTOR             
-Sugarcane            CANEGRO             
+Sugarcane            CANEGRO
+Cassava              CSYCA CIAT         
 ==================   =====================
 '''
 VERSION = '048'

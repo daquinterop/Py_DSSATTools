@@ -691,7 +691,7 @@ class Crop(MutableMapping):
         ingeno = self.__cultivar.str
         if "vrname" in self.__cultivar:
             cname = self.__cultivar['vrname']
-        elif "var-name" in self.cultivar:
+        elif "var-name" in self.__cultivar:
             cname = self.__cultivar['var-name']
         else:
             raise RuntimeError

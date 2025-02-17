@@ -5,11 +5,11 @@ soil organic carbon from soil color, and a function to estimate soil hydraulic
 properties using soil texture.
 """
 
-from DSSATTools.base.partypes import (
+from .base.partypes import (
     NumberType, DescriptionType, Record, TabularRecord,
     CodeType, parse_pars_line, clean_comments
 )
-from DSSATTools import __file__ as module_path
+from . import __file__ as module_path
 import os
 from rosetta import rosetta, SoilData
 

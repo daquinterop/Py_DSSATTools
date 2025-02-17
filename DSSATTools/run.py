@@ -25,13 +25,13 @@ import stat
 import re
 
 # Libraries for second version
-from DSSATTools import __file__ as module_path
-from DSSATTools import VERSION
-from DSSATTools.crop import Crop
-from DSSATTools.filex import(
+from . import __file__ as module_path
+from . import VERSION
+from .crop import Crop
+from .filex import(
     Planting, Cultivar, Harvest, InitialConditions, Fertilizer,
     SoilAnalysis, Irrigation, Residue, Chemical, Tillage, Field,
-    SimulationControls, Mow, Treatment, write_filex
+    SimulationControls, Mow, write_filex
 )
 
 OS = platform.system().lower()
@@ -95,7 +95,7 @@ class DSSAT:
     After the model runs, the output is saved in the output property. 
     '''
     run_path:str=None
-    output:dict=None
+    output_files:dict=None
     def __init__(self, run_path:str=None):   
         """
         Initializes the simulation environment. run_path is the only parameter. 
@@ -108,7 +108,6 @@ class DSSAT:
             Working directory. The model will be run in that directory. 
             If None, then a tmp directory will be created.
         """
-        self._output = {}
         if not run_path:
             run_path = os.path.join(
                 TMP_BASE, 
@@ -177,7 +176,7 @@ class DSSAT:
         # Remove previous outputs and inputs
         OUTPUT_FILES = [i for i in os.listdir(self.run_path) if i[-3:] == 'OUT']
         INP_FILES = [i for i in os.listdir(self.run_path) if i[-3:] in ['INP', 'INH']]
-        self._output = {}
+        self.output_files = {}
         for file in (OUTPUT_FILES + INP_FILES):
             os.remove(os.path.join(self.run_path, file))
 
@@ -263,57 +262,26 @@ class DSSAT:
         if excinfo.returncode != 0:
             with open(os.path.join(self.run_path, "ERROR.OUT"), "r") as f:
                 for line in f:
-                    print(line)
+                    print(line, end='')
             raise RuntimeError("DSSAT execution Failed. Check the ERROR.OUT file")
 
         # Get the output files
-        # OUTPUT_FILES = [i for i in os.listdir(self.run_path) if i[-3:] == 'OUT']
-        # self.OUTPUT_LIST = [
-        #     var for var in OUTPUTS
-        #     if management.simulation_controls.get(OUTPUT_MAP.get(var)) in ("Y", None)
-        # ]
-        # # Check for man.simulation_controls["WATER"]
-        # if management.simulation_controls["WATER"] == "N":
-        #     self.OUTPUT_LIST = list(filter(lambda x: x != "SoilWat", self.OUTPUT_LIST))
-        
-        # for file in self.OUTPUT_LIST:
-        #     assert f'{file}.OUT' in OUTPUT_FILES, \
-        #         f'{file}.OUT does not exist in {self.run_path}'
-        #     table_start = -1
-        #     init_lines = []
-        #     with open(os.path.join(self.run_path, f'{file}.OUT'), 'r', encoding='cp437') as f:
-        #         while True:
-        #             table_start += 1
-        #             init_lines.append(f.readline())
-        #             if '@' in init_lines[-1][:10]:
-        #                 break
-            
-        #     try:  
-        #         df = pd.read_csv(
-        #             os.path.join(self.run_path, f'{file}.OUT'),
-        #             skiprows=table_start, sep=' ', skipinitialspace=True
-        #         )
-        #         df = df.dropna(how="all", axis=1)
-
-        #     except UnicodeDecodeError:
-        #         with open(os.path.join(self.run_path, f'{file}.OUT'), 'r', encoding='cp437') as f:
-        #             lines = f.readlines()
-        #         with open(os.path.join(self.run_path, f'{file}.OUT'), 'w', encoding='utf-8') as f:
-        #             f.writelines(lines[table_start:])
-        #         df = pd.read_csv(
-        #             os.path.join(self.run_path, f'{file}.OUT'),
-        #             skiprows=0, sep=' ', skipinitialspace=True
-        #         )
-        #     if all(('@YEAR' in df.columns, 'DOY' in df.columns)):
-        #         df['DOY'] = df.DOY.astype(int).map(lambda x: f'{x:03d}')
-        #         df['@YEAR'] = df['@YEAR'].astype(str)
-        #         df.index = pd.to_datetime(
-        #             (df['@YEAR'] + df['DOY']),
-        #             format='%Y%j'
-        #         )
-        #     self._output[file] = df
-
-        return
+        self._fetch_output()
+        out_dict = {
+            k.lower(): int(v) 
+            if int(v) != -99 else None
+            for k, v in 
+            zip(self.stdout.split('\n')[0][10:].split(), 
+                self.stdout.split('\n')[2][10:].split())
+        }
+        return out_dict
+    
+    def _fetch_output(self):
+        files = os.listdir(self.run_path)
+        files = filter(lambda x: x[-4:] == ".OUT", files)
+        for file in files:
+            with open(os.path.join(self.run_path, file), "r") as f:
+                self.output_files[file.split('.')[0]] = ''.join(f.readlines())
 
     def close(self):
         '''

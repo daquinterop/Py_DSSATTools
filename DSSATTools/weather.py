@@ -172,7 +172,10 @@ class WeatherStation(TabularRecord):
 
     @property
     def str(self):
-        return format(self['insi'], '<8')
+        wth_year = self.table[0]["date"].year
+        wth_len = self.table[-1]["date"].year - wth_year + 1
+        wth_filename = f'{self["insi"]}{str(wth_year)[2:]}{wth_len:02d}'
+        return wth_filename
         
     @classmethod
     def from_files(cls, files:list[str]):

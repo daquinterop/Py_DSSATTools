@@ -1,45 +1,13 @@
 '''
-`Crop` is the only implemented class in the crop module. DSSAT's crop parameters
-are grouped in three different files: ecotype (.ECO), cultivar (.CUL) and 
-species (.SPE). Not all crops have the ecotype file though. DSSATTools uses the 
-default .SPE, .ECO, and .CUL files. The ecotype and cultivar parameters are
-defined as attributes of the `Crop` instance. Each parameter is accessible and can
-be modified using the key, value syntax, e.g.
-`crop.cultivar["PARAMETER"] = VALUE`. 
 
-It is well known that for a species there can be multiple varieties. Therefore, 
-when initializing a `Crop` instance, two parameters must be provided: the crop 
-name (species), and the cultivar code. The cultivar codes are defined in the .CUL
-file. If an unknown cultivar is passed, then the last cultivar in the .CUL file is
-used and a warning is shown. To get a list of the available cultivars for a crop
-the user can use the `DSSATTools.available_cultivars` function passing the 
-crop name as the only argument.
-
-If the user wants to modify the cultivar or ecotype parameters they can through
-the `Crop.cultivar` and `Crop.ecotype` attributes respectively. In these two
-attributes both the cultivar and ecotype parameters are defined as a `Section`
-class (DSSATTools.sections.Section). `Section` class simply maps the parameter's
-name to a value; it can be treated as a python dictionary. Each of the different
-sections of the `Management` class are defined in the same way.
-
-The next example shows how to define the crop and modify one cultivar and ecotype
-parameter.
-
-    >>> crop = Crop('maize')
-    >>> crop.cultivar["P1"] = 240
-    >>> crop.ecotype["P20"] = 13.
-
-Note that only the cultivar and ecotype parameters can be modified. If the user
-wants to modify the species parameters, they'll have to directly do it on the
-Genotype files located in `DSSATTools.crop.GENOTYPE_PATH`
 '''
 import os
 
-from DSSATTools import VERSION
-from DSSATTools.base.partypes import (
+from . import VERSION
+from .base.partypes import (
     CROPS_MODULES, NumberType, DescriptionType, Crop, Record
 )
-from DSSATTools import __file__ as module_path
+from . import __file__ as module_path
 import warnings
 import re
 
@@ -164,6 +132,39 @@ class Maize(Crop):
         'cday': '>5.1f'
     }
 
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Sorghum(Crop):
+    code = "SG"
+    smodel = CROPS_MODULES["Sorghum"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+        "var-name": DescriptionType, "expno": DescriptionType, "eco#": Record, 
+        "p1": NumberType, "p2": NumberType, "p2o": NumberType, "p2r": NumberType, 
+        "panth": NumberType, "p3": NumberType, "p4": NumberType, "p5": NumberType, 
+        "phint": NumberType, "g1": NumberType, "g2": NumberType, "pbase": NumberType, 
+        "psat": NumberType
+    }
+    cul_pars_fmt = {
+        "var-name": ".<16", "expno": ">5", "eco#": ">6", "p1": ">5.1f", 
+        "p2": ">5.1f", "p2o": ">5.2f", "p2r": ">5.1f", "panth": ">5.1f",
+        "p3": ">5.1f", "p4": ">5.1f", "p5": ">5.1f", "phint": ">5.2f",
+        "g1": ">5.1f", "g2": ">5.1f", "pbase": ">5.1f", "psat": ">5.1f"
+    }
+    eco_dtypes = {
+        'econame': DescriptionType, 'tbase': NumberType, 'topt': NumberType, 
+        'ropt': NumberType, 'gdde': NumberType, 'rue': NumberType, 
+        'kcan': NumberType, 'stpc': NumberType, 'rtpc': NumberType, 
+        'tilfc': NumberType, 'plam': NumberType
+    }
+    eco_pars_fmt = {
+        'econame': '<16', 'tbase': '>6.1f', 'topt': '>5.1f', 'ropt': '>5.1f', 
+        'gdde': '>5.1f', 'rue': '>5.1f', 'kcan': '>5.2f', 'stpc': '>5.3f', 
+        'rtpc': '>5.3f', 'tilfc': '>5.1f', 'plam': '>5.0f'
+    }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
         return
