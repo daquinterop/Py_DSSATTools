@@ -4,13 +4,8 @@ You can install the library using Python pip.
 ```
 pip install DSSATTools
 ```
-## v2.1 Updates
-For the latest version the next changes were implemented:
-- The library simultes only one treatment. Therefore, only one option for cultivars, irrigation, fertilizer, field, etc. can be defined. 
-- Every set of defined crop or management parameters is a section. Each section is an attribute of the `Crop` or `Management` class. Sections won't be created by the user. The user can only modify the value of the parameters of the section, they can't create or add new parameters.
-- The weather is now managed by a single `Weather` class.
-- A `__repr__` method was implemented for the four basic classes (`Crop`, `Management`, `Weather` and `SoilProfile`), and the `Section` class. 
-- The cultivar is selected when initializing the crop instance. Thus, the crop instance contains parameters only for that cultivar.
+## New version soon
+DSSATTools version 3 is soon to be released. **The new version is a major upgrade and will not be backwards compatible**. DSSATTools version 2.1.6 is the latest release of version 2. 
 
 ## Documentation
 [https://py-dssattools.readthedocs.io/en/latest/index.html](https://py-dssattools.readthedocs.io/en/latest/index.html)

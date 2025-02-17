@@ -82,3 +82,10 @@ __all__ = [
     'Crop', 'SoilProfile', 'SoilLayer', 'Weather', 'Management', 'DSSAT', 
     'TabularSubsection', "available_cultivars"
     ] 
+
+import warnings
+warnings.simplefilter('always', DeprecationWarning)
+warnings.warn(
+    'DSSATTools version 3 is soon to be released. The new version is a major upgrade and will not be backwards compatible. This will be the latest release of DSSATTools version 2.', 
+    DeprecationWarning
+)
