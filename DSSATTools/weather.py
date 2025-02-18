@@ -1,38 +1,5 @@
 '''
-This module hosts the `Weather` class. It also contains the
-`list_station_parameters` and `list_weather_variables` which return a list of the
-parameters that define the weather station where the data was collected, and the
-weather variables that can be included in the dataset. A `Weather` instance is
-initialized by passing five mandatory arguments: a pandas dataframe including
-the weather data, a dict mapping each dataframe column to one of the DSSAT
-weather varaibles, latitude, longitude, and elevation.
 
-The next example illustrates how to define a Weather instance from syntetic data:
-
-    >>> DATES = pd.date_range('2000-01-01', '2010-12-31'); N=len(DATES)
-    >>> df = pd.DataFrame(
-            {
-            'tn': np.random.gamma(10, 1, N),
-            'rad': np.random.gamma(10, 1.5, N),
-            'prec': np.round(np.random.gamma(.4, 10, N), 1),
-            'rh': 100 * np.random.beta(1.5, 1.15, N),
-            },
-            index=DATES,
-        )
-    >>> df['TMAX'] = df.tn + np.random.gamma(5., .5, N)
-    >>> weather = Weather(
-            df, 
-            {"tn": "TMIN", "rad": "SRAD", "prec": "RAIN", 
-            "rh": "RHUM", "TMAX": "TMAX"},
-            4.54, -75.1, 1800
-        )
-
-The parameters of the weather station are defined as attributes of the `Weather`
-class. Those parameters can be listed by calling the `list_station_parameters`.
-In the next example the reference height for windspeed measurements is defined
-for the weather instance created in the previous example:
-
-    >>> weather.WNDHT = 2
 
 '''
 import os
@@ -40,7 +7,8 @@ import pandas as pd
 from io import StringIO
 from datetime import date
 from .base.partypes import (
-    DateType, NumberType, Record, TabularRecord, DescriptionType
+    DateType, NumberType, Record, TabularRecord, DescriptionType,
+    clean_comments
 )
 
 class WeatherRecord(Record):
@@ -216,6 +184,7 @@ class WeatherStation(TabularRecord):
                         lines += f.readlines()
                     else:
                         continue
+            lines = clean_comments(lines)
             tmp_df = pd.read_csv(StringIO("".join(lines)), sep="\s+")
             df_list.append(tmp_df)
         

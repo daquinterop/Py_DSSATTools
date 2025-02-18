@@ -29,7 +29,7 @@ CROPS_MODULES = {
     'Cabbage': "CRGRO",
     'Sugarcane': "SCCAN",
     "Wheat": "CSCER",
-    "Bean": "CRGRO",
+    "DryBean": "CRGRO",
     "Cassava": "CSYCA"
 }
 CODE_VARS = {
@@ -54,12 +54,13 @@ CODE_VARS = {
              'FE665', 'FE666', 'FE667', 'FE668', 'FE669', 'FE670', 'FE680',
              'FE681', 'FE682', 'FE683', 'FE684', 'FE685', 'FE700', 'FE701',
              'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900',
-             "IB001", "IB002"],
+             "IB001", "IB002", 'SI001'],
     "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)],
     "smhb": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
     "smpx": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
     "smke": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
-    "iame": [None, "IB001", "IB00", 'B001'] + [f"IR{i:03d}" for i in range(1, 12)],
+    "iame": [None, "IB001", "IB00", 'B001', 'SI001'] +\
+          [f"IR{i:03d}" for i in range(1, 12)],
     "rcod": [None] + [
         'RE001','RE101','RE201','RE301','RE999','RE002','RE003', 'RE004',
         'RE005','RE006','RE102','RE103','RE104','RE105','RE106', 'RE107',
@@ -89,7 +90,7 @@ CODE_VARS = {
         "SL", "SA"
     ],
     "fldt": ["DR000", "DR001", "DR002", "DR003", "IB000"],
-    "flst": [None, "00000", "0"],
+    "flst": [None, "00000", "0", '0000'],
     "flhst": [None] + ["FH101", "FH102", "FH201", "FH202", "FH301", "FH302"],
     "start": ["S"],
     "smodel": ["", None] + list(CROPS_MODULES.values()),
@@ -113,7 +114,7 @@ CODE_VARS = {
     "harvs": ["A", "D", "M", "R", "W", "X", "Y", "Z"], 
     "vbose": ["A", "0", "D", "N", "Y"],
     "fmopt": ["C", "A"],
-    "naoff": ["IB001", "GS000"],
+    "naoff": ["IB001", "GS000", 'SI001'],
     'scom': ['BN', 'G', 'Y', 'BL', 'R', 'BROWN', 'BK', 'YR', None],
     "soil_clasification": [
         'C', 'CL', 'L', 'LS', 'S', 'SC', 'SCL', 'SI', 'SIC', 'SICL', 
@@ -460,7 +461,6 @@ class Record(MutableMapping):
             if issubclass(type(value), Record):
                 assert isinstance(value, self.dtypes[key][1])
                 self.__data[key] = value
-                return
             else:
                self.__data[key] = self.dtypes[key][0](
                 f'{key}', value, self.pars_fmt[key]
@@ -715,4 +715,16 @@ class Crop(MutableMapping):
     
     def _write_cul(self):
         return self.__cultivar._write_file()
+    
+    @classmethod
+    def cultivar_list(cls):
+        """
+        Returns a list with the cultivars available for that crop.
+        """
+        cul_path = cls.spe_path[:-4] + '.CUL'
+        with open(cul_path, "r") as f:
+            lines = f.readlines()
+        lines = [l for l in lines if l[:1] not in ["@", "*", "!", "$"]]
+        lines = [l for l in lines if len(l) > 5]
+        return [l.split()[0] for l in lines if len(l.strip()) > 6]
     

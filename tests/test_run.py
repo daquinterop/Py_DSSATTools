@@ -28,7 +28,9 @@ This is the list of crops and the tested experiments:
 """
 import pytest
 
-from DSSATTools.crop import Maize, Sorghum, Wheat
+from DSSATTools.crop import (
+    Maize, Sorghum, Wheat, Tomato
+)
 from DSSATTools.soil import SoilProfile
 from DSSATTools.filex import (
     read_filex, Field, InitialConditions, Planting, Fertilizer, 
@@ -169,6 +171,33 @@ def test_wheat():
     assert np.isclose(2417, results['harwt'], rtol=0.01)
     dssat.close()
 
+def test_tomato():
+    """
+    Experiment KSAS8101, treatment 4
+    """
+    cultivar = Tomato('TM0007')
+    soil = SoilProfile.from_file("UFBR950001")
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "UFBR9401.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Tomato', "UFBR9401.TMX"))
+    treatment = treatments[4]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=cultivar, 
+        planting=treatment["Planting"],
+        initial_conditions=treatment["InitialConditions"],
+        fertilizer=treatment["Fertilizer"],
+        irrigation=treatment["Irrigation"],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(6360, results['harwt'], rtol=0.01)
+    dssat.close()
+    
 
 if __name__ == "__main__":
-    test_wheat()
+    test_tomato()

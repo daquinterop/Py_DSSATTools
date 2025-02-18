@@ -35,73 +35,12 @@ SPE_FILES = {
     'Cabbage': f'CBGRO{VERSION}.SPE',
     'Sugarcane': f'SCCAN{VERSION}.SPE',
     "Wheat": f"WHCER{VERSION}.SPE",
-    "Bean": f"CRGRO{VERSION}.SPE",
+    "DryBean": f"CRGRO{VERSION}.SPE",
     "Cassava": f"CSYCA{VERSION}.SPE"
 }
 
-CROP_CODES = {
-    "Maize": "MZ",
-    'Millet': "ML",
-    'Sugarbeet': "BS",
-    'Rice': "RI",
-    'Sorghum': "SG",
-    'Sweetcorn': "SW",
-    'Alfalfa': "AL",
-    'Bermudagrass': "BM",
-    'Soybean': "SB",
-    'Canola': "CN",
-    'Sunflower': "SU",
-    'Potato': "PT",
-    'Tomato': "TM",
-    'Cabbage': "CB",
-    'Sugarcane': "SC",
-    "Wheat": "WH",
-    "Bean": "BN",
-    "Cassava": "CS"
-}
-
-
 DSSAT_MODULE_PATH = os.path.dirname(module_path)
 GENOTYPE_PATH = os.path.join(DSSAT_MODULE_PATH, 'static', 'Genotype')
-
-CUL_VARNAME = {
-    'MZ': 'VRNAME..........',
-    'ML': 'VAR-NAME........',
-    'BS': 'VRNAME..........',
-    'RI': 'VAR-NAME........',
-    'SG': 'VAR-NAME........',
-    'SW': 'VRNAME..........',
-    'AL': 'VRNAME..........',
-    'BM': 'VRNAME..........',
-    'SB': 'VAR-NAME........',
-    'CN': 'VRNAME..........',
-    'SU': 'VAR-NAME........',
-    'PT': 'VAR-NAME........',
-    'TM': 'VRNAME..........',
-    'CB': 'VRNAME..........',
-    'SC': 'VAR-NAME........',
-    "WH": "VAR-NAME........",
-    'BN': 'VRNAME..........',
-    'CS': 'VAR-NAME........'
-}
-
-def available_cultivars(crop_name):
-    """
-    Returns the code and description of the available cultivars for the specified
-    crop. 
-    """
-    crop_name = crop_name.title()
-    assert crop_name in CROPS_MODULES.keys(), \
-        f'{crop_name} is not a valid crop'
-    SMODEL = CROPS_MODULES[crop_name]
-    CODE = CROP_CODES[crop_name]
-    cul_path = os.path.join(GENOTYPE_PATH, f'{CODE}{SMODEL[2:]}{VERSION}.CUL')
-    with open(cul_path, "r") as f:
-        lines = f.readlines()
-    lines = [l for l in lines if l[:1] not in ["@", "*", "!", "$"]]
-    lines = [l for l in lines if len(l) > 5]
-    return [l.split()[0] for l in lines if len(l.strip()) > 6]
-
 
 class Maize(Crop):
     code = "MZ"
@@ -206,6 +145,288 @@ class Wheat(Crop):
         'tifac': '>5.1f', 'tdphs': '>5.1f', 'tdphe': '>5.1f', 'tdfac': '>5.1f', 
         'rdgs': '>5.1f', 'htstd': '>5.0f', 'awns': '>5.1f', 'kcan': '>5.2f', 
         'rs%s': '>5.0f', 'gn%s': '>5.1f', 'gn%mn': '>5.1f', 'tkfh': '>5.0f'
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+
+class Tomato(Crop):
+    code = "TM"
+    smodel = CROPS_MODULES["Tomato"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+        'vrname': DescriptionType, 'expno': DescriptionType, 
+        'eco#': Record, 'csdl': NumberType, 'ppsen': NumberType, 
+        'em-fl': NumberType, 'fl-sh': NumberType, 'fl-sd': NumberType, 
+        'sd-pm': NumberType, 'fl-lf': NumberType, 'lfmax': NumberType, 
+        'slavr': NumberType, 'sizlf': NumberType, 'xfrt': NumberType, 
+        'wtpsd': NumberType, 'sfdur': NumberType, 'sdpdv': NumberType, 
+        'podur': NumberType, 'thrsh': NumberType, 'sdpro': NumberType, 
+        'sdlip': NumberType
+    }
+    cul_pars_fmt = {
+        'vrname': '.<16', 'expno': '>5', 'eco#': '>6', 'csdl': '>5.2f', 
+        'ppsen': '>5.2f', 'em-fl': '>5.1f', 'fl-sh': '>5.1f', 'fl-sd': '>5.1f',
+        'sd-pm': '>5.2f', 'fl-lf': '>5.2f', 'lfmax': '>5.2f', 'slavr': '>5.0f',
+        'sizlf': '>5.1f', 'xfrt': '>5.2f', 'wtpsd': '>5.3f', 'sfdur': '>5.1f', 
+        'sdpdv': '>5.1f', 'podur': '>5.1f', 'thrsh': '>5.1f', 'sdpro': '>5.3f',
+        'sdlip': '>5.3f'
+    }
+    eco_dtypes = {
+        'econame': DescriptionType, 'mg': DescriptionType, 'tm': DescriptionType, 
+        'thvar': NumberType, 'pl-em': NumberType, 'em-v1': NumberType, 
+        'v1-ju': NumberType, 'ju-r0': NumberType, 'pm06': NumberType, 
+        'pm09': NumberType, 'lngsh': NumberType, 'r7-r8': NumberType, 
+        'fl-vs': NumberType, 'trifl': NumberType, 'rwdth': NumberType, 
+        'rhght': NumberType, 'r1ppo': NumberType, 'optbi': NumberType, 
+        'slobi': NumberType, 'xmage': NumberType
+    }
+    eco_pars_fmt = {
+        'econame': '.<17', 'mg': '<2', 'tm': '<2', 'thvar': '>5.1f', 
+        'pl-em': '>5.1f', 'em-v1': '>5.1f', 'v1-ju': '>5.1f', 'ju-r0': '>5.1f', 
+        'pm06': '>5.2f', 'pm09': '>5.2f', 'lngsh': '>5.1f', 'r7-r8': '>5.1f', 
+        'fl-vs': '>5.2f', 'trifl': '>5.2f', 'rwdth': '>5.1f', 'rhght': '>5.1f',
+        'r1ppo': '>5.3f', 'optbi': '>5.1f', 'slobi': '>5.3f', 'xmage': '>5.1f'
+    }
+    
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+
+class Soybean(Crop):
+    code = "SB"
+    smodel = CROPS_MODULES["Soybean"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Alfalfa(Crop):
+    code = "AL"
+    smodel = CROPS_MODULES["Alfalfa"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class DryBean(Crop):
+    code = "BN"
+    smodel = CROPS_MODULES["DryBean"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Millet(Crop):
+    code = "ML"
+    smodel = CROPS_MODULES["Millet"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Sugarbeet(Crop):
+    code = "BS"
+    smodel = CROPS_MODULES["Sugarbeet"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Rice(Crop):
+    code = "RI"
+    smodel = CROPS_MODULES["Rice"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Sweetcorn(Crop):
+    code = "SW"
+    smodel = CROPS_MODULES["Sweetcorn"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Bermudagrass(Crop):
+    code = "BM"
+    smodel = CROPS_MODULES["Bermudagrass"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Canola(Crop):
+    code = "CN"
+    smodel = CROPS_MODULES["Canola"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Sunflower(Crop):
+    code = "SU"
+    smodel = CROPS_MODULES["Sunflower"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Potato(Crop):
+    code = "PT"
+    smodel = CROPS_MODULES["Potato"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Cabbage(Crop):
+    code = "CB"
+    smodel = CROPS_MODULES["Cabbage"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Sugarcane(Crop):
+    code = "SC"
+    smodel = CROPS_MODULES["Sugarcane"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+    
+class Cassava(Crop):
+    code = "CS"
+    smodel = CROPS_MODULES["Cassava"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+    }
+    cul_pars_fmt = {
+    }
+    eco_dtypes = {
+    }
+    eco_pars_fmt = {
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
