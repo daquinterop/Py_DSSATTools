@@ -8,7 +8,8 @@ import os
 from pathlib import Path
 from DSSATTools.weather import WeatherStation
 
-WEATHER_PATH = "/home/diego/dssat-csm-data/Weather/"
+DATA_PATH = "/home/diego/dssat-csm-data"
+WEATHER_PATH = os.path.join(DATA_PATH, "Weather")
 PROJECT_ROOT = Path(__file__).parent.parent
 
 def test_read_wth_notlist():

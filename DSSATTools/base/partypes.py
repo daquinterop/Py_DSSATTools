@@ -10,6 +10,7 @@ from pandas import DataFrame
 import numpy as np
 from typing import Type
 import re
+import os
 
 CROPS_MODULES = {
     "Maize": "MZCER",
@@ -27,7 +28,7 @@ CROPS_MODULES = {
     'Tomato': "CRGRO",
     'Cabbage': "CRGRO",
     'Sugarcane': "SCCAN",
-    "Wheat": "WHCER",
+    "Wheat": "CSCER",
     "Bean": "CRGRO",
     "Cassava": "CSYCA"
 }
@@ -455,8 +456,16 @@ class Record(MutableMapping):
         key = key.lower()
         if key not in self.dtypes:
             raise KeyError(key)
-        if issubclass(self.dtypes[key], Record):
-            assert isinstance(value, Record)
+        if isinstance(self.dtypes[key], tuple): # Field objects
+            if issubclass(type(value), Record):
+                assert isinstance(value, self.dtypes[key][1])
+                self.__data[key] = value
+                return
+            else:
+               self.__data[key] = self.dtypes[key][0](
+                f'{key}', value, self.pars_fmt[key]
+            )
+        elif self.dtypes[key] is Record: # Crop objects
             self.__data[key] = value
         else:
             self.__data[key] = self.dtypes[key](
@@ -584,11 +593,14 @@ def _get_croppars(spe_path, code, dtypes_dict, pars_fmt_dict, par_prefix):
                 file_path = spe_path[:-3] + "CUL"
             else: 
                 file_path = spe_path[:-3] + "ECO"
-
+            if os.path.basename(spe_path)[:2] in ["WH"]:
+                header_character = '$'
+            else:
+                header_character = '*'
             with open(file_path, 'r') as f:
                 file_lines = f.readlines()
             self._file_header = filter(
-                lambda x: x[0] == "*", file_lines
+                lambda x: x[0] == header_character, file_lines
             ).__next__()
             file_lines = clean_comments(file_lines)
 

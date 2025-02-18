@@ -196,8 +196,15 @@ class WeatherStation(TabularRecord):
                 lines = []
                 for line in f:
                     if "@ INSI" in line:
-                        insi, lat, long, elev, tav, amp, refht, wndth = \
-                            f.readline().split()
+                        if len(line[1:].split()) == 8:
+                            insi, lat, long, elev, tav, amp, refht, wndth = \
+                                f.readline().split()
+                        elif len(line[1:].split()) == 6:
+                            insi, lat, long, elev, tav, amp = \
+                                f.readline().split()
+                            refht = wndth = None
+                        else:
+                            raise RuntimeError
                     elif ("@DATE" in line):
                         date_fmt = "%y%j"
                         lines.append(line)

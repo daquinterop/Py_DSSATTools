@@ -236,10 +236,10 @@ class DSSAT:
         # Configuration file
         with open(os.path.join(self.run_path, CONFILE), 'w') as f:
             f.write(f'WED    {os.path.join(self.run_path, "Weather")}\n')
-            if cultivar.code in ["WH", "BA"]:
-                f.write(f'M{cultivar.code}    {self.run_path} dscsm048 CSCER{VERSION}\n')
-            else:
-                f.write(f'M{cultivar.code}    {self.run_path} dscsm048 {cultivar.smodel}{VERSION}\n')
+            # if cultivar.code in ["WH", "BA"]:
+            #     f.write(f'M{cultivar.code}    {self.run_path} dscsm048 CSCER{VERSION}\n')
+            # else:
+            f.write(f'M{cultivar.code}    {self.run_path} dscsm048 {cultivar.smodel}{VERSION}\n')
             f.write(f'CRD    {CRD_PATH}\n')
             f.write(f'PSD    {os.path.join(DSSAT_HOME, "Pest")}\n')
             f.write(f'SLD    {SLD_PATH}\n')

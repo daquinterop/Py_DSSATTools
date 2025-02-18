@@ -28,13 +28,15 @@ from .base.partypes import (
     FACTOR_LEVELS
 )
 from .crop import (
-    Maize
+    Maize, Wheat, Sorghum
 )
 from .weather import WeatherStation
 from .soil import SoilProfile
 
 CROP_OBJECTS = {
-    "MZ": Maize
+    "MZ": Maize,
+    'WH': Wheat,
+    'SG': Sorghum
 }
 
 class Planting(Record):
@@ -226,7 +228,7 @@ class InitialConditions(TabularRecord):
     pars_fmt = {
         "pcr": ">5", "icdat": "%y%j", "icrt": ">5.0f", "icnd": ">5.0f", 
         "icrn": ">5.0f", "icre": ">5.0f", "icwd": ">5.0f", "icres": ">5.0f", 
-        "icren": ">5.1f", "icrep": ">5.0f", "icrip": ">5.0f", "icrid": ">5.0f",
+        "icren": ">5.2f", "icrep": ">5.0f", "icrip": ">5.0f", "icrid": ">5.0f",
         "icname": "<25"
     }
     table_dtype = InitialConditionsLayer
@@ -710,10 +712,10 @@ class Field(Record):
     '''
     prefix = "l"
     dtypes = {
-        "id_field": DescriptionType, "wsta": DescriptionType, 
+        "id_field": DescriptionType, "wsta": (DescriptionType, WeatherStation), 
         "flsa": NumberType, "flob": NumberType, "fldt": CodeType, 
         "fldd": NumberType, "flds": NumberType, "flst": CodeType, 
-        "sltx": CodeType, "sldp": NumberType, "id_soil": DescriptionType, 
+        "sltx": CodeType, "sldp": NumberType, "id_soil": (DescriptionType, SoilProfile), 
         "flname": DescriptionType, "xcrd": NumberType, "ycrd": NumberType, 
         "elev": NumberType, "area": NumberType, "slen": NumberType, 
         "flwr": NumberType, "slas": NumberType, "flhst": CodeType, 
@@ -828,13 +830,11 @@ class Field(Record):
     def __setitem__(self, key, value):
         if key == "id_field":
             assert len(value) == 8, "id_field must be a 8 character string"
-        if (key == "wsta") and isinstance(value, WeatherStation):
-            self.dtypes["wsta"] = WeatherStation
-            # value = {**{k: v for k, v in value.items()}, "table": value.table}
+        # if (key == "wsta") and isinstance(value, WeatherStation):
+        #     self.dtypes["wsta"] = WeatherStation
         if (key == "id_soil") and isinstance(value, SoilProfile):
-            self.dtypes["id_soil"] = SoilProfile
+            # self.dtypes["id_soil"] = SoilProfile
             self["sldp"] = value.table[-1]["slb"]
-            # value = {**{k: v for k, v in value.items()}, "table": value.table}
         super().__setitem__(key, value)
 
 

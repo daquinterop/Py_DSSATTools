@@ -28,7 +28,7 @@ This is the list of crops and the tested experiments:
 """
 import pytest
 
-from DSSATTools.crop import Maize, Sorghum
+from DSSATTools.crop import Maize, Sorghum, Wheat
 from DSSATTools.soil import SoilProfile
 from DSSATTools.filex import (
     read_filex, Field, InitialConditions, Planting, Fertilizer, 
@@ -44,11 +44,11 @@ import os
 import tempfile
 
 TMP = tempfile.gettempdir()
-WEATHER_PATH = "/home/diego/dssat-csm-data/Weather/"
+DATA_PATH = "/home/diego/dssat-csm-data"
 
 def test_modify_runpath():
     with pytest.raises(RuntimeError) as excinfo:
-        dssat = DSSAT("/tmp/dssat_test")
+        dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
         dssat.run_path = "runpath"
         assert 'run_path attribute ' in str(excinfo.value)
 
@@ -57,11 +57,14 @@ def test_maize():
     Experiment BRPI0202, treatment 1
     """
     cultivar = Maize("IB0171")
-    soil = SoilProfile.from_file("BRPI020001", "tests/input_files/BR.SOL")
+    soil = SoilProfile.from_file(
+        "BRPI020001",
+        os.path.join(DATA_PATH,"Soil", "BR.SOL")
+    )
     weather_station = WeatherStation.from_files([
-        os.path.join(WEATHER_PATH, "BRPI0201.WTH"),
+        os.path.join(DATA_PATH, 'Weather', "BRPI0201.WTH"),
     ])
-    treatments = read_filex("/home/diego/dssat-csm-data/Maize/BRPI0202.MZX")
+    treatments = read_filex(os.path.join(DATA_PATH,"Maize", "BRPI0202.MZX"))
     treatment = treatments[1]
     treatment["Field"]["wsta"] = weather_station
     treatment["Field"]["id_soil"] = soil 
@@ -87,8 +90,8 @@ def test_sorghum():
     df = []
     for year in range(80, 82):
         df.append(pd.read_csv(
-            f"tests/input_files/ITHY{year}01.WTH", skiprows=3, 
-            sep="\s+"
+            os.path.join(DATA_PATH, 'Weather', f'ITHY{year}01.WTH'),
+            skiprows=3, sep="\s+"
         ))
     df = pd.concat(df, ignore_index=True)
     df.columns = ['date', 'srad', 'tmax', 'tmin', 'rain']
@@ -130,7 +133,7 @@ def test_sorghum():
         methods=SCMethods(infil='S'),
         management=SCManagement(irrig='N', ferti='R', resid='N', harvs='M')
     )
-    dssat = DSSAT("/tmp/dssat_test")
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
     results = dssat.run_treatment(
         field=field, cultivar=cultivar, planting=planting, 
         initial_conditions=initial_conditions, fertilizer=fertilizer,
@@ -139,5 +142,33 @@ def test_sorghum():
     assert np.isclose(6334, results['harwt'], rtol=0.01)
     dssat.close()
 
+def test_wheat():
+    """
+    Experiment KSAS8101, treatment 1
+    """
+    cultivar = Wheat('IB0488')
+    soil = SoilProfile.from_file("IBWH980018")
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "KSAS8101.WTH"),
+        os.path.join(DATA_PATH, 'Weather', "KSAS8201.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Wheat', "KSAS8101.WHX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=cultivar, 
+        planting=treatment["Planting"],
+        initial_conditions=treatment["InitialConditions"],
+        fertilizer=treatment["Fertilizer"],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(2417, results['harwt'], rtol=0.01)
+    dssat.close()
+
+
 if __name__ == "__main__":
-    test_sorghum()
+    test_wheat()

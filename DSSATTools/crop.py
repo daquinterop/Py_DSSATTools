@@ -168,3 +168,45 @@ class Sorghum(Crop):
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
         return
+
+class Wheat(Crop):
+    code = "WH"
+    smodel = CROPS_MODULES["Wheat"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+        'var-name': DescriptionType, 'exp#': DescriptionType, 'eco#': Record, 
+        'p1v': NumberType, 'p1d': NumberType, 'p5': NumberType, 'g1': NumberType, 
+        'g2': NumberType, 'g3': NumberType, 'phint': NumberType
+    }
+    cul_pars_fmt = {
+        'var-name': '.<16', 'exp#': '>5', 'eco#': '>6', 'p1v': '>5.2f', 
+        'p1d': '>5.2f', 'p5': '>5.1f', 'g1': '>5.2f', 'g2': '>5.2f', 
+        'g3': '>5.3f', 'phint': '>5.1f'
+    }
+    eco_dtypes = {
+        'p1': NumberType, 'p2fr1': NumberType, 'p2': NumberType, 
+        'p3': NumberType, 'p4fr1': NumberType, 'p4fr2': NumberType, 
+        'p4': NumberType, 'veff': NumberType, 'parue': NumberType,
+        'paru2': NumberType, 'phl2': NumberType, 'phf3': NumberType,
+        'la1s': NumberType, 'lafv': NumberType, 'lafr': NumberType,
+        'slas': NumberType, 'lsphs': NumberType, 'lsphe': NumberType,
+        'til#s': NumberType, 'tiphe': NumberType, 'tifac': NumberType,
+        'tdphs': NumberType, 'tdphe': NumberType, 'tdfac': NumberType,
+        'rdgs': NumberType, 'htstd': NumberType, 'awns': NumberType,
+        'kcan': NumberType, 'rs%s': NumberType, 'gn%s': NumberType,
+        'gn%mn': NumberType, 'tkfh': NumberType
+    }
+    eco_pars_fmt = {
+        'p1': '>5.0f', 'p2fr1': '>5.2f', 'p2': '>5.0f', 'p3': '>5.0f', 
+        'p4fr1': '>5.2f', 'p4fr2': '>5.2f', 'p4': '>5.0f', 'veff': '>5.2f', 
+        'parue': '>5.2f', 'paru2': '>5.2f', 'phl2': '>5.1f', 'phf3': '>5.1f', 
+        'la1s': '>5.1f', 'lafv': '>5.2f', 'lafr': '>5.2f', 'slas': '>5.0f', 
+        'lsphs': '>5.1f', 'lsphe': '>5.1f', 'til#s': '>5.1f', 'tiphe': '>5.1f', 
+        'tifac': '>5.1f', 'tdphs': '>5.1f', 'tdphe': '>5.1f', 'tdfac': '>5.1f', 
+        'rdgs': '>5.1f', 'htstd': '>5.0f', 'awns': '>5.1f', 'kcan': '>5.2f', 
+        'rs%s': '>5.0f', 'gn%s': '>5.1f', 'gn%mn': '>5.1f', 'tkfh': '>5.0f'
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
