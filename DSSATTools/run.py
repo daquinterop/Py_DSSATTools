@@ -198,7 +198,7 @@ class DSSAT:
         filex_name = field["id_field"][:4] +\
             simulation_controls["general"]["sdate"].strftime('%y01') +\
             f'.{cultivar.code}X'
-        filex_name = os.path.join(self.run_path, filex_name)
+        filex_name = os.path.join(self.run_path, filex_name.upper())
         with open(filex_name, "w") as f:
             lines = write_filex(
                 field, cultivar, planting, simulation_controls, harvest, 

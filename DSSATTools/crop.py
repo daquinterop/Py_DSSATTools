@@ -17,11 +17,11 @@ from . import __file__ as module_path
 
 SPE_FILES = {
     'Maize': f'MZCER{VERSION}.SPE',
-    'Millet': f'MLCER{VERSION}.SPE',
+    'PearlMillet': f'MLCER{VERSION}.SPE',
     'Sugarbeet': f'BSCER{VERSION}.SPE',
     'Rice': f'RICER{VERSION}.SPE',
     'Sorghum': f'SGCER{VERSION}.SPE',
-    'Sweetcorn': f'SWCER{VERSION}.SPE',
+    'SweetCorn': f'SWCER{VERSION}.SPE',
     'Alfalfa': f'ALFRM{VERSION}.SPE',
     'Bermudagrass': f'BMFRM{VERSION}.SPE',
     'Soybean': f'SBGRO{VERSION}.SPE',
@@ -318,8 +318,7 @@ class DryBean(Crop):
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
         return
-
-    
+ 
 class Rice(Crop):
     code = "RI"
     smodel = CROPS_MODULES["Rice"]
@@ -344,18 +343,30 @@ class Rice(Crop):
         super().__init__(cultivar_code)
         return
 
-class Millet(Crop):
+class PearlMillet(Crop):
     code = "ML"
-    smodel = CROPS_MODULES["Millet"]
+    smodel = CROPS_MODULES["PearlMillet"]
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'var-name': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'p1': NumberType, 'p2o': NumberType, 'p2r': NumberType, 'p5': NumberType, 
+        'g1': NumberType, 'g4': NumberType, 'phint': NumberType, 'gt': NumberType, 
+        'g5': NumberType
     }
     cul_pars_fmt = {
+        'var-name': '.<16', 'expno': '>5', 'eco#': '>6', 'p1': '>5.1f', 
+        'p2o': '>5.2f', 'p2r': '>5.1f', 'p5': '>5.1f', 'g1': '>5.3f', 
+        'g4': '>5.2f', 'phint': '>5.3f', 'gt': '>5.2f', 'g5': '>5.2f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'tbase': NumberType, 'topt': NumberType, 
+        'ropt': NumberType, 'djti': NumberType, 'gdde': NumberType, 
+        'rue': NumberType, 'kcan': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'tbase': '>5.1f', 'topt': '>5.1f', 'ropt': '>5.1f', 
+        'djti': '>5.1f', 'gdde': '>5.1f', 'rue': '>5.1f', 'kcan': '>5.2f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
@@ -367,29 +378,55 @@ class Sugarbeet(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'vrname': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'p1': NumberType, 'p2': NumberType, 'p5': NumberType, 'g2': NumberType, 
+        'g3': NumberType, 'phint': NumberType
     }
     cul_pars_fmt = {
+        'vrname': '.<16', 'expno': '>5', 'eco#': '>6', 'p1': '>5.1f', 
+        'p2': '>5.3f', 'p5': '>5.1f', 'g2': '>5.1f', 'g3': '>5.1f', 
+        'phint': '>5.2f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'tbase': NumberType, 'topt': NumberType, 
+        'ropt': NumberType, 'p20': NumberType, 'djti': NumberType, 
+        'gdde': NumberType, 'dsgft': NumberType, 'rue': NumberType, 
+        'kcan': NumberType, 'tsen': NumberType, 'cday': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'tbase': '>5.1f', 'topt': '>4.1f', 'ropt': '>5.1f', 
+        'p20': '>5.1f', 'djti': '>5.1f', 'gdde': '>5.1f', 'dsgft': '>5.1f', 
+        'rue': '>5.1f', 'kcan': '>6.2f', 'tsen': '>5.1f', 'cday': '>5.1f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
         return
     
-class Sweetcorn(Crop):
+class SweetCorn(Crop):
     code = "SW"
-    smodel = CROPS_MODULES["Sweetcorn"]
+    smodel = CROPS_MODULES["SweetCorn"]
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'vrname': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'p1': NumberType, 'p2': NumberType, 'p5': NumberType, 'g2': NumberType, 
+        'g3': NumberType, 'phint': NumberType
     }
     cul_pars_fmt = {
+        'vrname': '.<16', 'expno': '>5', 'eco#': '>6', 'p1': '>5.1f', 
+        'p2': '>5.3f', 'p5': '>5.1f', 'g2': '>5.1f', 'g3': '>5.2f', 
+        'phint': '>5.2f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'tbase': NumberType, 'topt': NumberType, 
+        'ropt': NumberType, 'p20': NumberType, 'djti': NumberType, 
+        'gdde': NumberType, 'dsgft': NumberType, 'rue': NumberType, 
+        'kcan': NumberType, 'tsen': NumberType, 'cday': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'tbase': '>5.1f', 'topt': '>5.1f', 'ropt': '>5.1f', 
+        'p20': '>5.1f', 'djti': '>5.1f', 'gdde': '>5.1f', 'dsgft': '>5.1f', 
+        'rue': '>5.1f', 'kcan': '>5.2f', 'tsen': '>5.1f', 'cday': '>5.1f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)

@@ -28,16 +28,16 @@ from .base.partypes import (
     FACTOR_LEVELS, clean_comments, parse_pars_line
 )
 from .crop import (
-    Maize, Wheat, Sorghum, Millet, Sugarbeet, Rice, Alfalfa, Bermudagrass,
+    Maize, Wheat, Sorghum, PearlMillet, Sugarbeet, Rice, Alfalfa, Bermudagrass,
     Soybean, Canola, Sunflower, Potato, Tomato, Cabbage, Sugarcane, DryBean,
-    Cassava, Sweetcorn
+    Cassava, SweetCorn
 )
 from .weather import WeatherStation
 from .soil import SoilProfile
 
 CROP_OBJECTS = {
-    "MZ": Maize, 'WH': Wheat, 'SG': Sorghum, 'ML': Millet, 'BS': Sugarbeet,
-    'RI': Rice, 'SW': Sweetcorn, 'AL': Alfalfa, 'BM': Bermudagrass, 
+    "MZ": Maize, 'WH': Wheat, 'SG': Sorghum, 'ML': PearlMillet, 'BS': Sugarbeet,
+    'RI': Rice, 'SW': SweetCorn, 'AL': Alfalfa, 'BM': Bermudagrass, 
     'SB': Soybean, 'CN': Canola, 'SU': Sunflower, 'PT': Potato, 'TM': Tomato,
     'CB': Cabbage, 'SC': Sugarcane, 'BN': DryBean, 'CS': Cassava
 }

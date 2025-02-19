@@ -15,10 +15,10 @@ This is the list of crops and the tested experiments:
 | Sorghum      | ITHY8001   |   2   |
 | Alfalfa      | AGZG1501   |   1   |
 | Dry Bean     | CCPA8629   |   1   |
-| Rice         | Pending
-| Millet       | Pending
-| Sugarbeet    | Pending
-| Sweetcorn    | Pending
+| Rice         | DTSP8502   |   4   |
+| Pearl Millet | ITHY8201   |   1   |
+| Sugarbeet    | NDCR1401   |   1   |
+| Sweetcorn    | UFCI0401   |   1   |
 | Bermudagrass | Pending
 | Canola       | Pending
 | Sunflower    | Pending
@@ -29,7 +29,7 @@ This is the list of crops and the tested experiments:
 import pytest
 
 from DSSATTools.crop import (
-    Maize, Sorghum, Wheat, Tomato, Alfalfa
+    Maize, Sorghum, Wheat, Tomato, Alfalfa, 
 )
 from DSSATTools.soil import SoilProfile
 from DSSATTools.filex import (
@@ -333,5 +333,84 @@ def test_rice():
     assert np.isclose(4698, results['harwt'], rtol=0.01)
     dssat.close()
 
+def test_pearlMillet():
+    """
+    Experiment ITHY8201, Treatment 1
+    """
+    soil = SoilProfile.from_file("IBML910083")
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "ITHY8201.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'PearlMillet', "ITHY8201.MLX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=treatment['Cultivar'].crop, 
+        initial_conditions=treatment['InitialConditions'],
+        planting=treatment["Planting"],
+        fertilizer=treatment['Fertilizer'],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(4714, results['harwt'], rtol=0.01)
+    dssat.close()
+
+def test_sugarbeet():
+    """
+    Experiment NDCR1401, Treatment 1
+    """
+    soil = SoilProfile.from_file(
+        "CREC002014",
+        os.path.join(DATA_PATH, 'Soil', 'CR.SOL')
+    )
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "CRND1401.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Sugarbeet', "NDCR1401.BSX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=treatment['Cultivar'].crop, 
+        planting=treatment["Planting"],
+        harvest=treatment["Harvest"],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(18572, results['harwt'], rtol=0.01)
+    dssat.close()
+
+def test_sweetCorn():
+    """
+    Experiment UFCI0401, Treatment 1
+    """
+    soil = SoilProfile.from_file("IBMZ910214")
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "UFCI0401.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'SweetCorn', "UFCI0401.SWX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        cultivar=treatment['Cultivar'].crop, 
+        field=treatment["Field"],
+        initial_conditions=treatment['InitialConditions'], 
+        planting=treatment["Planting"],
+        irrigation=treatment["Irrigation"],
+        fertilizer=treatment["Fertilizer"],
+        harvest=treatment["Harvest"],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(3409, results['harwt'], rtol=0.01)
+    dssat.close()
+
 if __name__ == "__main__":
-    test_rice()
+    test_sweetCorn()

@@ -14,11 +14,11 @@ import os
 
 CROPS_MODULES = {
     "Maize": "MZCER",
-    'Millet': "MLCER",
+    'PearlMillet': "MLCER",
     'Sugarbeet': "BSCER",
     'Rice': "RICER",
     'Sorghum': "SGCER",
-    'Sweetcorn': "SWCER",
+    'SweetCorn': "SWCER",
     'Alfalfa': "PRFRM",
     'Bermudagrass': "PRFRM",
     'Soybean': "CRGRO",
@@ -54,7 +54,7 @@ CODE_VARS = {
              'FE665', 'FE666', 'FE667', 'FE668', 'FE669', 'FE670', 'FE680',
              'FE681', 'FE682', 'FE683', 'FE684', 'FE685', 'FE700', 'FE701',
              'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900',
-             "IB001", "IB002", 'SI001'],
+             "IB001", "IB002", 'SI001', 'IFE01', '0', '00000', '0000'],
     "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)],
     "smhb": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
     "smpx": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
