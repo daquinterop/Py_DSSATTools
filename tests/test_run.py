@@ -29,13 +29,13 @@ This is the list of crops and the tested experiments:
 import pytest
 
 from DSSATTools.crop import (
-    Maize, Sorghum, Wheat, Tomato
+    Maize, Sorghum, Wheat, Tomato, Alfalfa
 )
 from DSSATTools.soil import SoilProfile
 from DSSATTools.filex import (
     read_filex, Field, InitialConditions, Planting, Fertilizer, 
     FertilizerEvent, SimulationControls, SCGeneral, SCManagement,
-    SCMethods, SCOptions
+    SCMethods, SCOptions, Mow
 )
 from DSSATTools.weather import WeatherStation
 from DSSATTools.run import DSSAT
@@ -44,6 +44,7 @@ import pandas as pd
 import numpy as np
 import os
 import tempfile
+from io import StringIO
 
 TMP = tempfile.gettempdir()
 DATA_PATH = "/home/diego/dssat-csm-data"
@@ -61,7 +62,7 @@ def test_maize():
     cultivar = Maize("IB0171")
     soil = SoilProfile.from_file(
         "BRPI020001",
-        os.path.join(DATA_PATH,"Soil", "BR.SOL")
+        os.path.join(DATA_PATH, "Soil", "BR.SOL")
     )
     weather_station = WeatherStation.from_files([
         os.path.join(DATA_PATH, 'Weather', "BRPI0201.WTH"),
@@ -223,6 +224,61 @@ def test_soybean():
     assert np.isclose(2495, results['harwt'], rtol=0.01)
     dssat.close()
     
+def test_alfalfa():
+    """
+    Experiment AGZG1501, Treatment 1  
+    """
+    mow = Mow.from_file(os.path.join(DATA_PATH, 'Alfalfa', 'AGZG1501.MOW'))
+    soil = SoilProfile.from_file(
+        "AGSP209115", os.path.join(DATA_PATH, 'Soil', "AG.SOL")
+    )
+    cultivar = Alfalfa('AL0001')
+    df = []
+    for year in range(15, 18):
+        df.append(pd.read_fwf(
+            os.path.join(DATA_PATH, 'Weather', f'TARD{year}01.WTH'),
+            skiprows=4, colspecs=[(6*i, 6*i+5) for i in range(10)]
+        ))
+    df = pd.concat(df, ignore_index=True)
+    df.columns = [
+        'date', 'srad', 'tmax', 'tmin', 'rain', 'dewp',
+        'wind', 'par', 'evap', 'rhum'
+    ]
+    df = df.interpolate() # There is one missing record for wind and par
+    df["date"] = pd.to_datetime(df.date, format='%y%j')
+    df = df.dropna(how='all', axis=1)
+    weather_station = WeatherStation(
+        lat=33.3, long=-84.3, elev=300, tav=14.3, amp=18.2, 
+        table=df
+    )
+    treatments = read_filex(os.path.join(DATA_PATH, 'Alfalfa', "AGZG1501.ALX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=cultivar, 
+        planting=treatment["Planting"],
+        irrigation=treatment["Irrigation"],
+        fertilizer=treatment["Fertilizer"],
+        harvest=treatment['Harvest'],
+        simulation_controls=treatment["SimulationControls"],
+        mow=mow
+    )
+    # Open FORAGE.out
+    forage = pd.read_fwf(
+        StringIO(dssat.output_files['FORAGE']),
+        skiprows=1, widths=[5, 9, 3] + [5]*18
+    )
+    dssat_gui_values = [2151, 3341, 6303, 3555, 4099, 4104, 6056]
+    assert all([
+        np.isclose(gui, i, rtol=0.01) 
+        for gui, i in zip(dssat_gui_values, forage.FHWAH)
+    ])    
+    dssat.close()
+
 
 if __name__ == "__main__":
-    test_soybean()
+    test_alfalfa()

@@ -149,8 +149,8 @@ class DSSAT:
             Whether to display the model std out or not
         ''' 
         assert isinstance(field, Field), "field parameter must be a Field instance."
-        assert isinstance(cultivar, Cultivar) or issubclass(type(cultivar), Crop), \
-            "cultivar parameter must be a Culvivar or Crop instance."
+        assert issubclass(type(cultivar), Crop), \
+            "cultivar parameter must be a Crop instance."
         assert isinstance(planting, Planting), \
             "planting parameter must be a Planting instance."
         assert isinstance(simulation_controls, SimulationControls), \
@@ -231,8 +231,12 @@ class DSSAT:
         # Mow
         if type(cultivar).__name__ in PERENIAL_FORAGES:
             if len(mow.table) < 1:
-                warnings.warn('No mow was defined. Define it at the Management.mow attribute')
-            mow._write_mow(f'{filex_name[:-4]}.MOW')
+                warnings.warn('Mow was not defined. It can be defined in the mow parameter.')
+            else:
+                mow_file_path = os.path.join(self.run_path, f'{filex_name[:-4]}.MOW')
+                with open(mow_file_path, 'w') as f: 
+                    file_str = mow._write_section()
+                    f.write(file_str)
         # Configuration file
         with open(os.path.join(self.run_path, CONFILE), 'w') as f:
             f.write(f'WED    {os.path.join(self.run_path, "Weather")}\n')

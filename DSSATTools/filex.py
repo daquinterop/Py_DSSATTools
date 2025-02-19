@@ -25,7 +25,7 @@ classes that are used to construct all the sections:
 from datetime import date
 from .base.partypes import (
     DateType, CodeType, NumberType, Record, TabularRecord, DescriptionType,
-    FACTOR_LEVELS
+    FACTOR_LEVELS, clean_comments, parse_pars_line
 )
 from .crop import (
     Maize, Wheat, Sorghum, Millet, Sugarbeet, Rice, Alfalfa, Bermudagrass,
@@ -140,7 +140,14 @@ class Cultivar(Record):
         for name, value in kwargs.items():
             super().__setitem__(name, value)
         # The crop attribute stores the Crop object
-        self.crop = CROP_OBJECTS[cr.upper()](ingeno)
+        self.__crop = CROP_OBJECTS[cr.upper()](ingeno)
+    
+    @property
+    def crop(self):
+        """
+        Returns the Crop object asociated to this Cultivar instance.
+        """
+        return self.__crop
 
 
 class Harvest(Record):
@@ -698,7 +705,7 @@ class Tillage(TabularRecord):
     table_dtype = TillageEvent
     def __init__(self, table=list[TillageEvent]):
         """
-        Initializes a tillage section. 
+        Instanciates a tillage section. 
 
         Arguments
          ----------
@@ -1246,13 +1253,18 @@ class AMHarvest(Record):
     prefix = "n"
     dtypes = {
         'hfrst': NumberType, 'hlast': DateType, 'hpcnp': NumberType, 
-        'hpcnr': NumberType
+        'hpcnr': NumberType, 'hmfrq': NumberType, 'hmgdd': NumberType, 
+        'hmcut': NumberType, 'hmmow': NumberType, 'hrspl': NumberType, 
+        'hmvs': NumberType
     }
     pars_fmt = {
-        'hfrst': ">5.0f", 'hlast': "%y%j", 'hpcnp': ">5.0f", 
-        'hpcnr': ">5.0f"
+        'hfrst': ">5.0f", 'hlast': "%y%j", 'hpcnp': ">5.0f", 'hpcnr': ">5.0f", 
+        'hmfrq': ">5.0f", 'hmgdd': ">5.0f", 'hmcut': ">5.2f", 'hmmow': ">5.0f", 
+        'hrspl': ">5.0f", 'hmvs': ">5.0f"
     }
-    def __init__(self, hfrst:date, hlast:date, hpcnp:float=100, hpcnr:float=0):
+    def __init__(self, hfrst:date, hlast:date, hpcnp:float=100, hpcnr:float=0,
+                 hmfrq:float=None, hmgdd:float=None, hmcut:float=None,
+                 hmmow:float=None, hrspl:float=None, hmvs:float=None):
         """
         Initializes a Automatic Management Harvest section. 
 
@@ -1265,12 +1277,16 @@ class AMHarvest(Record):
         hpcnp: float
             Percentage of product harvested
         hpcnr: float
-            Percentafe of residue harvested 
+            Percentafe of residue harvested
+        hmfrq, hmgdd, hmcut, hmmow, hrspl, hmvs: float
+            Automow parameters
         """
         hfrst = 0 # Option not implemented yet on the GUI
         super().__init__()
         kwargs = {
-            'hfrst': hfrst, 'hlast': hlast, 'hpcnp': hpcnp, 'hpcnr': hpcnr
+            'hfrst': hfrst, 'hlast': hlast, 'hpcnp': hpcnp, 'hpcnr': hpcnr,
+            'hmfrq': hmfrq, 'hmgdd': hmgdd, 'hmcut': hmcut, 'hmmow': hmmow, 
+            'hrspl': hrspl, 'hmvs': hmvs
         }
         for name, value in kwargs.items():
             super().__setitem__(name, value)
@@ -1408,6 +1424,76 @@ class Treatment(Record):
         for name, value in kwargs.items():
             super().__setitem__(name, value)
 
+
+class MowEvent(Record):
+    prefix = 'trno '
+    dtypes = {
+        'date': DateType, 'mow': NumberType, 'rsplf': NumberType, 
+        'mvs': NumberType, 'rsht': NumberType
+    }
+    pars_fmt = {
+        'date': '%y%j', 'mow': '>5.0f', 'rsplf': '>5.0f', 
+        'mvs': '>5.0f', 'rsht': '>5.1f'
+    }
+    def __init__(self, date:date, mow:float, rsplf:float, mvs:float, rsht:float):
+        """
+        Instanciates a Mow event.
+
+        Arguments
+        ----------
+        date: date
+            Mow event date
+        mow: float
+            Residue biomass Residual biomass after mowing (kg/ha)
+        rsplf: float
+            Residual leaf   Residual leaf after mowing (%)   
+        mvs: float
+            Residual V stg  Residual vegetative stage after mowing (node #) 
+        rsht: float
+            Residule height after mowing (cm) [not used] 
+        """
+        super().__init__()
+        kwargs = {
+            "date": date, "mow": mow, "rsplf": rsplf, "rsht": rsht, 'mvs': mvs
+        }
+        for name, value in kwargs.items():
+            super().__setitem__(name, value) 
+
+
+class Mow(TabularRecord):
+    prefix = "trno "
+    dtypes = {}
+    pars_fmt = {}
+    table_dtype = MowEvent
+    def __init__(self, table=list[MowEvent]):
+        """
+        Instanciates a mow object. 
+
+        Arguments
+            ----------
+        table: list of MowEvent
+            Mow events
+        """
+        super().__init__()
+        self.table = table
+
+    @classmethod
+    def from_file(cls, file):
+        """
+        Creates and return a Mow instance from a mow file.
+        """
+        with open(file, 'r') as f:
+            lines = f.readlines()
+        lines = clean_comments(lines)
+        lines = filter(lambda x: '@TRNO' not in x, lines)
+        events = []
+        for line in lines:
+            if len(line.strip()) > 10:
+                pars = parse_pars_line(line[7:], cls.table_dtype.pars_fmt)
+                events.append(cls.table_dtype(**pars))
+        return cls(events)
+
+
 def get_header_range(l, h, pars_fmt):
     """Get variable start and index in the header line"""
     h_fmt = pars_fmt[h]
@@ -1428,16 +1514,6 @@ def get_header_range(l, h, pars_fmt):
         raise ValueError("Variable format must be right or left justified")
     return (start, end)
 
-
-class Mow(TabularRecord):
-    """
-    
-    """
-    def __init__(self):
-        """
-        Initialize a Mow class
-        """
-        super().__init__()
 
 def read_filex(filexpath):
     """

@@ -89,10 +89,10 @@ CODE_VARS = {
         "C", "CL", "L", "LS", "S", "SC", "SCL", "SI", "SIC", "SICL", "SIL", 
         "SL", "SA"
     ],
-    "fldt": ["DR000", "DR001", "DR002", "DR003", "IB000"],
+    "fldt": ["DR000", "DR001", "DR002", "DR003", "IB000", None, "-99"],
     "flst": [None, "00000", "0", '0000'],
     "flhst": [None] + ["FH101", "FH102", "FH201", "FH202", "FH301", "FH302"],
-    "start": ["S"],
+    "start": ["S", 'P'],
     "smodel": ["", None] + list(CROPS_MODULES.values()),
     "switch": ["Y", "N"],
     "co2": ["M", "D", "W"],
@@ -103,7 +103,7 @@ CODE_VARS = {
     "infil": ["S", "R", "N"], 
     "photo": ["C", "L", "R"],
     "hydro": ["R", ], 
-    "nswit": ["1", ], 
+    "nswit": ["1", '0'], 
     "mesom": ["G", "P"],
     "mesev": ["R", "S"], 
     "mesol": ["1", "2", "3"],
@@ -155,7 +155,8 @@ SECTION_HEADERS = {
     "Chemical": "*CHEMICAL APPLICATIONS",
     "Tillage": "*TILLAGE AND ROTATIONS",
     "Field": "*FIELDS",
-    "Treatment": "*TREATMENTS                        -------------FACTOR LEVELS------------"
+    "Treatment": "*TREATMENTS                        -------------FACTOR LEVELS------------",
+    "Mow": '!This file is for parameters controlling simulated mowing events for alfalfa\n!for CROPGRO-Forage model.\n!Mow height is not used any where, except to affect canopy height as m or cm.'
 }
 FACTOR_LEVELS = {
     "Cultivar": "cu",
@@ -438,7 +439,7 @@ class Record(MutableMapping):
 
     This is also used for a row of ECO or CUL parmeters
     """ 
-    prefix:dict # Prefix on FILEX/CUL/ECO
+    prefix:str # Prefix on FILEX/CUL/ECO
     dtypes:dict # Data type of each parameter in the record
     pars_fmt:dict # Format of each parameter
     n_tiers:int = 1 # Number of tiers. Sections like Field have more than one
@@ -516,7 +517,8 @@ class Record(MutableMapping):
             fmt = leading + fmt.split(".")[0]
             header.append(format(key.upper(), fmt))
         out_str = SECTION_HEADERS[type(self).__name__] + "\n"
-        out_str += " ".join(header) + "\n" + " 1 " + self._write_row()
+        out_str += " ".join(header) + "\n" + " "*len(self.prefix) + "1 " + \
+              self._write_row()
         return out_str
     
 
@@ -553,7 +555,7 @@ class TabularRecord(Record):
         table_str = self.table._write_table().split("\n")
         out_str += f"@{self.prefix.upper()} {table_str[0]}\n"
         for row in table_str[1:-1]: # Table string ends with \n
-            out_str += f" 1 {row}\n"
+            out_str += " "*len(self.prefix) + f"1 {row}\n"
         return out_str
     
     def __bool__(self):
@@ -566,6 +568,8 @@ def parse_pars_line(line, fmt):
     line = line[:]
     pars = {}
     for par, f in fmt.items():
+        if f == '%y%j':
+            f = '>5'
         if f[0] == ".":
             f = f[1:] # Remove point
         f = f[1:] # Remove right or left justifier
