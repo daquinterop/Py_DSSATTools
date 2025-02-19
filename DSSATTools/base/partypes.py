@@ -666,10 +666,13 @@ class Crop(MutableMapping):
             self.spe_path, cultivar_code, self.cul_dtypes, self.cul_pars_fmt, 
             "var#"
         )
-        self.__cultivar["eco#"] = _get_croppars(
-            self.spe_path, self.__cultivar._ecocode, self.eco_dtypes, 
-            self.eco_pars_fmt, "eco#"
-        )
+        if self.eco_dtypes:
+            self.__cultivar["eco#"] = _get_croppars(
+                self.spe_path, self.__cultivar._ecocode, self.eco_dtypes, 
+                self.eco_pars_fmt, "eco#"
+            )
+        else:
+            self.__cultivar["eco#"] = self.__cultivar._ecocode
         return
     
     def __repr__(self):

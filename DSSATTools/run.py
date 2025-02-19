@@ -212,9 +212,10 @@ class DSSAT:
             lines = cultivar._write_cul()
             f.write(lines)
         eco_filename = os.path.join(self.run_path, cultivar.spe_file[:-3]+"ECO") 
-        with open(eco_filename, "w") as f:
-            lines = cultivar._write_eco()
-            f.write(lines)
+        if cultivar.eco_dtypes:
+            with open(eco_filename, "w") as f:
+                lines = cultivar._write_eco()
+                f.write(lines)
         # Soil
         sol_filename = os.path.join(self.run_path, "SOIL.SOL")
         with open(sol_filename, "w") as f:

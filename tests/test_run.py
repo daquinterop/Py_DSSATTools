@@ -15,9 +15,9 @@ This is the list of crops and the tested experiments:
 | Sorghum      | ITHY8001   |   2   |
 | Alfalfa      | AGZG1501   |   1   |
 | Dry Bean     | CCPA8629   |   1   |
+| Rice         | Pending
 | Millet       | Pending
 | Sugarbeet    | Pending
-| Rice         | Pending
 | Sweetcorn    | Pending
 | Bermudagrass | Pending
 | Canola       | Pending
@@ -276,9 +276,62 @@ def test_alfalfa():
     assert all([
         np.isclose(gui, i, rtol=0.01) 
         for gui, i in zip(dssat_gui_values, forage.FHWAH)
-    ])    
+    ])
     dssat.close()
 
+def test_dryBean():
+    """
+    Experiment CCPA8629, Treatment 1
+    """
+    soil = SoilProfile.from_file("IBBN910030")
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "CCPA8601.WTH"),
+        os.path.join(DATA_PATH, 'Weather', "CCPA8501.WTH")
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Drybean', "CCPA8629.BNX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=treatment['Cultivar'].crop, 
+        initial_conditions=treatment['InitialConditions'],
+        planting=treatment["Planting"],
+        irrigation=treatment["Irrigation"],
+        fertilizer=treatment['Fertilizer'],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(3171, results['harwt'], rtol=0.01)
+    dssat.close()
+
+def test_rice():
+    """
+    Experiment DTSP8502, Treatment 4
+    """
+    soil = SoilProfile.from_file("IBRI910024")
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "DTSP8501.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Rice', "DTSP8502.RIX"))
+    treatment = treatments[4]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=treatment['Cultivar'].crop, 
+        initial_conditions=treatment['InitialConditions'],
+        planting=treatment["Planting"],
+        irrigation=treatment["Irrigation"],
+        fertilizer=treatment['Fertilizer'],
+        residue=treatment['Residue'],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(4698, results['harwt'], rtol=0.01)
+    dssat.close()
 
 if __name__ == "__main__":
-    test_alfalfa()
+    test_rice()
