@@ -197,7 +197,32 @@ def test_tomato():
     )
     assert np.isclose(6360, results['harwt'], rtol=0.01)
     dssat.close()
+
+def test_soybean():
+    """
+    Experiment CLMO8501, treatment 1
+    """
+    soil = SoilProfile.from_file("IBSB910032")
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "CLMO8501.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Soybean', "CLMO8501.SBX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=treatment['Cultivar'].crop, 
+        planting=treatment["Planting"],
+        initial_conditions=treatment["InitialConditions"],
+        irrigation=treatment["Irrigation"],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(2495, results['harwt'], rtol=0.01)
+    dssat.close()
     
 
 if __name__ == "__main__":
-    test_tomato()
+    test_soybean()

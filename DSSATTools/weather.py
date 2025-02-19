@@ -8,7 +8,7 @@ from io import StringIO
 from datetime import date
 from .base.partypes import (
     DateType, NumberType, Record, TabularRecord, DescriptionType,
-    clean_comments
+    clean_comments, parse_pars_line
 )
 
 class WeatherRecord(Record):
@@ -164,15 +164,7 @@ class WeatherStation(TabularRecord):
                 lines = []
                 for line in f:
                     if "@ INSI" in line:
-                        if len(line[1:].split()) == 8:
-                            insi, lat, long, elev, tav, amp, refht, wndth = \
-                                f.readline().split()
-                        elif len(line[1:].split()) == 6:
-                            insi, lat, long, elev, tav, amp = \
-                                f.readline().split()
-                            refht = wndth = None
-                        else:
-                            raise RuntimeError
+                        sta_pars = parse_pars_line(f.readline()[2:], cls.pars_fmt)
                     elif ("@DATE" in line):
                         date_fmt = "%y%j"
                         lines.append(line)
@@ -207,9 +199,6 @@ class WeatherStation(TabularRecord):
         table_df = tmp_df.copy()
         table_df.index.name = "date"
         table_df = table_df.reset_index()
-        
-        weather = cls(
-            lat=lat, long=long, insi=insi, elev=elev, tav=tav, amp=amp,
-            refht=refht, wndht=wndth, table=table_df
-        )
+        sta_pars["table"] = table_df
+        weather = cls(**sta_pars)
         return weather
