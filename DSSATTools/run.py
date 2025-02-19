@@ -34,10 +34,12 @@ from DSSATTools.management import Management
 from DSSATTools.base.sections import TabularSubsection
 
 OS = platform.system().lower()
-OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg", "SoilNi"]
+OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg", "SoilNi", 
+           "OVERVIEW", "Summary"]
 OUTPUT_MAP = {
     "PlantGro": "GROUT",  "SoilWat": "WAOUT", "SoilOrg": "CAOUT",
-    "Weather": "GROUT", "SoilNi": "NIOUT"
+    "Weather": "GROUT", "SoilNi": "NIOUT", "OVERVIEW": "OVVEW",
+    "Summary": "SUMRY"
 }
 SOIL_LAYER_OUTPUTS = ["SoilNi"]
 
@@ -229,8 +231,6 @@ class DSSAT():
         wth_path = os.path.join(self._RUN_PATH, 'Weather')
         weather.write(wth_path, management=management)
 
-        
-
         with open(os.path.join(self._RUN_PATH, CONFILE), 'w') as f:
             f.write(f'WED    {wth_path}\n')
             if crop._CODE in ["WH", "BA"]:
@@ -264,6 +264,11 @@ class DSSAT():
             var for var in OUTPUTS
             if management.simulation_controls.get(OUTPUT_MAP.get(var)) in ("Y", None)
         ]
+
+        # There's not overview file for perenial forages
+        if crop.crop_name in PERENIAL_FORAGES:
+            self.OUTPUT_LIST.remove("OVERVIEW")
+
         # Check for man.simulation_controls["WATER"]
         if management.simulation_controls["WATER"] == "N":
             self.OUTPUT_LIST = list(filter(lambda x: x != "SoilWat", self.OUTPUT_LIST))
@@ -271,41 +276,81 @@ class DSSAT():
         for file in self.OUTPUT_LIST:
             assert f'{file}.OUT' in OUTPUT_FILES, \
                 f'{file}.OUT does not exist in {self._RUN_PATH}'
-            table_start = -1
-            init_lines = []
-            with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
-                while True:
-                    table_start += 1
-                    init_lines.append(f.readline())
-                    if '@' in init_lines[-1][:10]:
-                        break
-            
-            try:  
-                df = pd.read_csv(
-                    os.path.join(self._RUN_PATH, f'{file}.OUT'),
-                    skiprows=table_start, sep=' ', skipinitialspace=True
-                )
-                df = df.dropna(how="all", axis=1)
-
-            except UnicodeDecodeError:
+            if "OVERVIEW" in file:
+                self.stress_table = self._get_overview_stress()
+                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 
+                          'r', encoding='cp437') as f:
+                    self._output[file] = f.readlines()
+            else:
+                table_start = -1
+                init_lines = []
                 with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
-                    lines = f.readlines()
-                with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'w', encoding='utf-8') as f:
-                    f.writelines(lines[table_start:])
-                df = pd.read_csv(
-                    os.path.join(self._RUN_PATH, f'{file}.OUT'),
-                    skiprows=0, sep=' ', skipinitialspace=True
-                )
-            if all(('@YEAR' in df.columns, 'DOY' in df.columns)):
-                df['DOY'] = df.DOY.astype(int).map(lambda x: f'{x:03d}')
-                df['@YEAR'] = df['@YEAR'].astype(str)
-                df.index = pd.to_datetime(
-                    (df['@YEAR'] + df['DOY']),
-                    format='%Y%j'
-                )
-            self._output[file] = df
+                    while True:
+                        table_start += 1
+                        init_lines.append(f.readline())
+                        if '@' in init_lines[-1][:10]:
+                            break
+                
+                try:  
+                    df = pd.read_csv(
+                        os.path.join(self._RUN_PATH, f'{file}.OUT'),
+                        skiprows=table_start, sep=' ', skipinitialspace=True
+                    )
+                    df = df.dropna(how="all", axis=1)
+
+                except UnicodeDecodeError:
+                    with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'r', encoding='cp437') as f:
+                        lines = f.readlines()
+                    with open(os.path.join(self._RUN_PATH, f'{file}.OUT'), 'w', encoding='utf-8') as f:
+                        f.writelines(lines[table_start:])
+                    df = pd.read_csv(
+                        os.path.join(self._RUN_PATH, f'{file}.OUT'),
+                        skiprows=0, sep=' ', skipinitialspace=True
+                    )
+                if all(('@YEAR' in df.columns, 'DOY' in df.columns)):
+                    df['DOY'] = df.DOY.astype(int).map(lambda x: f'{x:03d}')
+                    df['@YEAR'] = df['@YEAR'].astype(str)
+                    df.index = pd.to_datetime(
+                        (df['@YEAR'] + df['DOY']),
+                        format='%Y%j'
+                    )
+                self._output[file] = df
 
         return
+    
+    def _get_overview_stress(self):
+        table_start = -1
+        init_lines=[]
+        with open(os.path.join(self._RUN_PATH, 'OVERVIEW.OUT'), 'r', encoding='cp437') as f:
+            while True:
+                table_start += 1
+                search_term="DATE"
+                data = []
+                init_lines.append(f.readline())
+                if search_term in init_lines[-1][:12]:
+                    header = ['DATE', 'CROP AGE', 'GROWTH STAGE', 'BIOMASS', 'LEAF LAI', \
+                              'LEAF NUM', 'N_KG', 'N_PERCENT', 'STRESS H2O', 'STRESS Nitr', \
+                              'STRESS Phos1', 'STRESS Phos2', 'RSTG']
+                    break
+            # Skip the underline or separator line
+            f.readline()
+            for line in f:
+                if re.match(r'^\s*$', line):  # Check for an empty line
+                    break
+                else:
+                    data.append(line.strip())
+        widths = [7, 5, 11, 8, 7, 6, 5, 5, 6, 6, 6, 6, 6]
+        df_data=[]
+        for line in data:
+            columns = []
+            start = 0
+            for width in widths:
+                columns.append(line[start:start + width].strip())  # Extract and strip
+                start += width
+            df_data.append(columns)
+        df = pd.DataFrame(df_data, columns=header).dropna(how="all", axis=1)
+        return df
+
 
     def close(self):
         '''
