@@ -1,23 +1,7 @@
 """
 File X module. 
 
-Contains classes to handle the different sections of the fileX. Each section
-is represented by its own class. Overall, there are four types of base 
-classes that are used to construct all the sections:
 
-    Record: 
-    It is to be interpreted as a single row in the FileX. There
-    are three sections that are built based only in this class: Planting, 
-    Cultivar, and Harvest. Those are basically the sections that can only
-    contain a single row per treatment.
-
-    TabularRecord: 
-    It is to be interpreted as those sections that are formed by tabular 
-    entries. For example, all the other sections that can contain more 
-    than one row per treatment. Overall, there are two types of 
-    TabularRecords defined. Soil Tables (Soil Analysis, Initial
-    Conditions), and Schedule Tables (Fertilizer, Irrigation, Residue,
-    Chemical, Tillage). 
 
     SimulationOptions and Treatment:
     They are only to represent those sections.
@@ -57,7 +41,7 @@ class Planting(Record):
     pars_fmt = {
         "pdate": "%y%j", "edate": "%y%j", "ppop": ">5.1f", "ppoe": ">5.1f", 
         "plme": ">5", "plds": ">5", "plrs": ">5.0f", "plrd": ">5.0f", 
-        "pldp": ">5.0f", "plwt": ">5.1f", "page": ">5.0f", "penv": ">5.1f", 
+        "pldp": ">5.1f", "plwt": ">5.1f", "page": ">5.0f", "penv": ">5.1f", 
         "plph": ">5.0f", "sprl": ">5.0f", "plname": ">29"
     }
     # Typehints must be in order following DSSAT column order
@@ -1486,12 +1470,14 @@ class Mow(TabularRecord):
             lines = f.readlines()
         lines = clean_comments(lines)
         lines = filter(lambda x: '@TRNO' not in x, lines)
-        events = []
+        events = {}
         for line in lines:
             if len(line.strip()) > 10:
                 pars = parse_pars_line(line[7:], cls.table_dtype.pars_fmt)
-                events.append(cls.table_dtype(**pars))
-        return cls(events)
+                level = int(line[:6])
+                events[level] = events.get(level, []) + [cls.table_dtype(**pars)]
+        events = {k: cls(v) for k, v in events.items()}
+        return events
 
 
 def get_header_range(l, h, pars_fmt):
@@ -1539,6 +1525,10 @@ def read_filex(filexpath):
     for l in lines:
         l = l.replace("\n", "")
         if len(l.strip()) < 2:
+            if lookup == 'table header': # In case Table is not there
+                experiment[section_cls.__name__] = vals_dict
+                vals_dict = {}
+                del level
             if lookup == "table values":
                 if only_table:
                     for level, val in vals.items():

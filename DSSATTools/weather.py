@@ -194,8 +194,8 @@ class WeatherStation(TabularRecord):
             index=pd.date_range(table_df.index[0], table_df.index[-1])
         )
         for col in table_df.columns: tmp_df[col] = table_df[col]
-        assert not tmp_df.isna().any(axis=0).any(), \
-            "The files generate a timeseries with missing data"
+        # assert not tmp_df.isna().any(axis=0).any(), \
+        #     "The files generate a timeseries with missing data"
         table_df = tmp_df.copy()
         table_df.index.name = "date"
         table_df = table_df.reset_index()

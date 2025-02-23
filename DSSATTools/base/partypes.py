@@ -1,8 +1,27 @@
 """
 Parameter types.
 
+Contains classes to handle the different sections of the fileX. Each section
+is represented by its own class. Overall, there are four types of base 
+classes that are used to construct all the sections:
+
+    Record: 
+    It is to be interpreted as a single row in the FileX. There
+    are three sections that are built based only in this class: Planting, 
+    Cultivar, and Harvest. Those are basically the sections that can only
+    contain a single row per treatment.
+
+    TabularRecord: 
+    It is to be interpreted as those sections that are formed by tabular 
+    entries. For example, all the other sections that can contain more 
+    than one row per treatment. Overall, there are two types of 
+    TabularRecords defined. Soil Tables (Soil Analysis, Initial
+    Conditions), and Schedule Tables (Fertilizer, Irrigation, Residue,
+    Chemical, Tillage). 
+
 The order of the elements in the pars_fmt and dtype dictionaries is extremely
 important. They must follow the order of the columns in the DSSAT files.
+    
 """
 from datetime import date, datetime
 from collections.abc import MutableMapping, MutableSequence
@@ -56,9 +75,9 @@ CODE_VARS = {
              'FE702', 'FE720', 'FE721', 'FE722', 'FE723', 'FE740', 'FE900',
              "IB001", "IB002", 'SI001', 'IFE01', '0', '00000', '0000'],
     "facd": [None] + [f"AP{i:03d}" for i in range(1, 21)],
-    "smhb": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
-    "smpx": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
-    "smke": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(15)],
+    "smhb": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(16)],
+    "smpx": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(16)],
+    "smke": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(16)],
     "iame": [None, "IB001", "IB00", 'B001', 'SI001'] +\
           [f"IR{i:03d}" for i in range(1, 12)],
     "rcod": [None] + [
@@ -87,7 +106,7 @@ CODE_VARS = {
     ],
     "sltx": [None] + [
         "C", "CL", "L", "LS", "S", "SC", "SCL", "SI", "SIC", "SICL", "SIL", 
-        "SL", "SA"
+        "SL", "SA", 'LO'
     ],
     "fldt": ["DR000", "DR001", "DR002", "DR003", "IB000", None, "-99"],
     "flst": [None, "00000", "0", '0000'],
@@ -110,7 +129,7 @@ CODE_VARS = {
     "plant": ["A", "F", "R", ], 
     "irrig": ["A", "D", "F", "N", "P", "R", "W"], 
     "ferti": ["D", "N", "R", ],
-    "resid": ["D", "N", "R", ], 
+    "resid": ["D", "N", "R", 'A'], 
     "harvs": ["A", "D", "M", "R", "W", "X", "Y", "Z"], 
     "vbose": ["A", "0", "D", "N", "Y"],
     "fmopt": ["C", "A"],
@@ -196,6 +215,14 @@ def clean_comments(lines):
     return clean_lines
 
 class CodeType(str):
+    """
+    A class for Code variables in the DSSAT FileX. For example: fertilizer
+    application methods, fertilizer materials, tillage operations, irrigation
+    methods, etc. Those are the variables that are defined using a Dropdown menu 
+    in DSSAT XBuild. 
+    CodeType variables can only take the value that is allowed for that specific
+    variable. 
+    """
     def __new__(cls, name, value, fmt):
         if isinstance(value, str):
             value = value.strip()
@@ -230,6 +257,9 @@ class CodeType(str):
 
 
 class DateType(date):
+    """
+    A Class to handle all date variables in DSSAT.
+    """
     def __new__(cls, name, value, fmt):
         if isinstance(value, (date, datetime)):
             pass
@@ -238,6 +268,8 @@ class DateType(date):
         elif int(value) == -99:
             value = date(9999, 1, 1)
         elif isinstance(value, str):
+            if len(value.strip()) < 5:
+                value = f"{int(value):05d}"
             try:
                 value = datetime.strptime(value, "%y%j")
             except:
@@ -266,12 +298,15 @@ class DateType(date):
 
 
 class NumberType(float):
+    """
+    A class to handle all Number type varibles in DSSAT.
+    """
     def __new__(cls, name, value, fmt):
         if value is None:
             value = np.nan
         elif isinstance(value, str) and (len(value.split()) == 0):
             value = np.nan
-        elif int(float(value)) == -99:
+        elif float(value) == -99.:
             value = np.nan
         else:
             pass
@@ -292,6 +327,11 @@ class NumberType(float):
 
         
 class DescriptionType(str):
+    """
+    A Class to handle the Description type variables in all DSSAT files. This
+    includes all the user defined code-like variables, such as Soil profiles' id,
+    INSI codes, description and name of treatments, cultivars, ecotypes, etc.
+    """
     def __new__(cls, name, value, fmt):
         if isinstance(value, str):
             value = value.strip()
@@ -434,8 +474,8 @@ class TableType(MutableSequence):
 
 class Record(MutableMapping):
     """
-    Generic class to handle a single fileX row. The name and type of 
-    variables contained in the record are defined in the child object.
+    Generic class to handle a single fileX, WTH, CUL, ECO, or SOL row. The name 
+    and type of variables contained in the record are defined in the child object.
 
     This is also used for a row of ECO or CUL parmeters
     """ 
@@ -524,8 +564,8 @@ class Record(MutableMapping):
 
 class TabularRecord(Record):
     '''
-    Basically the same as record, with a table attribute. The 
-    table is list of Records.
+    Basically the same as record, with a table attribute. The table is list of 
+    Record subinstances.
     '''
     table_dtype:Type # Data type contained in the table
     table:TableType # The table
@@ -580,7 +620,7 @@ def parse_pars_line(line, fmt):
 
 def _get_croppars(spe_path, code, dtypes_dict, pars_fmt_dict, par_prefix):
     """
-    It constructs and returns a CropPars class for the Cultivar and Ecotype
+    It constructs and returns a CropPars instance for the Cultivar and Ecotype
     parameters
     """
     assert par_prefix in ("var#", "eco#")

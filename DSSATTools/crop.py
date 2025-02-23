@@ -438,12 +438,39 @@ class Bermudagrass(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'vrname': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'csdl': NumberType, 'ppsen': NumberType, 'em-fl': NumberType, 
+        'fl-sh': NumberType, 'fl-sd': NumberType, 'sd-pm': NumberType, 
+        'fl-lf': NumberType, 'lfmax': NumberType, 'slavr': NumberType, 
+        'sizlf': NumberType, 'xfrt': NumberType, 'wtpsd': NumberType, 
+        'sfdur': NumberType, 'sdpdv': NumberType, 'podur': NumberType, 
+        'thrsh': NumberType, 'sdpro': NumberType, 'sdlip': NumberType
     }
     cul_pars_fmt = {
+        'vrname': '.<16', 'expno': '>5', 'eco#': '>6', 'csdl': '>5.2f', 
+        'ppsen': '>5.3f', 'em-fl': '>5.1f', 'fl-sh': '>5.1f', 'fl-sd': '>5.1f', 
+        'sd-pm': '>5.2f', 'fl-lf': '>5.2f', 'lfmax': '>5.2f', 'slavr': '>5.1f', 
+        'sizlf': '>5.2f', 'xfrt': '>5.2f', 'wtpsd': '>5.2f', 'sfdur': '>5.1f', 
+        'sdpdv': '>5.2f', 'podur': '>5.1f', 'thrsh': '>5.1f', 'sdpro': '>5.3f', 
+        'sdlip': '>5.3f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'mg': DescriptionType, 'tm': DescriptionType, 
+        'thvar': NumberType, 'pl-em': NumberType, 'em-v1': NumberType, 
+        'v1-ju': NumberType, 'ju-r0': NumberType, 'pm06': NumberType, 
+        'pm09': NumberType, 'lngsh': NumberType, 'r7-r8': NumberType, 
+        'fl-vs': NumberType, 'trifl': NumberType, 'rwdth': NumberType, 
+        'rhght': NumberType, 'r1ppo': NumberType, 'optbi': NumberType, 
+        'slobi': NumberType, 'rdrmt': NumberType, 'rdrmg': NumberType, 
+        'rdrmm': NumberType, 'rchdp': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'mg': '<2', 'tm': '<2', 'thvar': '>5.2f', 
+        'pl-em': '>5.2f', 'em-v1': '>5.2f', 'v1-ju': '>5.2f', 'ju-r0': '>5.0f', 
+        'pm06': '>5.2f', 'pm09': '>5.2f', 'lngsh': '>5.1f', 'r7-r8': '>5.0f', 
+        'fl-vs': '>5.0f', 'trifl': '>5.2f', 'rwdth': '>5.2f', 'rhght': '>5.2f', 
+        'r1ppo': '>5.3f', 'optbi': '>5.2f', 'slobi': '>5.3f', 'rdrmt': '>5.3f', 
+        'rdrmg': '>5.3f', 'rdrmm': '>5.3f', 'rchdp': '>5.2f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
@@ -455,12 +482,37 @@ class Canola(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'vrname': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'csdl': NumberType, 'ppsen': NumberType, 'em-fl': NumberType, 
+        'fl-sh': NumberType, 'fl-sd': NumberType, 'sd-pm': NumberType, 
+        'fl-lf': NumberType, 'lfmax': NumberType, 'slavr': NumberType, 
+        'sizlf': NumberType, 'xfrt': NumberType, 'wtpsd': NumberType, 
+        'sfdur': NumberType, 'sdpdv': NumberType, 'podur': NumberType, 
+        'thrsh': NumberType, 'sdpro': NumberType, 'sdlip': NumberType
     }
     cul_pars_fmt = {
+        'vrname': '.<16', 'expno': '>5', 'eco#': '>6', 'csdl': '>5.2f', 
+        'ppsen': '>5.3f', 'em-fl': '>5.1f', 'fl-sh': '>5.1f', 'fl-sd': '>5.1f', 
+        'sd-pm': '>5.2f', 'fl-lf': '>5.2f', 'lfmax': '>5.3f', 'slavr': '>5.1f', 
+        'sizlf': '>5.1f', 'xfrt': '>5.2f', 'wtpsd': '>5.3f', 'sfdur': '>5.1f', 
+        'sdpdv': '>5.1f', 'podur': '>5.1f', 'thrsh': '>5.2f', 'sdpro': '>5.3f', 
+        'sdlip': '>5.3f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'mg': DescriptionType, 'tm': DescriptionType, 
+        'thvar': NumberType, 'pl-em': NumberType, 'em-v1': NumberType, 
+        'v1-ju': NumberType, 'ju-r0': NumberType, 'pm06': NumberType, 
+        'pm09': NumberType, 'lngsh': NumberType, 'r7-r8': NumberType, 
+        'fl-vs': NumberType, 'trifl': NumberType, 'rwdth': NumberType, 
+        'rhght': NumberType, 'r1ppo': NumberType, 'optbi': NumberType, 
+        'slobi': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'mg': '<2', 'tm': '<2', 'thvar': '>5.1f', 
+        'pl-em': '>5.1f', 'em-v1': '>5.1f', 'v1-ju': '>5.1f', 'ju-r0': '>5.1f', 
+        'pm06': '>5.1f', 'pm09': '>5.2f', 'lngsh': '>5.1f', 'r7-r8': '>5.1f', 
+        'fl-vs': '>5.2f', 'trifl': '>5.2f', 'rwdth': '>5.1f', 'rhght': '>5.1f', 
+        'r1ppo': '>5.3f', 'optbi': '>5.1f', 'slobi': '>5.3f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
@@ -472,12 +524,37 @@ class Sunflower(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'var-name': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'csdl': NumberType, 'ppsen': NumberType, 'em-fl': NumberType, 
+        'fl-sh': NumberType, 'fl-sd': NumberType, 'sd-pm': NumberType, 
+        'fl-lf': NumberType, 'lfmax': NumberType, 'slavr': NumberType, 
+        'sizlf': NumberType, 'xfrt': NumberType, 'wtpsd': NumberType, 
+        'sfdur': NumberType, 'sdpdv': NumberType, 'podur': NumberType, 
+        'thrsh': NumberType, 'sdpro': NumberType, 'sdlip': NumberType
     }
     cul_pars_fmt = {
+        'var-name': '.<16', 'expno': '>5', 'eco#': '>6', 'csdl': '>5.2f', 
+        'ppsen': '>5.3f', 'em-fl': '>5.2f', 'fl-sh': '>5.2f', 'fl-sd': '>5.2f', 
+        'sd-pm': '>5.2f', 'fl-lf': '>5.2f', 'lfmax': '>5.2f', 'slavr': '>5.1f', 
+        'sizlf': '>5.1f', 'xfrt': '>5.2f', 'wtpsd': '>5.2f', 'sfdur': '>5.1f', 
+        'sdpdv': '>5.2f', 'podur': '>5.1f', 'thrsh': '>5.1f', 'sdpro': '>5.3f', 
+        'sdlip': '>5.3f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'mg': DescriptionType, 'tm': DescriptionType, 
+        'thvar': NumberType, 'pl-em': NumberType, 'em-v1': NumberType, 
+        'v1-ju': NumberType, 'ju-r0': NumberType, 'pm06': NumberType, 
+        'pm09': NumberType, 'lngsh': NumberType, 'r7-r8': NumberType, 
+        'fl-vs': NumberType, 'trifl': NumberType, 'rwdth': NumberType, 
+        'rhght': NumberType, 'r1ppo': NumberType, 'optbi': NumberType, 
+        'slobi': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'mg': '>2', 'tm': '>2', 'thvar': '>5.2f', 
+        'pl-em': '>5.2f', 'em-v1': '>5.2f', 'v1-ju': '>5.2f', 'ju-r0': '>5.2f', 
+        'pm06': '>5.2f', 'pm09': '>5.2f', 'lngsh': '>5.2f', 'r7-r8': '>5.2f', 
+        'fl-vs': '>5.2f', 'trifl': '>5.2f', 'rwdth': '>5.2f', 'rhght': '>5.2f', 
+        'r1ppo': '>5.3f', 'optbi': '>5.3f', 'slobi': '>5.3f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)

@@ -231,7 +231,7 @@ class DSSAT:
             f.write(lines)
         # Mow
         if type(cultivar).__name__ in PERENIAL_FORAGES:
-            if len(mow.table) < 1:
+            if (not mow) or (len(mow.table) < 1):
                 warnings.warn('Mow was not defined. It can be defined in the mow parameter.')
             else:
                 mow_file_path = os.path.join(self.run_path, f'{filex_name[:-4]}.MOW')
