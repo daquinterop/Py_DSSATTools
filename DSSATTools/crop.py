@@ -566,12 +566,18 @@ class Potato(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'var-name': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'g2': NumberType, 'g3': NumberType, 'pd': NumberType,  'p2': NumberType,'tc': NumberType
     }
     cul_pars_fmt = {
+        'var-name': '.<16', 'expno': '>5', 'eco#': '>6', 
+         'g2': '>5.1f',  'g3': '>5.1f', 'pd': '>5.1f', 'p2': '>5.3f','tc': '>5.1f'
     }
     eco_dtypes = {
+     'econame': DescriptionType,"rue1": NumberType, "rue2": NumberType,
     }
     eco_pars_fmt = {
+         "econame": '.<17',"rue1": ">5.1f", "rue2": ">5.1f"
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
