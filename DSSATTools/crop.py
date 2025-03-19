@@ -627,3 +627,4 @@ class Cassava(Crop):
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
         return
+
