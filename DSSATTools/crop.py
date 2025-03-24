@@ -8,13 +8,6 @@ from .base.partypes import (
 )
 from . import __file__ as module_path
 
-# To add a new crop you have to do the next: 
-# 1. Add all the new crop to DEFAULT_CULTIVARS, CROP_CODES, CROPS_MODULES, CUL_VARNAME 
-#    in this file
-# 2. Add the new crop to CULTIVAR_HEADER_FMT, CULTIVAR_ROWS_FMT, ECOTYPE_HEADER_FMT, and
-#    ECOTYPE_ROWS_FMT in sections.py
-# 3. Add the crop in the __init__ docstring and the README file.
-
 SPE_FILES = {
     'Maize': f'MZCER{VERSION}.SPE',
     'PearlMillet': f'MLCER{VERSION}.SPE',
@@ -566,12 +559,19 @@ class Potato(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'var-name': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'g2': NumberType, 'g3': NumberType, 'pd': NumberType, 'p2': NumberType, 
+        'tc': NumberType
     }
     cul_pars_fmt = {
+        'var-name': '.<16', 'expno': '>5', 'eco#': '>6', 'g2': '>5.1f', 
+        'g3': '>5.2f', 'pd': '>5.3f', 'p2': '>5.3f', 'tc': '>5.2f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'rue1': NumberType, 'rue2': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'rue1': '>5.2f', 'rue2': '>5.2f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
@@ -583,12 +583,37 @@ class Cabbage(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'vrname': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'csdl': NumberType, 'ppsen': NumberType, 'em-fl': NumberType, 
+        'fl-sh': NumberType, 'fl-sd': NumberType, 'sd-pm': NumberType, 
+        'fl-lf': NumberType, 'lfmax': NumberType, 'slavr': NumberType, 
+        'sizlf': NumberType, 'xfrt': NumberType, 'wtpsd': NumberType, 
+        'sfdur': NumberType, 'sdpdv': NumberType, 'podur': NumberType, 
+        'thrsh': NumberType, 'sdpro': NumberType, 'sdlip': NumberType
     }
     cul_pars_fmt = {
+        'vrname': '.<16', 'expno': '>5', 'eco#': '>6', 'csdl': '>5.2f', 
+        'ppsen': '>5.3f', 'em-fl': '>5.2f', 'fl-sh': '>5.2f', 'fl-sd': '>5.2f', 
+        'sd-pm': '>5.2f', 'fl-lf': '>5.2f', 'lfmax': '>5.3f', 'slavr': '>5.1f', 
+        'sizlf': '>5.1f', 'xfrt': '>5.3f', 'wtpsd': '>5.2f', 'sfdur': '>5.2f', 
+        'sdpdv': '>5.2f', 'podur': '>5.1f', 'thrsh': '>5.2f', 'sdpro': '>5.3f', 
+        'sdlip': '>5.3f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'mg': DescriptionType, 'tm': DescriptionType, 
+        'pp-ss': NumberType, 'pl-em': NumberType, 'em-v1': NumberType, 
+        'v1-ju': NumberType, 'ju-r0': NumberType, 'pm06': NumberType, 
+        'pm09': NumberType, 'lnhsh': NumberType, 'r7-r8': NumberType, 
+        'fl-vs': NumberType, 'trifl': NumberType, 'rwdth': NumberType, 
+        'rhght': NumberType, 'r1ppo': NumberType, 'optbi': NumberType, 
+        'slobi': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'mg': '>2', 'tm': '>2', 'pp-ss': '>5.2f', 
+        'pl-em': '>5.2f', 'em-v1': '>5.2f', 'v1-ju': '>5.2f', 'ju-r0': '>5.2f', 
+        'pm06': '>5.2f', 'pm09': '>5.2f', 'lnhsh': '>5.1f', 'r7-r8': '>5.2f', 
+        'fl-vs': '>5.2f', 'trifl': '>5.2f', 'rwdth': '>5.2f', 'rhght': '>5.2f', 
+        'r1ppo': '>5.3f', 'optbi': '>5.1f', 'slobi': '>5.3f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
@@ -600,12 +625,63 @@ class Sugarcane(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'var-name': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'maxparce': NumberType, 'apfmx': NumberType, 'stkpfmax': NumberType, 
+        'suca': NumberType, 'tbft': NumberType, 'lfmax': NumberType, 
+        'mxlfarea': NumberType, 'mxlfarno': NumberType, 'pi1': NumberType, 
+        'pi2': NumberType, 'pswitch': NumberType, 'ttplntem': NumberType, 
+        'ttratnem': NumberType, 'chupibase': NumberType, 'tt_popgrowth': NumberType,
+        'poptt16': NumberType, 'tar0': NumberType, 'tdelay': NumberType, 
+        'ler0': NumberType, 'ser0': NumberType, 'lg_ambase': NumberType, 
+        'aqp_up5': NumberType
     }
     cul_pars_fmt = {
+        'var-name': '.<16', 'expno': '>5', 'eco#': '>6', 'maxparce': '>14.4f', 
+        'apfmx': '>14.4f', 'stkpfmax': '>14.4f', 'suca': '>14.4f', 'tbft': '>14.4f',
+        'lfmax': '>14.4f', 'mxlfarea': '>14.4f', 'mxlfarno': '>14.4f', 
+        'pi1': '>14.4f', 'pi2': '>14.4f', 'pswitch': '>14.4f', 'ttplntem': '>14.4f', 
+        'ttratnem': '>14.4f', 'chupibase': '>14.4f', 'tt_popgrowth': '>14.4f', 
+        'poptt16': '>14.4f', 'tar0': '>14.4f', 'tdelay': '>14.4f', 'ler0': '>14.4f', 
+        'ser0': '>14.4f', 'lg_ambase': '>14.4f', 'aqp_up5': '>14.4f'
     }
     eco_dtypes = {
+        'eco-name': DescriptionType, 'delttmax': NumberType, 'swdf2amp': NumberType, 
+        'extcfn': NumberType, 'extcfst': NumberType, 'lfnmxext': NumberType, 
+        'areamx_cf(2)': NumberType, 'areamx_cf(3)': NumberType, 'widcor': NumberType,
+        'wmax_cf(1)': NumberType, 'wmax_cf(2)': NumberType, 'wmax_cf(3)': NumberType, 
+        'popdecay': NumberType, 'ttbaseem': NumberType, 'ttbaselfex': NumberType, 
+        'lg_amrange': NumberType, 'lg_gp_reduc': NumberType, 
+        'ldg_fi_reduc': NumberType, 'lmax_cf(1)': NumberType, 
+        'lmax_cf(2)': NumberType, 'lmax_cf(3)': NumberType, 'maxlflength': NumberType, 
+        'maxlfwidth': NumberType, 'tbase_ge_em': NumberType, 'topt_ge_em': NumberType, 
+        'tfin_ge_em': NumberType, 'tbase_lfem': NumberType, 'topt_lfem': NumberType, 
+        'tfin_lfem': NumberType, 'tbase_tlrem': NumberType, 'topt_tlrem': NumberType, 
+        'tfin_tlrem': NumberType, 'tbase_lfsen': NumberType, 'topt_lfsen': NumberType, 
+        'tfin_lfsen': NumberType, 'tbase_stkex': NumberType, 'topt_stkex': NumberType,
+        'tfin_stkex': NumberType, 'tbase_lfex': NumberType, 'topt_lfex': NumberType, 
+        'tfin_lfex': NumberType, 'tbase_rex': NumberType, 'topt_rex': NumberType, 
+        'tfin_rex': NumberType, 'topt_phot': NumberType, 'topt_pho2': NumberType, 
+        'tfin_phot': NumberType, 'tbase_resp': NumberType, 'topt_resp': NumberType, 
+        'tfin_resp': NumberType
     }
     eco_pars_fmt = {
+        'eco-name': '.<18', 'delttmax': '>14.4f', 'swdf2amp': '>14.4f', 
+        'extcfn': '>14.4f', 'extcfst': '>14.4f', 'lfnmxext': '>14.4f', 
+        'areamx_cf(2)': '>14.4f', 'areamx_cf(3)': '>14.4f', 'widcor': '>14.4f', 
+        'wmax_cf(1)': '>14.4f', 'wmax_cf(2)': '>14.4f', 'wmax_cf(3)': '>14.4f', 
+        'popdecay': '>14.4f', 'ttbaseem': '>14.4f', 'ttbaselfex': '>14.4f', 
+        'lg_amrange': '>14.4f', 'lg_gp_reduc': '>14.4f', 'ldg_fi_reduc': '>14.4f', 
+        'lmax_cf(1)': '>14.4f', 'lmax_cf(2)': '>14.4f', 'lmax_cf(3)': '>14.4f', 
+        'maxlflength': '>14.4f', 'maxlfwidth': '>14.4f', 'tbase_ge_em': '>14.4f', 
+        'topt_ge_em': '>13.4f', 'tfin_ge_em': '>15.4f', 'tbase_lfem': '>14.4f', 
+        'topt_lfem': '>14.4f', 'tfin_lfem': '>14.4f', 'tbase_tlrem': '>14.4f', 
+        'topt_tlrem': '>14.4f', 'tfin_tlrem': '>14.4f', 'tbase_lfsen': '>14.4f', 
+        'topt_lfsen': '>14.4f', 'tfin_lfsen': '>14.4f', 'tbase_stkex': '>14.4f', 
+        'topt_stkex': '>14.4f', 'tfin_stkex': '>14.4f', 'tbase_lfex': '>14.4f', 
+        'topt_lfex': '>14.4f', 'tfin_lfex': '>14.4f', 'tbase_rex': '>14.4f', 
+        'topt_rex': '>14.4f', 'tfin_rex': '>14.4f', 'topt_phot': '>14.4f', 
+        'topt_pho2': '>14.4f', 'tfin_phot': '>14.4f', 'tbase_resp': '>14.4f', 
+        'topt_resp': '>14.4f', 'tfin_resp': '>14.4f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)

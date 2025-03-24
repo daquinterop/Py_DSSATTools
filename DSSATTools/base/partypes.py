@@ -52,8 +52,8 @@ CROPS_MODULES = {
     "Cassava": "CSYCA"
 }
 CODE_VARS = {
-    "plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V"],
-    "plds": ["H", "R", "U"],
+    "plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V", None],
+    "plds": ["H", "R", "U", None],
     "hstg": [None] + [f"GS0{i:02d}" for i in range(50)], #TODO: Deppends of crop, how to address that? https://github.com/DSSAT/dssat-csm-os/blob/develop/Data/GRSTAGE.CDE
     "hcom": ["C", "L", "H", None],
     "hsize": ["A", "S", "M", "L", None],
@@ -106,7 +106,7 @@ CODE_VARS = {
     ],
     "sltx": [None] + [
         "C", "CL", "L", "LS", "S", "SC", "SCL", "SI", "SIC", "SICL", "SIL", 
-        "SL", "SA", 'LO'
+        "SL", "SA", 'LO', 'CLLO'
     ],
     "fldt": ["DR000", "DR001", "DR002", "DR003", "IB000", None, "-99"],
     "flst": [None, "00000", "0", '0000'],
@@ -140,7 +140,7 @@ CODE_VARS = {
         'SIL', 'SL', None
     ]
 }
-CODE_VARS["pcr"] = CODE_VARS["cr"] 
+CODE_VARS["pcr"] = CODE_VARS["cr"] + [None]
 CODE_VARS["focd"] = CODE_VARS["fmcd"]
 CODE_VARS["ioff"] = CODE_VARS['hstg'] + ["IB001"]
 CODE_VARS["irop"] = CODE_VARS["iame"]
@@ -677,7 +677,12 @@ def _get_croppars(spe_path, code, dtypes_dict, pars_fmt_dict, par_prefix):
                 else:
                     leading = ""
                 fmt = leading + fmt.split(".")[0]
-                out_str += f" {format(key.upper(), fmt)}"
+                if key == 'maxparce': # This is spacial case for SugarCane CANEGRO CUL
+                    out_str += f" {format('MaxPARCE', fmt)}"
+                elif key[:5] == 'tfin_': # This is spacial case for SugarCane CANEGRO ECO
+                    out_str += f" {format('TFin_'+key[5:].upper(), fmt)}"
+                else:
+                    out_str += f" {format(key.upper(), fmt)}"
             out_str += f"\n{self._code} "
             out_str += self._write_row()
             return out_str

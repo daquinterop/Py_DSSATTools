@@ -285,7 +285,7 @@ class DSSAT:
         files = os.listdir(self.run_path)
         files = filter(lambda x: x[-4:] == ".OUT", files)
         for file in files:
-            with open(os.path.join(self.run_path, file), "r") as f:
+            with open(os.path.join(self.run_path, file), "r", encoding='cp437') as f:
                 self.output_files[file.split('.')[0]] = ''.join(f.readlines())
 
     def close(self):
