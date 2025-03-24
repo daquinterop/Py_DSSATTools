@@ -293,8 +293,7 @@ class DSSAT:
                     sep=" ",
                     skipinitialspace=True,
                 )
-            except Exception as e:
-                print(" %s has an error: %s" % (fname, e))
+            except Exception:
                 df = pd.read_csv(
                     io.StringIO("".join(file_lines[table_start:])),
                     skiprows=0,
