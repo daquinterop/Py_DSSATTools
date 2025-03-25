@@ -181,6 +181,7 @@ class WeatherStation(TabularRecord):
             df_list.append(tmp_df)
         
         table_df = pd.concat(df_list, ignore_index=True)
+        table_df = table_df.drop_duplicates()
         table_df.columns = [
             col.replace("@", "").strip().lower()
             for col in table_df.columns

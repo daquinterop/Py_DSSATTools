@@ -335,6 +335,7 @@ class DSSAT:
             with open(os.path.join(self.run_path, file), "r", encoding=encoding) as f:
                 self.output_files[file.split(".")[0]] = f.readlines()
 
+
     def close(self):
         '''
         Removes the simulation environment (tmp folder and files).

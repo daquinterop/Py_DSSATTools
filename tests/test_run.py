@@ -22,10 +22,10 @@ This is the list of crops and the tested experiments:
 | Bermudagrass | SPPI1101   |   1   |
 | Canola       | NOTH1201   |   3   |
 | Sunflower    | TRKO1501   |   2   |
-| Potato       | Pending
-| Cabbage      | Pending
-| Sugarcane    | Pending
-| Cassava      | Pending
+| Potato       | CPSR1302   |   1   |
+| Cabbage      | IBMC9601   |   1   |
+| Sugarcane    | ESAL1401   |   1   |
+| Cassava      | CCPA7801   |   1   |
 """
 import pytest
 
@@ -518,5 +518,137 @@ def test_sunflower():
     assert np.isclose(4116, results['harwt'], rtol=0.01)
     dssat.close()
 
+def test_potato():
+    """
+    Experiment CPSR1302, Treatment 1
+    """
+    soil = SoilProfile.from_file(
+        "CPSR000022",
+        os.path.join(DATA_PATH, 'Soil', 'CP.SOL')
+    )
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "CPSR1301.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Potato', "CPSR1302.PTX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        cultivar=treatment['Cultivar'].crop, 
+        field=treatment["Field"],
+        soil_analysis=treatment["SoilAnalysis"],
+        initial_conditions=treatment['InitialConditions'], 
+        planting=treatment["Planting"],
+        irrigation=treatment['Irrigation'],
+        fertilizer=treatment["Fertilizer"],
+        harvest=treatment['Harvest'],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(2146, results['harwt'], rtol=0.01)
+    dssat.close()
+
+def test_cabbage():
+    """
+    Experiment IBMC9601, Treatment 1
+    """
+    soil = SoilProfile.from_file(
+        "IB00720001",
+        os.path.join(DATA_PATH, 'Soil', 'SOIL.SOL')
+    )
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "IBMC9601.WTH"),
+        os.path.join(DATA_PATH, 'Weather', "IBMC9701.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Cabbage', "IBMC9601.CBX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        cultivar=treatment['Cultivar'].crop, 
+        field=treatment["Field"],
+        initial_conditions=treatment['InitialConditions'], 
+        planting=treatment["Planting"],
+        irrigation=treatment['Irrigation'],
+        fertilizer=treatment["Fertilizer"],
+        harvest=treatment['Harvest'],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(178, results['harwt'], rtol=0.01)
+    dssat.close()
+
+def test_sugarcane():
+    """
+    Experiment ESAL1401, Treatment 1
+    """
+    soil = SoilProfile.from_file(
+        "BRPI020003",
+        os.path.join(DATA_PATH, 'Soil', 'BR.SOL')
+    )
+    df = []
+    for year in range(14, 16):
+        df.append(pd.read_fwf(
+            os.path.join(DATA_PATH, 'Weather', f'SPFA{year}01.WTH'),
+            skiprows=4, colspecs=[(6*i, 6*i+5) for i in range(10)]
+        ))
+    df = pd.concat(df, ignore_index=True)
+    df.columns = ['date', 'srad', 'tmax', 'tmin', 'rain', 'dewp', 
+                  'wind', 'par', 'evap', 'rhum']
+    df["date"] = pd.to_datetime(df.date, format='%y%j')
+    weather_station = WeatherStation(
+        lat=-22.7017, long=-47.6423, elev=547, tav=21.5, amp=7.1, refht=2., 
+        wndht=2., table=df
+    )
+    treatments = read_filex(os.path.join(DATA_PATH, 'Sugarcane', "ESAL1401.SCX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        cultivar=treatment['Cultivar'].crop, 
+        field=treatment["Field"],
+        initial_conditions=treatment['InitialConditions'], 
+        planting=treatment["Planting"],
+        irrigation=treatment['Irrigation'],
+        harvest=treatment['Harvest'],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(15748, results['harwt'], rtol=0.01)
+    dssat.close()
+
+def test_cassava():
+    """
+    Experiment CCPA7801, Treatment 1
+    """
+    soil = SoilProfile.from_file(
+        "CCPA000030",
+        os.path.join(DATA_PATH, 'Soil', 'SOIL.SOL')
+    )
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "CCPA7801.WTH"),
+        os.path.join(DATA_PATH, 'Weather', "CCPA7901.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Cassava', "CCPA7801.CSX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        cultivar=treatment['Cultivar'].crop, 
+        field=treatment["Field"],
+        initial_conditions=treatment['InitialConditions'], 
+        planting=treatment["Planting"],
+        irrigation=treatment['Irrigation'],
+        harvest=treatment['Harvest'],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(11711, results['harwt'], rtol=0.01)
+    dssat.close()
+
 if __name__ == "__main__":
-    test_sunflower()
+    test_cassava()
