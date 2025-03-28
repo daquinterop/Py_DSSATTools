@@ -199,6 +199,9 @@ class WeatherStation(TabularRecord):
         #     "The files generate a timeseries with missing data"
         table_df = tmp_df.copy()
         table_df.index.name = "date"
+        for col in table_df.columns: # Some Weather files have one character flags
+            table_df[col] = table_df[col].astype(str)\
+                .str.replace('[A-Z]','', regex=True).astype(float)
         table_df = table_df.reset_index()
         sta_pars["table"] = table_df
         weather = cls(**sta_pars)

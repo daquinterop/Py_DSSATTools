@@ -693,12 +693,33 @@ class Cassava(Crop):
     spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
     spe_path = os.path.join(GENOTYPE_PATH, spe_file)
     cul_dtypes = {
+        'var-name': DescriptionType, 'exp#': DescriptionType, 'eco#': Record, 
+        'b01nd': NumberType, 'b12nd': NumberType, 'b23nd': NumberType, 
+        'b34nd': NumberType, 'br1fx': NumberType, 'br2fx': NumberType, 
+        'br3fx': NumberType, 'br4fx': NumberType, 'laxs': NumberType, 
+        'slas': NumberType, 'llifa': NumberType, 'lpefr': NumberType, 
+        'lnslp': NumberType, 'nodwt': NumberType, 'nodlt': NumberType
     }
     cul_pars_fmt = {
+        'var-name': '.<16', 'exp#': '>5', 'eco#': '>6', 'b01nd': '>5.1f', 
+        'b12nd': '>5.1f', 'b23nd': '>5.1f', 'b34nd': '>5.1f', 'br1fx': '>5.2f', 
+        'br2fx': '>5.2f', 'br3fx': '>5.2f', 'br4fx': '>5.2f', 'laxs': '>5.0f', 
+        'slas': '>5.0f', 'llifa': '>5.0f', 'lpefr': '>5.2f', 'lnslp': '>5.2f', 
+        'nodwt': '>5.2f', 'nodlt': '>5.2f'
     }
     eco_dtypes = {
+        'econame': DescriptionType, 'parue': NumberType, 'tblsz': NumberType, 
+        'srn%s': NumberType, 'kcan': NumberType, 'pgerm': NumberType, 
+        'pps1': NumberType, 'pps2': NumberType, 'pps3': NumberType, 
+        'phtv': NumberType, 'phsv': NumberType, 'rdgs': NumberType, 
+        'rlwr': NumberType, 'wfsu': NumberType, 'rsuse': NumberType, 
+        'hmpc': NumberType
     }
     eco_pars_fmt = {
+        'econame': '.<17', 'parue': '>5.2f', 'tblsz': '>5.1f', 'srn%s': '>5.2f', 
+        'kcan': '>5.2f', 'pgerm': '>5.0f', 'pps1': '>5.2f', 'pps2': '>5.2f', 
+        'pps3': '>5.2f', 'phtv': '>5.2f', 'phsv': '>5.2f', 'rdgs': '>5.2f', 
+        'rlwr': '>5.0f', 'wfsu': '>5.2f', 'rsuse': '>5.2f', 'hmpc': '>5.0f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)

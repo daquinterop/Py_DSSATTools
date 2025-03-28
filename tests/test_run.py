@@ -1,4 +1,3 @@
-# TODO: Make tests with the experiments included in DSSAT
 """
 Each test is runs one of the experiments included in DSSAT for that crop. The 
 test pass if the result is close enough to the one obtained using the desktop
@@ -651,4 +650,4 @@ def test_cassava():
     dssat.close()
 
 if __name__ == "__main__":
-    test_cassava()
+    test_wheat()

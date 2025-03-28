@@ -78,7 +78,7 @@ CODE_VARS = {
     "smhb": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(16)],
     "smpx": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(16)],
     "smke": [None, "IB001", "IB00", 'B001'] + [f"SA{i:03d}" for i in range(16)],
-    "iame": [None, "IB001", "IB00", 'B001', 'SI001'] +\
+    "iame": [None, "IB001", "IB00", 'B001', 'SI001', 'IBI01'] +\
           [f"IR{i:03d}" for i in range(1, 12)],
     "rcod": [None] + [
         'RE001','RE101','RE201','RE301','RE999','RE002','RE003', 'RE004',
@@ -118,9 +118,9 @@ CODE_VARS = {
     "wther": ["M", "G", "S", "W"], 
     "incon": ["M", ], 
     "light": ["E", ],
-    "evapo": ["R", "F", "S", "T"], 
+    "evapo": ["R", "F", "S", "T", 'H'], 
     "infil": ["S", "R", "N"], 
-    "photo": ["C", "L", "R"],
+    "photo": ["C", "L", "R", "V"],
     "hydro": ["R", ], 
     "nswit": ["1", '0'], 
     "mesom": ["G", "P"],
@@ -637,11 +637,11 @@ def _get_croppars(spe_path, code, dtypes_dict, pars_fmt_dict, par_prefix):
                 file_path = spe_path[:-3] + "CUL"
             else: 
                 file_path = spe_path[:-3] + "ECO"
-            if os.path.basename(spe_path)[:2] in ["WH"]:
+            if os.path.basename(spe_path)[:2] in ["WH", "CS"]:
                 header_character = '$'
             else:
                 header_character = '*'
-            with open(file_path, 'r') as f:
+            with open(file_path, 'r', encoding='utf-8-sig') as f:
                 file_lines = f.readlines()
             self._file_header = filter(
                 lambda x: x[0] == header_character, file_lines
