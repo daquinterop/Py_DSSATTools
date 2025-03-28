@@ -23,6 +23,8 @@ import warnings
 import platform
 import stat
 import re
+import io
+import chardet
 
 # Libraries for second version
 from . import __file__ as module_path
@@ -119,6 +121,7 @@ class DSSAT:
             os.mkdir(os.path.join(run_path, "Weather"))
         sys.stdout.write(f'{run_path} created.\n')
         self.run_path = run_path
+        self._output = {}
 
 
     def run_treatment(self, field:Field, cultivar:Cultivar, planting:Planting, 
@@ -333,7 +336,7 @@ class DSSAT:
             encoding = detector.result["encoding"]
 
             with open(os.path.join(self.run_path, file), "r", encoding=encoding) as f:
-                self.output_files[file.split(".")[0]] = f.readlines()
+                self.output_files[file.split(".")[0]] = ''.join(f.readlines())
 
 
     def close(self):
