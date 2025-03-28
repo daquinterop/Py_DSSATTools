@@ -23,6 +23,8 @@ import warnings
 import platform
 import stat
 import re
+import io
+import chardet
 
 # Libraries for second version
 from . import __file__ as module_path
@@ -119,6 +121,7 @@ class DSSAT:
             os.mkdir(os.path.join(run_path, "Weather"))
         sys.stdout.write(f'{run_path} created.\n')
         self.run_path = run_path
+        self._output = {}
 
 
     def run_treatment(self, field:Field, cultivar:Cultivar, planting:Planting, 
@@ -272,21 +275,69 @@ class DSSAT:
 
         # Get the output files
         self._fetch_output()
+        # parse ouputs from files
+        for fname, file_lines in self.output_files.items():
+            # determine how many rows to skip in output file
+            if fname not in OUTPUTS:
+                continue
+            table_start = -1
+            init_lines = []
+            for line in file_lines:
+                table_start += 1
+                init_lines.append(line)
+
+                if "@" in init_lines[-1][:10]:
+                    break
+
+            try:
+                df = pd.read_csv(
+                    io.StringIO("".join(file_lines)),
+                    skiprows=table_start,
+                    sep=" ",
+                    skipinitialspace=True,
+                )
+            except Exception:
+                df = pd.read_csv(
+                    io.StringIO("".join(file_lines[table_start:])),
+                    skiprows=0,
+                    sep=" ",
+                    skipinitialspace=True,
+                )
+                break
+
+            if all(("@YEAR" in df.columns, "DOY" in df.columns)):
+                df["DOY"] = df.DOY.astype(int).map(lambda x: f"{x:03d}")
+                df["@YEAR"] = df["@YEAR"].astype(str)
+                df.index = pd.to_datetime((df["@YEAR"] + df["DOY"]), format="%Y%j")
+
+            self._output[fname] = df
+
         out_dict = {
-            k.lower(): int(v) 
-            if int(v) != -99 else None
-            for k, v in 
-            zip(self.stdout.split('\n')[0][10:].split(), 
-                self.stdout.split('\n')[2][10:].split())
+            k.lower(): int(v) if int(v) != -99 else None
+            for k, v in zip(
+                self.stdout.split("\n")[0][10:].split(),
+                self.stdout.split("\n")[2][10:].split(),
+            )
         }
         return out_dict
-    
+
     def _fetch_output(self):
         files = os.listdir(self.run_path)
         files = filter(lambda x: x[-4:] == ".OUT", files)
         for file in files:
-            with open(os.path.join(self.run_path, file), "r", encoding='cp437') as f:
-                self.output_files[file.split('.')[0]] = ''.join(f.readlines())
+            detector = chardet.UniversalDetector()
+            # detect the file encoding before returning output
+            with open(os.path.join(self.run_path, file), "rb") as f:
+                for line in f.readlines():
+                    detector.feed(line)
+                    if detector.done:
+                        break
+            detector.close()
+            encoding = detector.result["encoding"]
+
+            with open(os.path.join(self.run_path, file), "r", encoding=encoding) as f:
+                self.output_files[file.split(".")[0]] = ''.join(f.readlines())
+
 
     def close(self):
         '''
