@@ -14,7 +14,6 @@ import os
 from rosetta import rosetta, SoilData
 
 DSSAT_MODULE_PATH = os.path.dirname(module_path)
-SOIL_PATH = os.path.join(DSSAT_MODULE_PATH, 'static', 'Soil', 'SOIL.SOL')
 
 SURF_PARS_1 = [
     "name", "soil_data_source", "soil_clasification", "soil_depth", 
@@ -390,7 +389,7 @@ class SoilProfile(TabularRecord):
         return self['name']
 
     @classmethod
-    def from_file(cls, profile:str, file:str=SOIL_PATH):
+    def from_file(cls, profile:str, file:str):
         """
         Returns the SoilProfile from a file. 
         """

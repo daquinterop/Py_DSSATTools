@@ -18,6 +18,7 @@ from .crop import (
 )
 from .weather import WeatherStation
 from .soil import SoilProfile
+from .base.utils import detect_encoding
 
 CROP_OBJECTS = {
     "MZ": Maize, 'WH': Wheat, 'SG': Sorghum, 'ML': PearlMillet, 'BS': Sugarbeet,
@@ -1466,7 +1467,8 @@ class Mow(TabularRecord):
         """
         Creates and return a Mow instance from a mow file.
         """
-        with open(file, 'r') as f:
+        encoding = detect_encoding(file)
+        with open(file, 'r', encoding=encoding) as f:
             lines = f.readlines()
         lines = clean_comments(lines)
         lines = filter(lambda x: '@TRNO' not in x, lines)

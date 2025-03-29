@@ -89,7 +89,10 @@ def test_sorghum():
     Experiment ITHY8001, treatment 2
     """
     cultivar = Sorghum('IB0026')
-    soil = SoilProfile.from_file('IBSG910085')
+    soil = SoilProfile.from_file(
+        'IBSG910085', 
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
     df = []
     for year in range(80, 82):
         df.append(pd.read_csv(
@@ -150,7 +153,10 @@ def test_wheat():
     Experiment KSAS8101, treatment 1
     """
     cultivar = Wheat('IB0488')
-    soil = SoilProfile.from_file("IBWH980018")
+    soil = SoilProfile.from_file(
+        "IBWH980018", 
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
     weather_station = WeatherStation.from_files([
         os.path.join(DATA_PATH, 'Weather', "KSAS8101.WTH"),
         os.path.join(DATA_PATH, 'Weather', "KSAS8201.WTH"),
@@ -177,7 +183,10 @@ def test_tomato():
     Experiment KSAS8101, treatment 4
     """
     cultivar = Tomato('TM0007')
-    soil = SoilProfile.from_file("UFBR950001")
+    soil = SoilProfile.from_file(
+        "UFBR950001", 
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
     weather_station = WeatherStation.from_files([
         os.path.join(DATA_PATH, 'Weather', "UFBR9401.WTH"),
     ])
@@ -203,7 +212,10 @@ def test_soybean():
     """
     Experiment CLMO8501, treatment 1
     """
-    soil = SoilProfile.from_file("IBSB910032")
+    soil = SoilProfile.from_file(
+        "IBSB910032", 
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
     weather_station = WeatherStation.from_files([
         os.path.join(DATA_PATH, 'Weather', "CLMO8501.WTH"),
     ])
@@ -230,7 +242,8 @@ def test_alfalfa():
     """
     mow = Mow.from_file(os.path.join(DATA_PATH, 'Alfalfa', 'AGZG1501.MOW'))[1]
     soil = SoilProfile.from_file(
-        "AGSP209115", os.path.join(DATA_PATH, 'Soil', "AG.SOL")
+        "AGSP209115", 
+        os.path.join(DATA_PATH, 'Soil', "AG.SOL")
     )
     cultivar = Alfalfa('AL0001')
     df = []
@@ -283,7 +296,10 @@ def test_dryBean():
     """
     Experiment CCPA8629, Treatment 1
     """
-    soil = SoilProfile.from_file("IBBN910030")
+    soil = SoilProfile.from_file(
+        "IBBN910030", 
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
     weather_station = WeatherStation.from_files([
         os.path.join(DATA_PATH, 'Weather', "CCPA8601.WTH"),
         os.path.join(DATA_PATH, 'Weather', "CCPA8501.WTH")
@@ -310,7 +326,10 @@ def test_rice():
     """
     Experiment DTSP8502, Treatment 4
     """
-    soil = SoilProfile.from_file("IBRI910024")
+    soil = SoilProfile.from_file(
+        "IBRI910024", 
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
     weather_station = WeatherStation.from_files([
         os.path.join(DATA_PATH, 'Weather', "DTSP8501.WTH"),
     ])
@@ -337,7 +356,10 @@ def test_pearlMillet():
     """
     Experiment ITHY8201, Treatment 1
     """
-    soil = SoilProfile.from_file("IBML910083")
+    soil = SoilProfile.from_file(
+        "IBML910083", 
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
     weather_station = WeatherStation.from_files([
         os.path.join(DATA_PATH, 'Weather', "ITHY8201.WTH"),
     ])
@@ -363,7 +385,7 @@ def test_sugarbeet():
     Experiment NDCR1401, Treatment 1
     """
     soil = SoilProfile.from_file(
-        "CREC002014",
+        "CREC002014", 
         os.path.join(DATA_PATH, 'Soil', 'CR.SOL')
     )
     weather_station = WeatherStation.from_files([
@@ -389,7 +411,10 @@ def test_sweetCorn():
     """
     Experiment UFCI0401, Treatment 1
     """
-    soil = SoilProfile.from_file("IBMZ910214")
+    soil = SoilProfile.from_file(
+        "IBMZ910214", 
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
     weather_station = WeatherStation.from_files([
         os.path.join(DATA_PATH, 'Weather', "UFCI0401.WTH"),
     ])
@@ -417,7 +442,7 @@ def test_bermudagrass():
     Experiment SPPI1101, Treatment 1
     """
     soil = SoilProfile.from_file(
-        "EBPI080100",
+        "EBPI080100", 
         os.path.join(DATA_PATH, 'Soil', 'EB.SOL')
     )
     weather_station = WeatherStation.from_files([
@@ -463,7 +488,7 @@ def test_canola():
     Experiment NOTH1201, Treatment 3
     """
     soil = SoilProfile.from_file(
-        "NOTH030003",
+        "NOTH030003", 
         os.path.join(DATA_PATH, 'Soil', 'NO.SOL')
     )
     weather_station = WeatherStation.from_files([
@@ -492,7 +517,7 @@ def test_sunflower():
     Experiment TRKO1501, Treatment 2
     """
     soil = SoilProfile.from_file(
-        "TRKON20150",
+        "TRKON20150", 
         os.path.join(DATA_PATH, 'Soil', 'TR.SOL')
     )
     weather_station = WeatherStation.from_files([
@@ -553,7 +578,7 @@ def test_cabbage():
     Experiment IBMC9601, Treatment 1
     """
     soil = SoilProfile.from_file(
-        "IB00720001",
+        "IB00720001", 
         os.path.join(DATA_PATH, 'Soil', 'SOIL.SOL')
     )
     weather_station = WeatherStation.from_files([
@@ -584,7 +609,7 @@ def test_sugarcane():
     Experiment ESAL1401, Treatment 1
     """
     soil = SoilProfile.from_file(
-        "BRPI020003",
+        "BRPI020003", 
         os.path.join(DATA_PATH, 'Soil', 'BR.SOL')
     )
     df = []

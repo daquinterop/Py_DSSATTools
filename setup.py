@@ -32,6 +32,7 @@ setuptools.setup(
     package_dir={"": "."},
     packages=[
         'DSSATTools', 
+        'DSSATTools.base',
         'DSSATTools.dssat-csm-os.Data', 
         'DSSATTools.dssat-csm-os.Data.Genotype', 
         'DSSATTools.dssat-csm-os.Data.Default',

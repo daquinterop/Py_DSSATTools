@@ -24,7 +24,6 @@ import platform
 import stat
 import re
 import io
-import chardet
 
 # Libraries for second version
 from . import __file__ as module_path
@@ -35,6 +34,7 @@ from .filex import(
     SoilAnalysis, Irrigation, Residue, Chemical, Tillage, Field,
     SimulationControls, Mow, write_filex
 )
+from .base.utils import detect_encoding
 
 OS = platform.system().lower()
 OUTPUTS = ['PlantGro', "Weather", "SoilWat", "SoilOrg", "SoilNi"]
@@ -325,16 +325,7 @@ class DSSAT:
         files = os.listdir(self.run_path)
         files = filter(lambda x: x[-4:] == ".OUT", files)
         for file in files:
-            detector = chardet.UniversalDetector()
-            # detect the file encoding before returning output
-            with open(os.path.join(self.run_path, file), "rb") as f:
-                for line in f.readlines():
-                    detector.feed(line)
-                    if detector.done:
-                        break
-            detector.close()
-            encoding = detector.result["encoding"]
-
+            encoding = detect_encoding(os.path.join(self.run_path, file))
             with open(os.path.join(self.run_path, file), "r", encoding=encoding) as f:
                 self.output_files[file.split(".")[0]] = ''.join(f.readlines())
 
