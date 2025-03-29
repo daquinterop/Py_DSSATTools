@@ -32,21 +32,22 @@ setuptools.setup(
     package_dir={"": "."},
     packages=[
         'DSSATTools', 
-        'DSSATTools.static', 'DSSATTools.static.bin', 
-        'DSSATTools.static.Genotype', 'DSSATTools.static.Pest', 
-        'DSSATTools.static.StandardData', 'DSSATTools.static.Soil', 
-        'DSSATTools.base'
-        ],
+        'DSSATTools.dssat-csm-os.Data', 
+        'DSSATTools.dssat-csm-os.Data.Genotype', 
+        'DSSATTools.dssat-csm-os.Data.Default',
+        'DSSATTools.dssat-csm-os.Data.Pest',
+        'DSSATTools.dssat-csm-os.Data.StandardData',
+        'DSSATTools.bin'
+    ],
     python_requires=">=3.6",
     license='MIT',
     install_requires=requirements,
     package_data = {
-        'DSSATTools.static.Genotype': ['*'],
-        'DSSATTools.static.Pest': ['*'],
-        'DSSATTools.static.StandardData': ['*'],
-        'DSSATTools.static.Soil': ['*'],
-        'DSSATTools.static.bin': ['dscsm048', 'dscsm048.exe'],
-        'DSSATTools.static': ['*.CDE', 'MODEL.ERR']
+        'DSSATTools.dssat-csm-os.Data.Genotype': ['*'],
+        'DSSATTools.bin': ['dscsm048', 'dscsm048.exe'],
+        'DSSATTools.dssat-csm-os.Data.Default': ['*'],
+        'DSSATTools.dssat-csm-os.Data.Pest': ['*'],
+        'DSSATTools.dssat-csm-os.Data.StandardData': ['*'],
     },
     # include_package_data=True
 )

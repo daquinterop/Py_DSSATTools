@@ -1,0 +1,3 @@
+[submodule "DSSATTools/dssat-csm-os"]
+	path = DSSATTools/dssat-csm-os
+	url = https://github.com/DSSAT/dssat-csm-os.git

@@ -51,7 +51,7 @@ TMP_BASE = tempfile.gettempdir()
 
 # Paths to DSSAT and Env variables
 BASE_PATH = os.path.dirname(module_path)
-STATIC_PATH = os.path.join(BASE_PATH, 'static')
+STATIC_PATH = os.path.join(BASE_PATH, 'dssat-csm-os', 'Data')
 TMP =  tempfile.gettempdir()
 DSSAT_HOME = os.path.join(TMP, f"DSSAT{VERSION}"+os.sep)
 STD_PATH = os.path.join(DSSAT_HOME, 'StandardData')
@@ -69,10 +69,10 @@ for file in os.listdir(STATIC_PATH):
     os.symlink(os.path.join(STATIC_PATH, file), file_link)
 
 if 'windows'in OS:
-    BIN_PATH = os.path.join(STATIC_PATH, 'bin', 'dscsm048.exe')
+    BIN_PATH = os.path.join(BASE_PATH, 'bin', 'dscsm048.exe')
     CONFILE = 'DSSATPRO.V48'
 else: 
-    BIN_PATH = os.path.join(STATIC_PATH, 'bin', 'dscsm048')
+    BIN_PATH = os.path.join(BASE_PATH, 'bin', 'dscsm048')
     CONFILE = 'DSSATPRO.L48'
 
 # function to handle windows permisions

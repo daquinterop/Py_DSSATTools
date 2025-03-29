@@ -30,6 +30,7 @@ import numpy as np
 from typing import Type
 import re
 import os
+import chardet
 
 CROPS_MODULES = {
     "Maize": "MZCER",
@@ -641,7 +642,18 @@ def _get_croppars(spe_path, code, dtypes_dict, pars_fmt_dict, par_prefix):
                 header_character = '$'
             else:
                 header_character = '*'
-            with open(file_path, 'r', encoding='utf-8-sig') as f:
+
+            # detect the file encoding before opening file
+            detector = chardet.UniversalDetector()
+            with open(file_path, "rb") as f:
+                for line in f.readlines():
+                    detector.feed(line)
+                    if detector.done:
+                        break
+            detector.close()
+            encoding = detector.result["encoding"]
+            
+            with open(file_path, 'r', encoding=encoding) as f:
                 file_lines = f.readlines()
             self._file_header = filter(
                 lambda x: x[0] == header_character, file_lines

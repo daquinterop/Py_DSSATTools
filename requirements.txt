@@ -3,7 +3,6 @@ certifi==2021.10.8
 chardet==4.0.0
 charset-normalizer==2.0.9
 coverage==6.3.2
-fortranformat==1.2.2
 idna==3.3
 iniconfig==1.1.1
 numpy
