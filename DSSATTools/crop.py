@@ -1,5 +1,20 @@
 '''
-
+This module hosts the classes that represent each crop. Not all crops are 
+implemented. Each crop class is child of a generic Crop class. A crop is 
+instantiated by passing the cultivar code:
+    >>> crop = Sorghum('IB0026')
+This will create a dictionary-like object with keys as the cultivar parameters' 
+names. Then, the cultivar parameters can be modified
+by assigning values:
+    >>> crop['p1'] = 450.
+    >>> crop['g1'] = 0.1
+The ecotype parameter is itself a dictionary-like object with the ecotype 
+parameters' names as keys. Then, the ecotype parameters are modified in the same 
+way as the cultivar parameters:
+    >>> crop['eco#']['topt'] = 35.5
+The cultivar_list class function will return a list of all the cultivars availble
+for a crop:
+    >>> available_cultivars = Sorghum.cultivar_list()
 '''
 import os
 from . import VERSION

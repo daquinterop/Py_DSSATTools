@@ -1,10 +1,90 @@
 """
-File X module. 
+This module implement the sections of the DSSAT FileX as python objects. All 
+sections are implemented, excepting the enviromental modifications section. 
+Environmental modifications can be easily implemented by modifying the Weather
+component of each experiment. One section object represents a single factor
+level in the experiment.
 
+Each section is defined using the same parameter names (lowercase) of the DSSAT 
+FileX. For example, planting date is defined as follow:  
+    >>> planting = Planting(
+    >>>     pdate=date(1980, 6, 17), ppop=18, ppoe=18,
+    >>>     plme='S', plds='R', plrs=45, plrd=0, pldp=5
+    >>> )
 
+Sections that include a schedule or soil profile (i.e. Initial conditions), are 
+defined as a list of individual events or soil layers. For example, a fertilizer
+section with two fertilizer events is defined as follows:
+    >>> fertilizer = Fertilizer(table=[
+    >>>     FertilizerEvent(
+    >>>         fdate=date(1980, 7, 4), fmcd='FE005', fdep=5,
+    >>>         famn=80, facd='AP002'
+    >>>     ),
+    >>>     FertilizerEvent(
+    >>>         fdate=date(1980, 8, 7), fmcd='FE005', fdep=5,
+    >>>         famn=80, facd='AP002'
+    >>>     )
+    >>> ])
+Other sections based on events are irrigation, residue, chemical, and tillage.
 
-    SimulationOptions and Treatment:
-    They are only to represent those sections.
+Note that the Fertilizer object is initialized by passing a list of FertilizerEvent
+objects in the 'table' parameter. The table parameter also accepts DataFrames, 
+only if the column names of that DataFrame match the parameters for the individual
+event or layer object. Next is an example of this for the initial conditions section:
+    >>> initial_conditions = InitialConditions(
+    >>>        pcr='SG', icdat=date(1980, 6, 1), icrt=500, icnd=0,
+    >>>        icrn=1, icre=1, icres=1300, icren=.5, icrep=0, icrip=100, icrid=10,
+    >>>        table=pd.DataFrame([
+    >>>            (10, .06, 2.5, 1.8),
+    >>>            (22, .06, 2.5, 1.8),
+    >>>            (52, .195, 3., 4.5),
+    >>>            (82, .21, 3.5, 5.0),
+    >>>            (112, 0.2, 2., 2.0),
+    >>>            (142, 0.2, 1., 0.7),
+    >>>            (172, 0.2, 1., 0.6),
+    >>>        ], columns=['icbl', 'sh2o', 'snh4', 'sno3'])
+    >>>    )
+Note that InitialConditions have more parameters besides the table parameter. The 
+column names of the passed DataFrame are the same as the parameters for the 
+InitialConditionsLayer class. The soil analysis section is the other section based
+on soil layers.
+
+The field and cultivar sections are the only sections that need other DSSATTools 
+objects as input parameters. In this section, the 'wsta' must be a WeatherStation 
+object, and the 'id_soil' must be a SoilProfile object.
+    >>> field = Field(
+    >>>        id_field='ITHY0001', wsta=weather_station, flob=0, fldt='DR000', 
+    >>>        fldd=0, flds=0, id_soil=soil
+    >>>     )
+'wsta' and 'id_soil' also receives weather station and soil profile ids as strings.
+However, this wouldn't make sense in the context of running DSSAT using this package.
+
+The cultivar can be defined either using the Cultivar class, or by directly using the
+one of the classes defined in DSSATTools.crop. 
+    >>> cultivar = Sorghum('IB0026')
+    >>> cultivar = Cultivar(cr='SG', ingeno='IB0026', cname='CSH-1')
+These two definitions will yield the same result. However, when the cultivar is 
+defined using the crop class it is posible to modify the cultivar and ecotype 
+coefficients. More information is found at the DSSATTools.crop module documentation.
+    
+Finally, the simulations controls is created by using the SimulationsControls
+class. Each sub-section of the simulation controls sections is created using its
+own class. Next example shows how to create the simulations controls defining only
+the general options.
+    >>> simulation_controls = SimulationControls(
+    >>>     general=SCGeneral(sdate=date(1980, 6, 1))
+    >>> )
+
+The sections can be created from an existing FileX using the read_filex function.
+That function will return a dictionary, mapping each treatment to its correspondent
+section definitions. The next example reads an existing FileX, and then assigns
+the first treatment to the treatment variable. In this case, treatment is a 
+dictionary mapping each section name to its python object. 
+    >>> treatments = read_filex("Maize/BRPI0202.MZX")
+    >>> treatment = treatments[1]
+
+The create_filex function returns the string of the FileX for for the passed 
+sections defined as their python objects. 
 """
 from datetime import date
 from .base.partypes import (
@@ -1709,14 +1789,14 @@ def read_filex(filexpath):
         )
     return treatments
         
-def write_filex(field:Field, cultivar:Cultivar, planting:Planting, 
+def create_filex(field:Field, cultivar:Cultivar, planting:Planting, 
                 simulation_controls:SimulationControls, harvest:Harvest=None,
                 initial_conditions:InitialConditions=None, 
                 fertilizer:Fertilizer=None, soil_analysis:SoilAnalysis=None, 
                 irrigation:Irrigation=None, residue:Residue=None, 
                 chemical:Chemical=None, tillage:Tillage=None):
     """
-    Returns the FileX string
+    Returns the FileX as a string
     """
     experiment_name = field["id_field"][:4] +\
         simulation_controls["general"]["sdate"].strftime('%y01') + cultivar.code

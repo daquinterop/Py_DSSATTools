@@ -1,2 +1,0 @@
-- Simulate time steps instead of going until harvest, maturity or crop failure. Changes to the DSSAT source code have to made for this. 
-- Include some parameter optimization methods.

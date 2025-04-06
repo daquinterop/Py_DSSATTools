@@ -1,6 +1,19 @@
 '''
-
-
+This module contains the classes that handle the weather definition. The 
+WeatherStation class represents the DSSAT weather station. The weather station
+object can be created by reading the data from existing DSSAT wheater files:
+    >>> weather = WeatherStation.from_files(["UAFD9001.WTH", "UAFD9101.WTH",])
+Note that the input parameter is a list of files, as DSSAT can have multiple files
+for the same station. The list of files must correspond to the same station. The
+weather station can also be created using the data from a DataFrame:
+    >>> weather_station = WeatherStation(
+    >>>     insi='UNCU', lat=4.34, long=-74.40, elev=1800, 
+    >>>     table=df_with_data
+    >>> )
+where the df_with_data contains the weather data and its column names match the 
+DSSAT weather parameters' names. As with the event-based sections of the FileX,
+the table is a list of events (daily weather records). In this case the 
+WeatherRecord class is the class representing each daily weather record.
 '''
 import os
 import pandas as pd

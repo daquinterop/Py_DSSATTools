@@ -33,12 +33,12 @@ Here is one example on how the package is used to run a simple simulation:
     >>>     insi='UNCU', lat=4.34, long=-74.40, elev=1800, 
     >>>     table=df_with_data
     >>> )
-    >>> soil = SoilProfile.from_file('IBSG910085')
+    >>> soil = SoilProfile.from_file('IBSG910085', 'SOIL.SOL')
     >>> field = Field(
     >>>     id_field='ITHY0001', wsta=weather_station, flob=0, 
     >>>     fldd=0, flds=0, id_soil=soil, fldt='DR000'
     >>> )
-    >>> planting = planting = Planting(
+    >>> planting = Planting(
     >>>     pdate=date(1980, 6, 17), ppop=18, ppoe=18,
     >>>     plme='S', plds='R', plrs=45, plrd=0, pldp=5
     >>> )
@@ -91,11 +91,11 @@ Cassava              CSYCA CIAT
 VERSION = '048'
 
 from DSSATTools import crop
-from DSSATTools.soil import SoilProfile
-from DSSATTools.weather import WeatherStation
+from DSSATTools.soil import SoilProfile, SoilLayer
+from DSSATTools.weather import WeatherStation, WeatherRecord
 from DSSATTools.run import DSSAT
 from DSSATTools import filex
 
 __all__ = [
-    'crop', 'SoilProfile', 'WeatherStation', 'DSSAT', 
+    'crop', 'SoilProfile', 'WeatherStation', 'DSSAT',  'filex'
     ] 

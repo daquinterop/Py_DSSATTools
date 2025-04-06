@@ -3,12 +3,24 @@ This module hosts the DSSAT class. This class represents the simulation environm
 so per each DSSAT instance there's a directory where all the necesary files to 
 run the model are allocated. To run the model there are 2 basic steps:
 
-1. Create a new DSSAT instance.
-2. Run the model by calling the run() method.
-You can close the simulation environment by calling the close() method.
-
-The model outputs are storage in the `output` attribute. Up to date the next output
-are available: PlantGro, Weather, SoilWat, SoilOrg.
+1. Create a new DSSAT instance. When DSSAT is instantiated, a simulation environment
+is set. That enviroment is set at the path passed during the call:
+    >>> dssat = DSSAT("/tmp/dssat_test")
+2. Run the model by calling the run_treatment() method. This method receives as 
+parameters the FileX sections' objects:
+    >>> results = dssat.run_treatment(
+    >>>     field=field, cultivar=crop, planting=planting,
+    >>>     initial_conditions=initial_conditions, fertilizer=fertilizer,
+    >>>     simulation_controls=simulation_controls
+    >>> )
+This call returns a dictionary that contains the values of the standard output 
+of the model: FLO, MAT, TOPWT, HARWT, RAIN, etc. After running, the DSSAT instance
+will have all the output files as strings in the output_files attribute, and the 
+output timeseries tables in the output_tables attribute:
+    >>> overview = dssat.output_files['OVERVIEW'] # Gets the overview file as a str
+    >>> plantgro = dssat.output_tables['PlantGro'] # Gets the plant growth table
+3. You can close the simulation environment by calling the close() method.
+    >>> dssat.close
 '''
 
 import subprocess
@@ -32,7 +44,7 @@ from .crop import Crop
 from .filex import(
     Planting, Cultivar, Harvest, InitialConditions, Fertilizer,
     SoilAnalysis, Irrigation, Residue, Chemical, Tillage, Field,
-    SimulationControls, Mow, write_filex
+    SimulationControls, Mow, create_filex
 )
 from .base.utils import detect_encoding
 
@@ -203,7 +215,7 @@ class DSSAT:
             f'.{cultivar.code}X'
         filex_name = os.path.join(self.run_path, filex_name.upper())
         with open(filex_name, "w") as f:
-            lines = write_filex(
+            lines = create_filex(
                 field, cultivar, planting, simulation_controls, harvest, 
                 initial_conditions, fertilizer, soil_analysis, irrigation,
                 residue, chemical, tillage
@@ -282,13 +294,11 @@ class DSSAT:
                 continue
             table_start = -1
             init_lines = []
-            for line in file_lines:
+            for line in file_lines.split('\n'):
                 table_start += 1
                 init_lines.append(line)
-
                 if "@" in init_lines[-1][:10]:
                     break
-
             try:
                 df = pd.read_csv(
                     io.StringIO("".join(file_lines)),
@@ -338,7 +348,7 @@ class DSSAT:
         sys.stdout.write(f'{self.run_path} and its content has been removed.\n')
 
     @property
-    def output(self):
+    def output_tables(self):
         if len(self._output) < 1:
             warnings.warn("No output has been saved")
             return None
