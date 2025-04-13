@@ -4,11 +4,6 @@ API
 .. autosummary::
    :toctree: generated
 
-   DSSATTools
-
-.. autosummary::
-   :toctree: generated
-
    DSSATTools.weather
 
 .. autosummary::
