@@ -283,7 +283,7 @@ def test_alfalfa():
     # Open FORAGE.out
     forage = pd.read_fwf(
         StringIO(dssat.output_files['FORAGE']),
-        skiprows=1, widths=[5, 9, 3] + [5]*18
+        skiprows=1, widths=[4, 6, 6, 5, 5, 5, 4] + [6]*14
     )
     dssat_gui_values = [2151, 3341, 6303, 3555, 4099, 4104, 6056]
     assert all([
