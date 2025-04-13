@@ -13,7 +13,7 @@ else:
 
 setuptools.setup(
     name="DSSATTools",
-    version="3.0.0",
+    version="3.0.0-1",
     author="Diego Quintero",
     author_email="daquinterop@gmail.com",
     description="A DSSAT's Python implementation",
@@ -49,6 +49,7 @@ setuptools.setup(
         'DSSATTools.dssat-csm-os.Data.Default': ['*'],
         'DSSATTools.dssat-csm-os.Data.Pest': ['*'],
         'DSSATTools.dssat-csm-os.Data.StandardData': ['*'],
+        'DSSATTools.dssat-csm-os.Data': ['*'],
     },
     # include_package_data=True
 )
