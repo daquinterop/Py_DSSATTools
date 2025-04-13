@@ -26,7 +26,7 @@ The documentation is in process of being updated. However, this readme and the E
 You'll find example notebooks in this repo:[https://github.com/daquinterop/DSSATTools_notebooks](https://github.com/daquinterop/DSSATTools_notebooks). I'll keep uploading examples as some new feature is introduced.
 ## Module contents
 
-DSSATTools library allows the user to create low-code scripts to run simulations using the DSSAT modeling framework. DSSATTools version 2.2.0 includes significant changes when compared to previous versions. The newer is more intuitive for the users familiar with the model, the DSSAT GUI, and the DSSAT file creation tools. Therefore, if you are new to DSSAT I highly recommend you to familiarize yourself with the model, the GUI, and the file creation Tools before jumping into using this library.
+DSSATTools library allows the user to create low-code scripts to run simulations using the DSSAT modeling framework. DSSATTools version 3 includes significant changes when compared to previous versions. The newer is more intuitive for the users familiar with the model, the DSSAT GUI, and the DSSAT file creation tools. Therefore, if you are new to DSSAT I highly recommend you to familiarize yourself with the model, the GUI, and the file creation Tools before jumping into using this library.
 
 DSSATTools implements an object-based approach to define DSSAT simulation input. This aims to mimic the process of creating the DSSAT input files (SOL, WTH, FileX) using the DSSAT GUI Tools. Then, the same way that XBuild has one menu for each FileX section (e.g. Cultivar, Soil Analysis, Planting Date, etc.), there is one DSSATTools class for each section of the FileX. Also, there is one class for the WTH file, and one class for the SOL file. 
 
