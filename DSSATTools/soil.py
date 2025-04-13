@@ -1,5 +1,5 @@
 """
-This module contains the classes and functions that handle the soil definition.
+This module contains the classes and functions that handle the soil definition. 
 The soil profile object is created using the SoilProfile class. One way of 
 doing that is just loading soil profile from an existing DSSAT Soil file. For
 that, the from_file soil profile class function is used:

@@ -1,7 +1,7 @@
 API
 ===
 
-.. automodule::
+.. autosummary::
    :toctree: generated
 
    DSSATTools
