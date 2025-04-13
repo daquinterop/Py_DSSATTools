@@ -20,7 +20,8 @@ output timeseries tables in the output_tables attribute:
     >>> overview = dssat.output_files['OVERVIEW'] # Gets the overview file as a str
     >>> plantgro = dssat.output_tables['PlantGro'] # Gets the plant growth table
 3. You can close the simulation environment by calling the close() method.
-    >>> dssat.close
+    >>> dssat.close()
+
 '''
 
 import subprocess

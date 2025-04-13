@@ -21,7 +21,7 @@ You can install the library using Python pip.
 pip install DSSATTools
 ```
 ## Documentation
-The documentation is in process of being updated. However, this readme and the Example Notebooks contain all the information you need to use the library.
+The documentation is found here: https://py-dssattools.readthedocs.io/en/latest/. However, this readme and the Example Notebooks contain all the information you need to use the library.
 ## Example Notebooks
 You'll find example notebooks in this repo:[https://github.com/daquinterop/DSSATTools_notebooks](https://github.com/daquinterop/DSSATTools_notebooks). I'll keep uploading examples as some new feature is introduced.
 ## Module contents

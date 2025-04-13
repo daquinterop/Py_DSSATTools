@@ -4,22 +4,8 @@ API
 .. autosummary::
    :toctree: generated
 
+   DSSATTools
    DSSATTools.weather
-
-.. autosummary::
-   :toctree: generated
-
-   DSSATTools.soil 
-
-.. autosummary::
-   :toctree: generated
-
-   DSSATTools.filex 
-
-.. autosummary::
-   :toctree: generated
-
+   DSSATTools.soil
+   DSSATTools.filex
    DSSATTools.run
-
-
-
