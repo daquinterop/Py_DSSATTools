@@ -1,4 +1,7 @@
+API
+===
+
 .. autosummary::
-   :toctree: 
+   :toctree: generated
 
    DSSATTools
