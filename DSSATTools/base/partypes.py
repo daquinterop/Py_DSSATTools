@@ -725,7 +725,7 @@ class Crop(MutableMapping):
         return
     
     def __repr__(self):
-        print(self.__cultivar)
+        return self.__cultivar.__repr__()
 
     def __len__(self):
         return len(self.__cultivar)

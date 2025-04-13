@@ -20,9 +20,6 @@ You can install the library using Python pip.
 ```
 pip install DSSATTools
 ```
-## New version soon
-DSSATTools version 3 is soon to be released. **The new version is a major upgrade and will not be backwards compatible**. DSSATTools version 2.1.6 is the latest release of version 2. 
-
 ## Documentation
 [https://py-dssattools.readthedocs.io/en/latest/index.html](https://py-dssattools.readthedocs.io/en/latest/index.html)
 ## Example Notebooks

@@ -99,3 +99,10 @@ from DSSATTools import filex
 __all__ = [
     'crop', 'SoilProfile', 'WeatherStation', 'DSSAT',  'filex'
     ] 
+
+import warnings
+warnings.simplefilter('always', DeprecationWarning)
+warnings.warn(
+    'This new version is a major upgrade and will not be backwards compatible with previous versions. If you are running code that was developed  using a previous DSSATTools version, then install DSSATTools version 2.1.6',  
+    DeprecationWarning
+)
