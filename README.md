@@ -76,9 +76,6 @@ The parameters for ecach class are described in their doucmentation. As now, the
 `DSSAT.run_treatment` is the only function available to run the model. This 
 function runs the CSM in the 'C' mode (one treatment at a time).
 
-All of the parameters and attributes of the four basic clases have the same name you find in the DSSAT files (Take a look at the .CDE files in 
-https://github.com/DSSAT/dssat-csm-os/tree/develop/Data).
-
 **At the moment Only the next crops and models are implemented:**
 | Crop         | Model               |
 |--------------|---------------------|
