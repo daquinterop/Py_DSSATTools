@@ -16,7 +16,7 @@ The new version aims to be more intuitive for the users familiar with the model,
 
 
 ## Installation:
-You can install the library using Python pip.
+You can install the library using Python pip. **The library has only been tested for a Linux environment. It is not guaranteed that it will work in Windows.** If you have a Windows machine I recommend you to use WSL, or Google Colab.
 ```
 pip install DSSATTools
 ```
