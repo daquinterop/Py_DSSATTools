@@ -16,7 +16,7 @@ If you use DSSATTools for your projects and analysis, you can cite it as
 
 `Quintero, D. (2026). DSSATTools: a Python library for crop modeling with DSSAT (3.0). Zenodo. https://doi.org/10.5281/zenodo.18481764`
 ```
-@software{quintero_2026_18481764,
+@misc{quintero_2026_18481764,
   author       = {Quintero, Diego},
   title        = {DSSATTools: a Python library for crop modeling
                    with DSSAT
