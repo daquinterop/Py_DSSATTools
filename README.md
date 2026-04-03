@@ -1,6 +1,36 @@
 # DSSATTools package
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18481764.svg)](https://doi.org/10.5281/zenodo.18481764)  [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+## Installation:
+You can install the library using Python pip. **The library has only been tested for a Linux environment. It is not guaranteed that it will work in Windows.** If you have a Windows machine I recommend you to use WSL, or Google Colab.
+```
+pip install DSSATTools
+```
+## Documentation
+The documentation is found here: https://py-dssattools.readthedocs.io/en/latest/. However, this readme and the Example Notebooks contain all the information you need to use the library.
+## Example Notebooks
+You'll find example notebooks in this repo:[https://github.com/daquinterop/DSSATTools_notebooks](https://github.com/daquinterop/DSSATTools_notebooks). I'll keep uploading examples as some new feature is introduced.
+## Cite 
+
+If you use DSSATTools for your projects and analysis, you can cite it as
+
+`Quintero, D. (2026). DSSATTools: a Python library for crop modeling with DSSAT (3.0). Zenodo. https://doi.org/10.5281/zenodo.18481764`
+```
+@software{quintero_2026_18481764,
+  author       = {Quintero, Diego},
+  title        = {DSSATTools: a Python library for crop modeling
+                   with DSSAT
+                  },
+  month        = feb,
+  year         = 2026,
+  publisher    = {Zenodo},
+  version      = {3.0},
+  doi          = {10.5281/zenodo.18481764},
+  url          = {https://doi.org/10.5281/zenodo.18481764},
+}
+```
 ## v3.0 Updates
-Significant changes have been implemented. **Those changes are not backward compatible.** The DSSATTools code for the previous versions are not compatible with the new version. If you have DSSATTools in your current workflows, I recommend you to update your code. If you can't change your code, then install the 2.1.6 version. 
+Significant changes were implemented for the version 3.0 of the package. **Those changes are not backward compatible.** The DSSATTools code for the previous versions are not compatible with the new version. If you have DSSATTools in your current workflows, I recommend you to update your code. If you can't change your code, then install the 2.1.6 version. 
 
 The new version aims to be more intuitive for the users familiar with the model, the DSSAT GUI, and the DSSAT file creation tools. Therefore, **if you are new to DSSAT I highly recommend you to familiarize yourself with the model, the GUI, and the file creation Tools before jumping into using this library.** The changes in this new version are summarized next:
 
@@ -14,21 +44,6 @@ The new version aims to be more intuitive for the users familiar with the model,
 - When the model is run using the `DSSAT.run_treatment` method, all the output files are stored in the `DSSAT.output_files` attribute. The files are stored as a string.
 - The `DSSAT.run_treatment` returns a dictionary with the standard output of the CSM.
 
-## Cite 
-
-You can cite DSSATTools as
-
-`Quintero, D. (2026). DSSATTools: a Python library for crop modeling with DSSAT (3.0). Zenodo. https://doi.org/10.5281/zenodo.18481764`
-
-## Installation:
-You can install the library using Python pip. **The library has only been tested for a Linux environment. It is not guaranteed that it will work in Windows.** If you have a Windows machine I recommend you to use WSL, or Google Colab.
-```
-pip install DSSATTools
-```
-## Documentation
-The documentation is found here: https://py-dssattools.readthedocs.io/en/latest/. However, this readme and the Example Notebooks contain all the information you need to use the library.
-## Example Notebooks
-You'll find example notebooks in this repo:[https://github.com/daquinterop/DSSATTools_notebooks](https://github.com/daquinterop/DSSATTools_notebooks). I'll keep uploading examples as some new feature is introduced.
 ## Module contents
 
 DSSATTools library allows the user to create low-code scripts to run simulations using the DSSAT modeling framework. DSSATTools version 3 includes significant changes when compared to previous versions. The newer is more intuitive for the users familiar with the model, the DSSAT GUI, and the DSSAT file creation tools. Therefore, if you are new to DSSAT I highly recommend you to familiarize yourself with the model, the GUI, and the file creation Tools before jumping into using this library.
@@ -102,10 +117,11 @@ function runs the CSM in the 'C' mode (one treatment at a time).
 | Sugarcane    | CANEGRO             |
 | Bean (Dry)   | CROPGRO             |
 | Cassava      | CSYCA               |
+| Cotton       | CROPGRO             |
 
-All crops have been validated by comparing the DSSATTools final harvest with that obtained using the DSSAT GUI.
+All crops have been validated by comparing the DSSATTools final harvest with that obtained using the DSSAT GUI. If the crop you want to simulate is in the DSSAT GUI but not in this package, you can open an issue requesting the new crop, I'll add as soon as I can.
 
-If you're interested in contributing to this project, don't hesitate in sending me an email (daquinterop@gmail.com). 
+If you're interested in contributing to this project, don't hesitate in sending me an email (daquinterop@gmail.com).
 
 ### DSSATTools.filex
 This module implement the sections of the DSSAT FileX as python objects. All sections are implemented, excepting the enviromental modifications section. Environmental modifications can be easily implemented by modifying the Weather component of each experiment. One section object represents a single factor level in the experiment.
