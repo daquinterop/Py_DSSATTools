@@ -1,7 +1,7 @@
 [project]
 name = "DSSATTools"
 version = "3.0.2"
-description = "A DSSAT's Python implementation"
+description = "A Python library for crop modeling with DSSAT"
 readme = "README.md"
 requires-python = ">=3.6"
 license = "GPL-3.0-or-later"
