@@ -1,0 +1,63 @@
+[project]
+name = "DSSATTools"
+version = "3.0.2"
+description = "A DSSAT's Python implementation"
+readme = "README.md"
+requires-python = ">=3.6"
+license = "GPL-3.0-or-later"
+authors = [
+  {email = "daquinterop@gmail.com", name = "Diego Quintero"},
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "attrs",
+  "certifi",
+  "chardet",
+  "charset-normalizer",
+  "coverage",
+  "idna",
+  "iniconfig",
+  "numpy",
+  "packaging",
+  "pandas",
+  "pluggy",
+  "py",
+  "pyparsing",
+  "pytest",
+  "pytest-cov",
+  "python-dateutil",
+  "pytz",
+  "requests",
+  "rosetta-soil",
+  "six",
+  "toml",
+  "tomli",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/daquinterop/Py_DSSATTools"
+"Bug Tracker" = "https://github.com/daquinterop/Py_DSSATTools/issues"
+"Documentation" = "https://py-dssattools.readthedocs.io/en/latest/"
+"Repository" = "https://github.com/daquinterop/Py_DSSATTools"
+
+[tool.setuptools]
+packages = [
+    'DSSATTools', 
+    'DSSATTools.base',
+    'DSSATTools.dssat-csm-os.Data', 
+    'DSSATTools.dssat-csm-os.Data.Genotype', 
+    'DSSATTools.dssat-csm-os.Data.Default',
+    'DSSATTools.dssat-csm-os.Data.Pest',
+    'DSSATTools.dssat-csm-os.Data.StandardData',
+    'DSSATTools.bin'
+]
+
+[tool.setuptools.package-data]
+"DSSATTools.dssat-csm-os.Data.Genotype" = ["*"]
+"DSSATTools.bin" = ["dscsm048", "dscsm048.exe"]
+"DSSATTools.dssat-csm-os.Data.Default" = ["*"]
+"DSSATTools.dssat-csm-os.Data.Pest" = ["*"]
+"DSSATTools.dssat-csm-os.Data.StandardData" = ["*"]
+"DSSATTools.dssat-csm-os.Data" = ["*"]

@@ -51,7 +51,8 @@ CROPS_MODULES = {
     'Sugarcane': "SCCAN",
     "Wheat": "CSCER",
     "DryBean": "CRGRO",
-    "Cassava": "CSYCA"
+    "Cassava": "CSYCA",
+    "Cotton": "CRGRO"
 }
 CODE_VARS = {
     "plme": ["B", "C", "H", "I", "N", "P", "R", "S", "T", "V", None],

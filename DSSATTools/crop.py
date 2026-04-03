@@ -41,7 +41,8 @@ SPE_FILES = {
     'Sugarcane': f'SCCAN{VERSION}.SPE',
     "Wheat": f"WHCER{VERSION}.SPE",
     "DryBean": f"CRGRO{VERSION}.SPE",
-    "Cassava": f"CSYCA{VERSION}.SPE"
+    "Cassava": f"CSYCA{VERSION}.SPE",
+    "Cotton": f"CRGRO{VERSION}.SPE"
 }
 
 DSSAT_MODULE_PATH = os.path.dirname(module_path)
@@ -737,6 +738,48 @@ class Cassava(Crop):
         'kcan': '>5.2f', 'pgerm': '>5.0f', 'pps1': '>5.2f', 'pps2': '>5.2f', 
         'pps3': '>5.2f', 'phtv': '>5.2f', 'phsv': '>5.2f', 'rdgs': '>5.2f', 
         'rlwr': '>5.0f', 'wfsu': '>5.2f', 'rsuse': '>5.2f', 'hmpc': '>5.0f'
+    }
+    def __init__(self, cultivar_code):
+        super().__init__(cultivar_code)
+        return
+
+class Cotton(Crop):
+    code = "CO"
+    smodel = CROPS_MODULES["Cotton"]
+    spe_file = f'{code}{smodel[2:]}{VERSION}.SPE'
+    spe_path = os.path.join(GENOTYPE_PATH, spe_file)
+    cul_dtypes = {
+        'vrname': DescriptionType, 'expno': DescriptionType, 'eco#': Record, 
+        'csdl': NumberType, 'ppsen': NumberType, 'em-fl': NumberType, 
+        'fl-sh': NumberType, 'fl-sd': NumberType, 'sd-pm': NumberType, 
+        'fl-lf': NumberType, 'lfmax': NumberType, 'slavr': NumberType, 
+        'sizlf': NumberType, 'xfrt': NumberType, 'wtpsd': NumberType, 
+        'sfdur': NumberType, 'sdpdv': NumberType, 'podur': NumberType, 
+        'thrsh': NumberType, 'sdpro': NumberType, 'sdlip': NumberType
+    }
+    cul_pars_fmt = {
+        'vrname': '.<16', 'expno': '>5', 'eco#': '>6', 'csdl': '>5.2f', 
+        'ppsen': '>5.3f', 'em-fl': '>5.1f', 'fl-sh': '>5.1f', 'fl-sd': '>5.1f', 
+        'sd-pm': '>5.2f', 'fl-lf': '>5.2f', 'lfmax': '>5.3f', 'slavr': '>5.1f', 
+        'sizlf': '>5.1f', 'xfrt': '>5.2f', 'wtpsd': '>5.3f', 'sfdur': '>5.1f', 
+        'sdpdv': '>5.1f', 'podur': '>5.1f', 'thrsh': '>5.2f', 'sdpro': '>5.3f', 
+        'sdlip': '>5.3f'
+    }
+    eco_dtypes = {
+        'econame': DescriptionType, 'mg': DescriptionType, 'tm': DescriptionType, 
+        'thvar': NumberType, 'pl-em': NumberType, 'em-v1': NumberType, 
+        'v1-ju': NumberType, 'ju-r0': NumberType, 'pm06': NumberType, 
+        'pm09': NumberType, 'lngsh': NumberType, 'r7-r8': NumberType, 
+        'fl-vs': NumberType, 'trifl': NumberType, 'rwdth': NumberType, 
+        'rhght': NumberType, 'r1ppo': NumberType, 'optbi': NumberType, 
+        'slobi': NumberType
+    }
+    eco_pars_fmt = {
+        'econame': '.<17', 'mg': '<2', 'tm': '<2', 'thvar': '>5.1f', 
+        'pl-em': '>5.1f', 'em-v1': '>5.1f', 'v1-ju': '>5.1f', 'ju-r0': '>5.1f', 
+        'pm06': '>5.1f', 'pm09': '>5.2f', 'lngsh': '>5.1f', 'r7-r8': '>5.1f', 
+        'fl-vs': '>5.2f', 'trifl': '>5.2f', 'rwdth': '>5.2f', 'rhght': '>5.2f', 
+        'r1ppo': '>5.3f', 'optbi': '>5.1f', 'slobi': '>5.3f'
     }
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)

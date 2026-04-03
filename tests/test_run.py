@@ -25,6 +25,7 @@ This is the list of crops and the tested experiments:
 | Cabbage      | IBMC9601   |   1   |
 | Sugarcane    | ESAL1401   |   1   |
 | Cassava      | CCPA7801   |   1   |
+| Cotton       | GACM0401   |   1   |
 """
 import pytest
 
@@ -709,5 +710,33 @@ def test_freeze_soya():
     assert 'Freeze occurred' in dssat.stdout
     dssat.close()
 
+def test_cotton():
+    """
+    Experiment GACM0401, Treatment 1
+    """
+    soil = SoilProfile.from_file(
+        "GAPL850009", 
+        os.path.join(DATA_PATH, 'Soil', 'GA.SOL')
+    )
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "GACM9824.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Cotton', "GACM0401.COX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    results = dssat.run_treatment(
+        cultivar=treatment['Cultivar'].crop, 
+        field=treatment["Field"],
+        initial_conditions=treatment['InitialConditions'], 
+        planting=treatment["Planting"],
+        fertilizer=treatment["Fertilizer"],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    assert np.isclose(4647, results['harwt'], rtol=0.01)
+    dssat.close()
+
 if __name__ == "__main__":
-    test_wheat()
+    test_cotton()
