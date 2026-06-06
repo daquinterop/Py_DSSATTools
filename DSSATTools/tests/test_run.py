@@ -1,7 +1,7 @@
 """
 Each test is runs one of the experiments included in DSSAT for that crop. The 
 test pass if the result is close enough to the one obtained using the desktop
-version of DSSAT. Close enough is an error of less than 1%.
+version of DSSAT (v4.8.2). Close enough is an error of less than 1%.
 
 This is the list of crops and the tested experiments:
 

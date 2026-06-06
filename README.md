@@ -6,6 +6,17 @@ You can install the library using Python pip. **The library has only been tested
 ```
 pip install DSSATTools
 ```
+## Testing
+
+`DSSATTools` features an automated test suite powered by `pytest` to ensure structural stability and verify precise file parsing capabilities against the DSSAT-CSM requirements.
+
+### 1. Running Tests via Python (Recommended for Quick Verification)
+If you have installed `DSSATTools` via `pip`, the core test files are bundled directly within your installation. The tests run a DSSAT experiment for each crop, and verifies that the final yield obtained using `DSSATTools` is the same as the yield obtained using the DSSAT v4.8.2 desktop version. You can run the test suite from an active Python terminal or Jupyter Notebook:
+```python
+import DSSATTools
+DSSATTools.test("-v")
+```
+
 ## Documentation
 The documentation is found here: https://py-dssattools.readthedocs.io/en/latest/. However, this readme and the Example Notebooks contain all the information you need to use the library.
 ## Example Notebooks

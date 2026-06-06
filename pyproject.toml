@@ -51,7 +51,8 @@ packages = [
     'DSSATTools.dssat-csm-os.Data.Default',
     'DSSATTools.dssat-csm-os.Data.Pest',
     'DSSATTools.dssat-csm-os.Data.StandardData',
-    'DSSATTools.bin'
+    'DSSATTools.bin',
+    'DSSATTools.test'
 ]
 
 [tool.setuptools.package-data]

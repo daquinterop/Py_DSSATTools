@@ -1,6 +1,6 @@
 '''
 DSSATTools library allows the user to create low-code scripts to run simulations
-using the DSSAT modeling framework. DSSATTools version 2.2.0 includes significant
+using the DSSAT modeling framework. DSSATTools version 3.0.0 includes significant
 changes when compared to previous versions. The newer is more intuitive for the 
 users familiar with the model, the DSSAT GUI, and the DSSAT file creation tools.
 Therefore, if you are new to DSSAT I highly recommend you to familiarize yourself
@@ -106,3 +106,17 @@ warnings.warn(
     'DSSATTools version 3.0.0 is a major upgrade and will not be backwards compatible with previous versions. If you are running code that was developed  using a previous DSSATTools version, then install DSSATTools version 2.1.6',  
     DeprecationWarning
 )
+
+def test(*args):
+    """
+    Run the internal DSSATTools test suite via pytest.
+    
+    Example:
+        >>> import DSSATTools
+        >>> DSSATTools.test("-v")  # Runs in verbose mode
+    """
+    from DSSATTools.tests import run_tests
+    import sys
+    
+    # Run the tests and exit Python with the corresponding pytest exit code
+    sys.exit(run_tests(*args))
