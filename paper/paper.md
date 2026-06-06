@@ -51,6 +51,7 @@ Other crop models feature pure Python implementations. For instance, `AquaCrop-O
 Inspired by modern software design patterns observed in `pcse`, `DSSATTools` (Version 3) is structured around a modular, object-oriented framework. The software modules mirror the legacy layout of DSSAT input data files, rendering the architecture intuitive to anyone familiar with the DSSAT GUI tools.
 
 The package is organized into four core modules corresponding to primary DSSAT components:
+
 - **`DSSATTools.soil`**: Manages soil profiles (`SoilProfile` class) and translates structured layers into the required `.SOL` format.
 - **`DSSATTools.weather`**: Encapsulates environmental and meteorological observations into a `WeatherStation` class to compile `.WTH` files.
 - **`DSSATTools.crop`**: Controls genetic, cultivar, and ecotype parameters across 19 supported crop types (e.g., the `Maize` class) by reading and modifying `.CUL`, `.ECO`, and `.SPE` files.
