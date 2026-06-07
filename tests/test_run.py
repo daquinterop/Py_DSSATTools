@@ -26,11 +26,12 @@ This is the list of crops and the tested experiments:
 | Sugarcane    | ESAL1401   |   1   |
 | Cassava      | CCPA7801   |   1   |
 | Cotton       | GACM0401   |   1   |
+| Fallow       | GAGR0401FA |   1   |
 """
 import pytest
 
 from DSSATTools.crop import (
-    Maize, Sorghum, Wheat, Tomato, Alfalfa, 
+    Maize, Sorghum, Wheat, Tomato, Alfalfa, Fallow
 )
 from DSSATTools.soil import SoilProfile
 from DSSATTools.filex import (
@@ -738,5 +739,40 @@ def test_cotton():
     assert np.isclose(4647, results['harwt'], rtol=0.01)
     dssat.close()
 
+def test_fallow():
+    """
+    Experiment GAGR0401FA, Treatment 1
+    """
+    cultivar = Fallow("IB0001")
+    soil = SoilProfile.from_file(
+        "GA00620001",
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "GAGR9626.WTH"),
+    ])
+    treatments = read_filex(os.path.join(DATA_PATH, 'Fallow', "GAGR0401.FAX"))
+    treatment = treatments[1]
+    treatment["Field"]["wsta"] = weather_station
+    treatment["Field"]["id_soil"] = soil 
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    planting = treatment.get("Planting", Planting(
+        pdate=date(2004, 1, 1), ppop=1, ppoe=1, plme='S',
+        plds='R', plrs=50, plrd=0, pldp=5
+    ))
+    results = dssat.run_treatment(
+        field=treatment["Field"], 
+        cultivar=cultivar, 
+        planting=planting,
+        harvest=treatment.get("Harvest"),
+        initial_conditions=treatment["InitialConditions"],
+        simulation_controls=treatment["SimulationControls"]
+    )
+    soilwat = dssat.output_tables['SoilWat']
+    # Evaluate the water content in the first layer at the last 4 days
+    assert all(np.isclose(soilwat['SW1D'].iloc[-4:].values, [.088, .071, .07, .069]))
+    dssat.close()
+
 if __name__ == "__main__":
-    test_cotton()
+    test_fallow()
