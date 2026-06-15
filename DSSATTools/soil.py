@@ -253,7 +253,7 @@ class SoilLayer(Record):
         slhw: float
             pH in water
         slhb: float
-            Albedo, fraction
+            pH in buffer
         scec: float
             Cation exchange capacity, cmol kg-1
         sadc: float
