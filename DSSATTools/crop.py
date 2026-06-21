@@ -42,7 +42,8 @@ SPE_FILES = {
     "Wheat": f"WHCER{VERSION}.SPE",
     "DryBean": f"CRGRO{VERSION}.SPE",
     "Cassava": f"CSYCA{VERSION}.SPE",
-    "Cotton": f"CRGRO{VERSION}.SPE"
+    "Cotton": f"CRGRO{VERSION}.SPE",
+    "Fallow": f"FAGRO{VERSION}.SPE"
 }
 
 DSSAT_MODULE_PATH = os.path.dirname(module_path)
@@ -784,3 +785,44 @@ class Cotton(Crop):
     def __init__(self, cultivar_code):
         super().__init__(cultivar_code)
         return
+
+class Fallow(Crop):
+    code = "FA"
+    smodel = CROPS_MODULES["Fallow"]
+    spe_file = f'{code}GRO{VERSION}.SPE'
+    spe_path = ""
+    cul_dtypes = {}
+    cul_pars_fmt = {}
+    eco_dtypes = None
+    eco_pars_fmt = None
+
+    def __init__(self, cultivar_code):
+        self._code = cultivar_code
+        class MockCultivarRecord:
+            def __init__(self, code):
+                self.code = code
+            @property
+            def str(self):
+                return self.code
+            def __getitem__(self, key):
+                key = key.lower()
+                if key in ['vrname', 'var-name']:
+                    return 'FALLOW'
+                if key == 'eco#':
+                    return 'FA0001'
+                raise KeyError(key)
+            def __contains__(self, key):
+                return key.lower() in ['vrname', 'var-name', 'eco#']
+            def __len__(self):
+                return 3
+            def _write_file(self):
+                return "*CULTIVARS\n"
+            def __repr__(self):
+                return f"Fallow(cultivar_code={self.code!r})"
+
+        self._Crop__cultivar = MockCultivarRecord(cultivar_code)
+        return
+
+    @classmethod
+    def cultivar_list(cls):
+        return ['IB0001']

@@ -94,7 +94,7 @@ from .base.partypes import (
 from .crop import (
     Maize, Wheat, Sorghum, PearlMillet, Sugarbeet, Rice, Alfalfa, Bermudagrass,
     Soybean, Canola, Sunflower, Potato, Tomato, Cabbage, Sugarcane, DryBean,
-    Cassava, SweetCorn, Cotton
+    Cassava, SweetCorn, Cotton, Fallow
 )
 from .weather import WeatherStation
 from .soil import SoilProfile
@@ -104,7 +104,8 @@ CROP_OBJECTS = {
     "MZ": Maize, 'WH': Wheat, 'SG': Sorghum, 'ML': PearlMillet, 'BS': Sugarbeet,
     'RI': Rice, 'SW': SweetCorn, 'AL': Alfalfa, 'BM': Bermudagrass, 
     'SB': Soybean, 'CN': Canola, 'SU': Sunflower, 'PT': Potato, 'TM': Tomato,
-    'CB': Cabbage, 'SC': Sugarcane, 'BN': DryBean, 'CS': Cassava, 'CO': Cotton
+    'CB': Cabbage, 'SC': Sugarcane, 'BN': DryBean, 'CS': Cassava, 'CO': Cotton,
+    'FA': Fallow
 }
 
 class Planting(Record):
