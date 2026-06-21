@@ -31,7 +31,7 @@ This is the list of crops and the tested experiments:
 import pytest
 
 from DSSATTools.crop import (
-    Maize, Sorghum, Wheat, Tomato, Alfalfa, Fallow
+    Maize, Sorghum, Wheat, Tomato, Alfalfa, Fallow, DryBean
 )
 from DSSATTools.soil import SoilProfile
 from DSSATTools.filex import (
@@ -950,6 +950,144 @@ def test_sequence():
     # Index 0 is Wheat, Index 2 is Maize
     assert np.isclose(3922, summary.loc[0, 'HWAM'], rtol=0.01)
     assert np.isclose(3153, summary.loc[2, 'HWAM'], rtol=0.01)
+    dssat.close()
+
+def test_maize_bean_maize_sequence():
+    """
+    Maize - DryBean - Maize sequence at CCPA site (Palmira, Colombia).
+
+    Verifies that run_sequence works correctly when crops from different
+    model families (MZCER for Maize, CRGRO for DryBean) are combined in
+    the same rotation, ensuring the smodel switch in the config file and
+    the cultivar/ecotype file generation are both handled correctly.
+    """
+    cultivar_mz = Maize("IB0171")
+    cultivar_bn = DryBean("IB0001")
+
+    soil = SoilProfile.from_file(
+        "IBBN910030",
+        os.path.join(DATA_PATH, "Soil", "SOIL.SOL")
+    )
+
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "CCPA8601.WTH"),
+        os.path.join(DATA_PATH, 'Weather', "CCPA8701.WTH"),
+        os.path.join(DATA_PATH, 'Weather', "CCPA8801.WTH"),
+    ])
+
+    field = Field(
+        id_field='CCPA0001', wsta=weather_station, flob=0, fldt='DR000',
+        fldd=0, flds=0, id_soil=soil
+    )
+
+    initial_conditions = InitialConditions(
+        pcr='MZ', icdat=date(1986, 9, 1), icrt=700, icnd=-99, icrn=1, icre=1,
+        icwd=-99, icres=1000, icren=1.0, icrep=-99, icrip=-99, icrid=-99,
+        table=pd.DataFrame([
+            (5, 0.34, 2, 15),
+            (15, 0.34, 2, 15),
+            (25, 0.345, 2, 15),
+            (35, 0.345, 2, 15),
+            (50, 0.335, 2, 15),
+            (65, 0.323, 1, 4),
+            (80, 0.323, 1, 4),
+            (99, 0.328, 7, 4),
+        ], columns=['icbl', 'sh2o', 'snh4', 'sno3'])
+    )
+
+    sc_outputs = SCOutputs(
+        fname='Y', ovvew='Y', sumry='Y', fropt=1, grout='Y', caout='Y',
+        waout='Y', niout='Y', miout='Y', diout='N', vbose='D', chout='Y',
+        opout='Y', fmopt='A'
+    )
+
+    # --- Maize 1 (Sep 1986 - Jan 1987) ---
+    planting_mz1 = Planting(
+        pdate=date(1986, 9, 15), ppop=5, ppoe=5, plme='S',
+        plds='R', plrs=75, plrd=0, pldp=5
+    )
+    fertilizer_mz1 = Fertilizer(table=[
+        FertilizerEvent(fdate=date(1986, 9, 25), fmcd='FE007', fdep=5,
+                        famn=80, facd='AP002')
+    ])
+    harvest_mz1 = Harvest(
+        hdate=date(1987, 1, 31), hstg='GS000', hcom='-99', hsize='-99',
+        hpc=100, hbpc=0
+    )
+    sim_controls_mz1 = SimulationControls(
+        general=SCGeneral(sdate=date(1986, 9, 1)),
+        options=SCOptions(water='Y', nitro='Y', symbi='N'),
+        methods=SCMethods(infil='S', mesol='3'),
+        management=SCManagement(irrig='N', ferti='R', resid='N', harvs='R'),
+        outputs=sc_outputs
+    )
+
+    # --- DryBean (Feb 1987 - May 1987) ---
+    planting_bn = Planting(
+        pdate=date(1987, 2, 15), ppop=15, ppoe=15, plme='S',
+        plds='R', plrs=30, plrd=0, pldp=2
+    )
+    harvest_bn = Harvest(
+        hdate=date(1987, 5, 31), hstg='GS000', hcom='-99', hsize='-99',
+        hpc=100, hbpc=0
+    )
+    sim_controls_bn = SimulationControls(
+        general=SCGeneral(sdate=date(1986, 9, 1)),
+        options=SCOptions(water='Y', nitro='Y', symbi='N'),
+        methods=SCMethods(infil='S', mesol='3'),
+        management=SCManagement(irrig='N', ferti='N', resid='N', harvs='R'),
+        outputs=sc_outputs
+    )
+
+    # --- Maize 2 (Sep 1987 - Jan 1988) ---
+    planting_mz2 = Planting(
+        pdate=date(1987, 9, 15), ppop=5, ppoe=5, plme='S',
+        plds='R', plrs=75, plrd=0, pldp=5
+    )
+    fertilizer_mz2 = Fertilizer(table=[
+        FertilizerEvent(fdate=date(1987, 9, 25), fmcd='FE007', fdep=5,
+                        famn=80, facd='AP002')
+    ])
+    harvest_mz2 = Harvest(
+        hdate=date(1988, 1, 31), hstg='GS000', hcom='-99', hsize='-99',
+        hpc=100, hbpc=0
+    )
+    sim_controls_mz2 = SimulationControls(
+        general=SCGeneral(sdate=date(1986, 9, 1)),
+        options=SCOptions(water='Y', nitro='Y', symbi='N'),
+        methods=SCMethods(infil='S', mesol='3'),
+        management=SCManagement(irrig='N', ferti='R', resid='N', harvs='R'),
+        outputs=sc_outputs
+    )
+
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    summary = dssat.run_sequence(
+        field=field,
+        initial_conditions=initial_conditions,
+        sequence=[
+            {
+                "cultivar": cultivar_mz, "planting": planting_mz1,
+                "fertilizer": fertilizer_mz1, "harvest": harvest_mz1,
+                "simulation_controls": sim_controls_mz1
+            },
+            {
+                "cultivar": cultivar_bn, "planting": planting_bn,
+                "harvest": harvest_bn, "simulation_controls": sim_controls_bn
+            },
+            {
+                "cultivar": cultivar_mz, "planting": planting_mz2,
+                "fertilizer": fertilizer_mz2, "harvest": harvest_mz2,
+                "simulation_controls": sim_controls_mz2
+            }
+        ]
+    )
+
+    # Verify all three crops completed (non-zero harvest weight) and
+    # that the DryBean step (index 1) also produced a positive yield,
+    # confirming the model switch between MZCER and CRGRO worked.
+    assert summary.loc[0, 'HWAM'] > 0, "Maize 1 should produce a positive yield"
+    assert summary.loc[1, 'HWAM'] > 0, "DryBean should produce a positive yield"
+    assert summary.loc[2, 'HWAM'] > 0, "Maize 2 should produce a positive yield"
     dssat.close()
 
 if __name__ == "__main__":
