@@ -1011,17 +1011,20 @@ class SCMethods(Record):
         "wther": CodeType, "incon": CodeType, "light": CodeType,
         "evapo": CodeType, "infil": CodeType, "photo": CodeType,
         "hydro": CodeType, "nswit": CodeType, "mesom": CodeType,
-        "mesev": CodeType, "mesol": CodeType
+        "mesev": CodeType, "mesol": CodeType, "metmp": CodeType,
+        "meghg": CodeType
     }
     pars_fmt = {
         "wther": ">5", "incon": ">5", "light": ">5",
         "evapo": ">5", "infil": ">5", "photo": ">5",
         "hydro": ">5", "nswit": ">5", "mesom": ">5",
-        "mesev": ">5", "mesol": ">5"
+        "mesev": ">5", "mesol": ">5", "metmp": ">5",
+        "meghg": ">5"
     }
     def __init__(self, wther:str="M", incon:str="M", light:str="E",
                  evapo:str="R", infil:str="R", photo:str="C", hydro:str="R",
-                 nswit:str="1", mesom:str="P", mesev:str="R", mesol:str="1"):
+                 nswit:str="1", mesom:str="P", mesev:str="R", mesol:str="1",
+                 metmp:str="D", meghg:str="N"):
         """
         Initializes a Simulation Controls Methods section. 
 
@@ -1054,12 +1057,17 @@ class SCMethods(Record):
         mesol: str
             Soil layer distribution (1: Model-specified soil layers,
             2: Modified soil profile, 3: Unmodified soil profile)
+        metmp: str
+            Temperature method
+        meghg: str
+            Greenhouse gas method
         """
         super().__init__()
         kwargs = {
             "wther": wther, "incon": incon, "light": light, "evapo": evapo,
             "infil": infil, "photo": photo, "hydro": hydro, "nswit": nswit,
-            "mesom": mesom, "mesev": mesev, "mesol": mesol
+            "mesom": mesom, "mesev": mesev, "mesol": mesol, "metmp": metmp,
+            "meghg": meghg
         }
         for name, value in kwargs.items():
             super().__setitem__(name, value)
@@ -1597,7 +1605,9 @@ def read_filex(filexpath):
     - Treament number is always the first column
     - Treatment number is on the first two spaces
     """
-    with open(filexpath, "r") as f:
+    from .base.utils import detect_encoding
+    encoding = detect_encoding(filexpath)
+    with open(filexpath, "r", encoding=encoding) as f:
         lines = f.readlines()
     lookup = "section"
     vals_dict = {}
@@ -1829,5 +1839,175 @@ def create_filex(field:Field, cultivar:Cultivar, planting:Planting,
     out_str += simulation_controls._write_section()
 
     return out_str
+    
+def _write_tabular_block(obj, idx):
+    header_fields = ["@"+obj.prefix.upper()]
+    for key, fmt in obj.pars_fmt.items():
+        if fmt == "%y%j":
+            fmt = ">5"
+        if fmt == "%Y%j":
+            fmt = ">7"
+        if fmt[0] == ".":
+            leading = "."
+            fmt = fmt[1:]
+        else:
+            leading = ""
+        fmt = leading + fmt.split(".")[0]
+        header_fields.append(format(key.upper(), fmt))
+    
+    out_str = ""
+    if len(obj.dtypes) > 0:
+        out_str += " ".join(header_fields) + "\n"
+        out_str += " "*len(obj.prefix) + f"{idx} " + obj._write_row()
+        
+    table_str = obj.table._write_table().split("\n")
+    out_str += f"@{obj.prefix.upper()} {table_str[0]}\n"
+    for row in table_str[1:-1]:
+        out_str += " "*len(obj.prefix) + f"{idx} {row}\n"
+    return out_str
+
+def create_filex_sequence(field:Field, sequence:list, initial_conditions:InitialConditions=None):
+    """
+    Returns the FileX as a string for sequence mode simulation
+    """
+    # 1. EXP.DETAILS line
+    sim_controls1 = sequence[0]["simulation_controls"]
+    cultivar1 = sequence[0]["cultivar"]
+    experiment_name = field["id_field"][:4] +\
+        sim_controls1["general"]["sdate"].strftime('%y01') + "SQ"
+    out_str = f"*EXP.DETAILS: {experiment_name}\n\n"
+    
+    # 2. TREATMENTS section
+    out_str += "*TREATMENTS                        -------------FACTOR LEVELS------------\n"
+    out_str += "@N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM\n"
+    
+    for idx, step in enumerate(sequence, 1):
+        cultivar = step["cultivar"]
+        tname = f"P1 {cultivar.code}"
+        treatment_kwargs = {
+            "r": idx,
+            "o": 1,
+            "c": 0,
+            "tname": tname,
+            "cu": idx,
+            "fl": 1,
+            "sa": 1 if (idx == 1 and step.get("soil_analysis")) else 0,
+            "ic": 1 if (idx == 1 and initial_conditions) else 0,
+            "mp": idx,
+            "mi": idx if step.get("irrigation") else 0,
+            "mf": idx if step.get("fertilizer") else 0,
+            "mr": idx if step.get("residue") else 0,
+            "mc": idx if step.get("chemical") else 0,
+            "mt": idx if step.get("tillage") else 0,
+            "me": 0,
+            "mh": idx if step.get("harvest") else 0,
+            "sm": idx
+        }
+        trt = Treatment(**treatment_kwargs)
+        out_str += " 1 " + trt._write_row()
+        
+    out_str += "\n"
+    
+    # 3. CULTIVARS section
+    out_str += "*CULTIVARS\n@C CR INGENO CNAME\n"
+    for idx, step in enumerate(sequence, 1):
+        cultivar = step["cultivar"]
+        cr = cultivar.code
+        ingeno = cultivar._Crop__cultivar.str
+        if "vrname" in cultivar._Crop__cultivar:
+            cname = cultivar._Crop__cultivar['vrname']
+        elif "var-name" in cultivar._Crop__cultivar:
+            cname = cultivar._Crop__cultivar['var-name']
+        else:
+            raise RuntimeError
+        out_str += f" {idx} {cr:>2} {ingeno:>6} {cname:<16}\n"
+    out_str += "\n"
+    
+    # 4. FIELDS section
+    out_str += field._write_section() + "\n"
+    
+    # 5. SOIL ANALYSIS section (if any)
+    if sequence[0].get("soil_analysis"):
+        out_str += sequence[0]["soil_analysis"]._write_section() + "\n"
+        
+    # 6. INITIAL CONDITIONS section (if any)
+    if initial_conditions:
+        out_str += initial_conditions._write_section() + "\n"
+        
+    # 7. PLANTING DETAILS section
+    out_str += "*PLANTING DETAILS\n"
+    first_planting = sequence[0]["planting"]
+    planting_header = first_planting._write_section().split('\n')[1]
+    out_str += planting_header + "\n"
+    for idx, step in enumerate(sequence, 1):
+        planting = step["planting"]
+        out_str += " "*len(planting.prefix) + f"{idx} " + planting._write_row()
+    out_str += "\n"
+    
+    # 8. IRRIGATION AND WATER MANAGEMENT section (if any)
+    irrigations = [(idx, step["irrigation"]) for idx, step in enumerate(sequence, 1) if step.get("irrigation")]
+    if irrigations:
+        out_str += "*IRRIGATION AND WATER MANAGEMENT\n"
+        for idx, irr in irrigations:
+            out_str += _write_tabular_block(irr, idx)
+        out_str += "\n"
+        
+    # 9. FERTILIZERS (INORGANIC) section (if any)
+    fertilizers = [(idx, step["fertilizer"]) for idx, step in enumerate(sequence, 1) if step.get("fertilizer")]
+    if fertilizers:
+        out_str += "*FERTILIZERS (INORGANIC)\n"
+        for idx, fert in fertilizers:
+            out_str += _write_tabular_block(fert, idx)
+        out_str += "\n"
+        
+    # 10. RESIDUES AND ORGANIC FERTILIZER section (if any)
+    residues = [(idx, step["residue"]) for idx, step in enumerate(sequence, 1) if step.get("residue")]
+    if residues:
+        out_str += "*RESIDUES AND ORGANIC FERTILIZER\n"
+        for idx, res in residues:
+            out_str += _write_tabular_block(res, idx)
+        out_str += "\n"
+        
+    # 11. CHEMICAL APPLICATIONS section (if any)
+    chemicals = [(idx, step["chemical"]) for idx, step in enumerate(sequence, 1) if step.get("chemical")]
+    if chemicals:
+        out_str += "*CHEMICAL APPLICATIONS\n"
+        for idx, chem in chemicals:
+            out_str += _write_tabular_block(chem, idx)
+        out_str += "\n"
+        
+    # 12. TILLAGE AND ROTATIONS section (if any)
+    tillages = [(idx, step["tillage"]) for idx, step in enumerate(sequence, 1) if step.get("tillage")]
+    if tillages:
+        out_str += "*TILLAGE AND ROTATIONS\n"
+        for idx, till in tillages:
+            out_str += _write_tabular_block(till, idx)
+        out_str += "\n"
+        
+    # 13. HARVEST DETAILS section (if any)
+    harvests = [(idx, step["harvest"]) for idx, step in enumerate(sequence, 1) if step.get("harvest")]
+    if harvests:
+        out_str += "*HARVEST DETAILS\n"
+        first_harvest = harvests[0][1]
+        harvest_header = first_harvest._write_section().split('\n')[1]
+        out_str += harvest_header + "\n"
+        for idx, harvest in harvests:
+            out_str += " "*len(harvest.prefix) + f"{idx} " + harvest._write_row()
+        out_str += "\n"
+        
+    # 14. SIMULATION CONTROLS section
+    out_str += "*SIMULATION CONTROLS\n"
+    for idx, step in enumerate(sequence, 1):
+        sim_controls = step["simulation_controls"]
+        lines = sim_controls._write_section().split('\n')
+        if lines[0] == '*SIMULATION CONTROLS':
+            lines = lines[1:]
+        for i in range(len(lines)):
+            if lines[i].startswith(' 1 '):
+                lines[i] = f' {idx} ' + lines[i][3:]
+        out_str += '\n'.join(lines) + '\n'
+        
+    return out_str
+
     
     

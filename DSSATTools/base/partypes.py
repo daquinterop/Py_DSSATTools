@@ -130,6 +130,8 @@ CODE_VARS = {
     "mesom": ["G", "P"],
     "mesev": ["R", "S"], 
     "mesol": ["1", "2", "3"],
+    "metmp": ["D", None],
+    "meghg": ["0", "1", "N", None],
     "plant": ["A", "F", "R", ], 
     "irrig": ["A", "D", "F", "N", "P", "R", "W"], 
     "ferti": ["D", "N", "R", ],

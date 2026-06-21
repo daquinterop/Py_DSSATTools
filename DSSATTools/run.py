@@ -45,7 +45,7 @@ from .crop import Crop
 from .filex import(
     Planting, Cultivar, Harvest, InitialConditions, Fertilizer,
     SoilAnalysis, Irrigation, Residue, Chemical, Tillage, Field,
-    SimulationControls, Mow, create_filex
+    SimulationControls, Mow, create_filex, create_filex_sequence
 )
 from .base.utils import detect_encoding
 
@@ -331,6 +331,219 @@ class DSSAT:
             )
         }
         return out_dict
+
+    def run_sequence(self, field:Field, sequence:list, initial_conditions:InitialConditions=None, verbose=True):
+        '''
+        Run a sequence simulation.
+
+        A sequence simulation runs multiple crop seasons or fallow periods 
+        sequentially on the same field, carrying over soil water, nitrogen, 
+        organic matter, and other physical/chemical states from one crop/season 
+        to the next.
+
+        Arguments
+        ----------
+        field: Field
+        sequence: list
+        initial_conditions: InitialConditions, optional
+        verbose: bool
+            Whether to display the model std out or not
+
+        Examples
+        --------
+        >>> dssat = DSSAT("/tmp/dssat_test")
+        >>> dssat.run_sequence(
+        ...     field=field,
+        ...     initial_conditions=initial_conditions,
+        ...     sequence=[
+        ...         {
+        ...             "cultivar": cultivar_wh, "planting": planting_wh,
+        ...             "tillage": tillage_wh, "irrigation": irrigation_wh,
+        ...             "harvest": harvest_wh, "simulation_controls": sim_controls_wh
+        ...         },
+        ...         {
+        ...             "cultivar": cultivar_mz, "planting": planting_mz,
+        ...             "tillage": tillage_mz, "fertilizer": fertilizer_mz,
+        ...             "irrigation": irrigation_mz, "harvest": harvest_mz,
+        ...             "simulation_controls": sim_controls_mz
+        ...         }
+        ...     ]
+        ... )
+        '''
+        assert isinstance(field, Field), "field parameter must be a Field instance."
+        assert not initial_conditions or isinstance(initial_conditions, InitialConditions), \
+            "initial_conditions parameter must be a InitialConditions instance."
+            
+        # Remove previous outputs and inputs
+        OUTPUT_FILES = [i for i in os.listdir(self.run_path) if i[-3:] == 'OUT']
+        INP_FILES = [i for i in os.listdir(self.run_path) if i[-3:] in ['INP', 'INH', 'MOW']]
+        self.output_files = {}
+        for file in (OUTPUT_FILES + INP_FILES):
+            os.remove(os.path.join(self.run_path, file))
+            
+        # Generate FileX name ending with .SQX
+        for step in sequence:
+            step["simulation_controls"]["general"]["smodel"] = step["cultivar"].smodel
+        sim_controls1 = sequence[0]["simulation_controls"]
+        filex_name = field["id_field"][:4] +\
+            sim_controls1["general"]["sdate"].strftime('%y01') +\
+            '.SQX'
+        filex_name = os.path.join(self.run_path, filex_name.upper())
+        
+        # Write File X
+        with open(filex_name, "w") as f:
+            lines = create_filex_sequence(field, sequence, initial_conditions)
+            f.write(lines)
+            
+        # Cultivar and ecotype files for each unique cultivar in the sequence
+        written_genotypes = set()
+        for step in sequence:
+            cultivar = step["cultivar"]
+            if cultivar.spe_file in written_genotypes:
+                continue
+            written_genotypes.add(cultivar.spe_file)
+            cul_filename = os.path.join(self.run_path, cultivar.spe_file[:-3]+"CUL") 
+            with open(cul_filename, "w") as f:
+                lines = cultivar._write_cul()
+                f.write(lines)
+            eco_filename = os.path.join(self.run_path, cultivar.spe_file[:-3]+"ECO") 
+            if cultivar.eco_dtypes:
+                with open(eco_filename, "w") as f:
+                    lines = cultivar._write_eco()
+                    f.write(lines)
+                    
+        # Soil
+        sol_filename = os.path.join(self.run_path, "SOIL.SOL")
+        with open(sol_filename, "w") as f:
+            lines = field["id_soil"]._write_sol()
+            f.write(lines)
+            
+        # Weather
+        wth_year = field["wsta"].table[0]["date"].year
+        wth_len = field["wsta"].table[-1]["date"].year - wth_year + 1
+        wth_filename = f'{field["wsta"]["insi"]}{str(wth_year)[2:]}{wth_len:02d}.WTH'
+        wth_filename = os.path.join(self.run_path, "Weather", wth_filename)
+        with open(wth_filename, "w") as f:
+            lines = field["wsta"]._write_wth()
+            f.write(lines)
+            
+        # Mow
+        for idx, step in enumerate(sequence, 1):
+            cultivar = step["cultivar"]
+            mow = step.get("mow")
+            if type(cultivar).__name__ in PERENIAL_FORAGES:
+                if mow and len(mow.table) >= 1:
+                    mow_file_path = os.path.join(self.run_path, f'{os.path.basename(filex_name)[:-4]}.MOW')
+                    with open(mow_file_path, 'w') as f: 
+                        file_str = mow._write_section()
+                        f.write(file_str)
+                        
+        # Configuration file
+        with open(os.path.join(self.run_path, CONFILE), 'w') as f:
+            f.write(f'WED    {os.path.join(self.run_path, "Weather")}\n')
+            
+            written_crops = set()
+            for step in sequence:
+                cultivar = step["cultivar"]
+                if cultivar.code in written_crops:
+                    continue
+                written_crops.add(cultivar.code)
+                f.write(f'M{cultivar.code}    {self.run_path} dscsm048 {cultivar.smodel}{VERSION}\n')
+                
+            f.write(f'CRD    {CRD_PATH}\n')
+            f.write(f'PSD    {os.path.join(DSSAT_HOME, "Pest")}\n')
+            f.write(f'SLD    {SLD_PATH}\n')
+            f.write(f'STD    {STD_PATH}\n')
+            
+        # Write Batch file
+        batch_filename = os.path.join(self.run_path, 'DSSBATCH.V48')
+        with open(batch_filename, 'w') as f:
+            f.write("$BATCH(SEQUENCE)\n!\n")
+            f.write(f"@FILEX                                                                                        TRTNO     RP     SQ     OP     CO\n")
+            filex_base = os.path.basename(filex_name)
+            for idx in range(1, len(sequence) + 1):
+                f.write(f"{filex_base:<92} {1:>6} {1:>6} {idx:>6} {0:>6} {0:>6}\n")
+                
+        # Run the model
+        exc_args = [BIN_PATH, 'Q', 'DSSBATCH.V48']
+        excinfo = subprocess.run(exc_args, 
+            cwd=self.run_path, capture_output=True, text=True,
+            env={"DSSAT_HOME": DSSAT_HOME, }
+        )
+        excinfo.stdout = re.sub("\n{2,}", "\n", excinfo.stdout)
+        excinfo.stdout = re.sub("\n$", "", excinfo.stdout)
+        self.stdout = excinfo.stdout.strip()
+        
+        if verbose:
+            for line in excinfo.stdout.split("\n"):
+                sys.stdout.write(line + '\n')
+                
+        if excinfo.returncode != 0:
+            error_file = os.path.join(self.run_path, "ERROR.OUT")
+            if os.path.exists(error_file):
+                with open(error_file, "r") as f:
+                    for line in f:
+                        print(line, end='')
+            raise RuntimeError("DSSAT execution Failed. Check the ERROR.OUT file")
+            
+        # Get the output files
+        self._fetch_output()
+        
+        # Parse outputs (excluding PlantGro in sequence mode)
+        SEQ_OUTPUTS = ["Weather", "SoilWat", "SoilOrg", "SoilNi"]
+        for fname, file_lines in self.output_files.items():
+            if fname not in SEQ_OUTPUTS:
+                continue
+            table_start = -1
+            init_lines = []
+            for line in file_lines.split('\n'):
+                table_start += 1
+                init_lines.append(line)
+                if "@" in init_lines[-1][:10]:
+                    break
+            try:
+                df = pd.read_csv(
+                    io.StringIO("".join(file_lines)),
+                    skiprows=table_start,
+                    sep=" ",
+                    skipinitialspace=True,
+                )
+            except Exception:
+                df = pd.read_csv(
+                    io.StringIO("".join(file_lines[table_start:])),
+                    skiprows=0,
+                    sep=" ",
+                    skipinitialspace=True,
+                )
+                break
+
+            if all(("@YEAR" in df.columns, "DOY" in df.columns)):
+                df["DOY"] = df.DOY.astype(int).map(lambda x: f"{x:03d}")
+                df["@YEAR"] = df["@YEAR"].astype(str)
+                df.index = pd.to_datetime((df["@YEAR"] + df["DOY"]), format="%Y%j")
+
+            self._output[fname] = df
+            
+        # Parse Summary.OUT
+        summary_df = pd.DataFrame()
+        summary_file = os.path.join(self.run_path, "Summary.OUT")
+        if os.path.exists(summary_file):
+            encoding = detect_encoding(summary_file)
+            with open(summary_file, "r", encoding=encoding) as f:
+                file_lines = f.readlines()
+            ts = -1
+            for i, line in enumerate(file_lines):
+                if "@" in line[:10]:
+                    ts = i
+                    break
+            if ts != -1:
+                summary_df = pd.read_fwf(io.StringIO("".join(file_lines)), skiprows=ts)
+                summary_df.columns = [c.replace(".", "").strip() for c in summary_df.columns]
+                if '@' in summary_df.columns:
+                    summary_df = summary_df.drop(columns=['@'])
+                    
+        self._output['Summary'] = summary_df
+        return summary_df
 
     def _fetch_output(self):
         files = os.listdir(self.run_path)

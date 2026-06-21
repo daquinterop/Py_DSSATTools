@@ -501,7 +501,7 @@ class SoilProfile(TabularRecord):
         if not level_2_pars:
             level_2_pars = ["\n"] * len(level_1_pars)
         pars = [
-            f"{l1.rstrip()}{l2[6:]}" 
+            f"{l1.split('!')[0].rstrip()}{l2.split('!')[0][6:]}" 
             for l1, l2 in zip(level_1_pars, level_2_pars)
         ]
         table = []

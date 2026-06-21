@@ -37,7 +37,8 @@ from DSSATTools.soil import SoilProfile
 from DSSATTools.filex import (
     read_filex, Field, InitialConditions, Planting, Fertilizer, 
     FertilizerEvent, SimulationControls, SCGeneral, SCManagement,
-    SCMethods, SCOptions, Mow
+    SCMethods, SCOptions, Mow, Harvest, Irrigation, IrrigationEvent,
+    Tillage, TillageEvent, SCOutputs, SoilAnalysis
 )
 from DSSATTools.weather import WeatherStation
 from DSSATTools.run import DSSAT
@@ -772,6 +773,183 @@ def test_fallow():
     soilwat = dssat.output_tables['SoilWat']
     # Evaluate the water content in the first layer at the last 4 days
     assert all(np.isclose(soilwat['SW1D'].iloc[-4:].values, [.088, .071, .07, .069]))
+    dssat.close()
+
+def test_sequence():
+    """
+    Sequence experiment QUKY1101, Wheat-Fallow-Maize sequence
+    """
+    cultivar_wh = Wheat("990015")
+    cultivar_fa = Fallow("IB0001")
+    cultivar_mz = Maize("IB0200")
+    
+    soil = SoilProfile.from_file(
+        "QUKI100004",
+        os.path.join(DATA_PATH, "Soil", "QU.SOL")
+    )
+    
+    weather_station = WeatherStation.from_files([
+        os.path.join(DATA_PATH, 'Weather', "QDKY1101.WTH"),
+        os.path.join(DATA_PATH, 'Weather', "QDKY1201.WTH"),
+    ])
+    
+    field = Field(
+        id_field='KYQD0001', wsta=weather_station, flob=0, fldt='DR000', 
+        fldd=105, flds=0, id_soil=soil
+    )
+    
+    initial_conditions = InitialConditions(
+        pcr='BN', icdat=date(2011, 6, 8), icrt=700, icnd=-99, icrn=1, icre=1,
+        icwd=-99, icres=1320, icren=1.5, icrep=-99, icrip=-99, icrid=-99,
+        table=pd.DataFrame([
+            (5, 0.35, 3, 4),
+            (10, 0.35, 3, 5),
+            (20, 0.35, 6, 9),
+            (30, 0.35, 6, 4),
+            (40, 0.4, 3, 3),
+            (50, 0.4, 2, 1),
+            (60, 0.4, 1, 1),
+            (70, 0.4, 1, 1),
+            (80, 0.4, 1, 1),
+            (90, 0.4, 1, 1),
+        ], columns=['icbl', 'sh2o', 'snh4', 'sno3'])
+    )
+    
+    planting_wh = Planting(
+        pdate=date(2011, 7, 6), ppop=125, ppoe=125, plme='S',
+        plds='R', plrs=25, plrd=0, pldp=5
+    )
+    
+    tillage_wh = Tillage(table=[
+        TillageEvent(tdate=date(2011, 6, 8), timpl='TI005', tdep=20),
+        TillageEvent(tdate=date(2011, 6, 10), timpl='TI010', tdep=20),
+        TillageEvent(tdate=date(2011, 6, 20), timpl='TI033', tdep=15),
+    ])
+    
+    irrigation_wh = Irrigation(
+        efir=1, idep=30, ithr=50, iept=100, ioff='GS000', iame='IR001', iamt=10,
+        table=[
+            IrrigationEvent(idate=date(2011, 8, 11), irop='IR004', irval=40),
+            IrrigationEvent(idate=date(2011, 9, 15), irop='IR004', irval=21),
+            IrrigationEvent(idate=date(2011, 9, 27), irop='IR004', irval=30),
+            IrrigationEvent(idate=date(2011, 10, 5), irop='IR004', irval=45),
+        ]
+    )
+    
+    harvest_wh = Harvest(
+        hdate=date(2011, 11, 29), hstg='GS000', hcom='-99', hsize='-99', hpc=100, hbpc=0
+    )
+    
+    sc_outputs = SCOutputs(
+        fname='Y', ovvew='Y', sumry='Y', fropt=1, grout='Y', caout='Y',
+        waout='Y', niout='Y', miout='Y', diout='N', vbose='D', chout='Y',
+        opout='Y', fmopt='A'
+    )
+
+    sim_controls_wh = SimulationControls(
+        general=SCGeneral(sdate=date(2011, 6, 8), sname="CONV"),
+        options=SCOptions(water='Y', nitro='Y', symbi='N'),
+        methods=SCMethods(evapo='R', photo='C', infil='S', mesev='S', mesol='3', meghg='1'),
+        management=SCManagement(irrig='R', ferti='R', resid='N', harvs='R'),
+        outputs=sc_outputs
+    )
+    
+    planting_fa = Planting(
+        pdate=date(2011, 11, 30), ppop=125, ppoe=125, plme='S',
+        plds='R', plrs=25, plrd=0, pldp=5
+    )
+    
+    harvest_fa = Harvest(
+        hdate=date(2011, 12, 14), hstg='GS000', hcom='-99', hsize='-99', hpc=0, hbpc=0
+    )
+    
+    sim_controls_fa = SimulationControls(
+        general=SCGeneral(sdate=date(2011, 6, 8), sname="CONV"),
+        options=SCOptions(water='Y', nitro='Y', symbi='N'),
+        methods=SCMethods(evapo='F', photo='L', infil='S', mesev='S', mesol='3', meghg='1'),
+        management=SCManagement(irrig='R', ferti='R', resid='N', harvs='R'),
+        outputs=sc_outputs
+    )
+    
+    planting_mz = Planting(
+        pdate=date(2011, 12, 15), ppop=5, ppoe=5, plme='S',
+        plds='R', plrs=93, plrd=0, pldp=5
+    )
+    
+    tillage_mz = Tillage(table=[
+        TillageEvent(tdate=date(2011, 12, 1), timpl='TI005', tdep=20),
+        TillageEvent(tdate=date(2011, 12, 5), timpl='TI010', tdep=20),
+        TillageEvent(tdate=date(2011, 12, 10), timpl='TI033', tdep=15),
+    ])
+    
+    fertilizer_mz = Fertilizer(table=[
+        FertilizerEvent(fdate=date(2011, 12, 21), fmcd='FE007', fdep=3, famn=40, facd='AP002')
+    ])
+    
+    irrigation_mz = Irrigation(
+        efir=1, idep=30, ithr=50, iept=100, ioff='GS000', iame='IR001', iamt=10,
+        table=[
+            IrrigationEvent(idate=date(2012, 1, 5), irop='IR004', irval=26),
+            IrrigationEvent(idate=date(2012, 1, 23), irop='IR004', irval=40),
+        ]
+    )
+    
+    harvest_mz = Harvest(
+        hdate=date(2012, 6, 20), hstg='GS000', hcom='-99', hsize='-99', hpc=100, hbpc=0
+    )
+    
+    sim_controls_mz = SimulationControls(
+        general=SCGeneral(sdate=date(2011, 6, 8), sname="CONV"),
+        options=SCOptions(water='Y', nitro='Y', symbi='N'),
+        methods=SCMethods(evapo='F', photo='L', infil='S', mesev='S', mesol='3', meghg='1'),
+        management=SCManagement(irrig='R', ferti='R', resid='N', harvs='R'),
+        outputs=sc_outputs
+    )
+    
+    soil_analysis = SoilAnalysis(
+        sadat=date(2011, 6, 9),
+        table=pd.DataFrame([
+            (5, 1.8, 1.2),
+            (10, 1.5, 1.1),
+            (20, 1.4, 1.3),
+            (30, 1.1, 1.0),
+            (40, 0.9, 0.7),
+            (50, 0.2, 0.1),
+            (60, 0.1, -99),
+            (70, 0.1, -99),
+            (80, 0.1, -99),
+            (90, 0.1, -99),
+        ], columns=['sabl', 'saoc', 'sasc'])
+    )
+    
+    dssat = DSSAT(os.path.join(TMP, 'dssat_test'))
+    summary = dssat.run_sequence(
+        field=field,
+        initial_conditions=initial_conditions,
+        sequence=[
+            {
+                "cultivar": cultivar_wh, "planting": planting_wh,
+                "tillage": tillage_wh, "irrigation": irrigation_wh,
+                "harvest": harvest_wh, "simulation_controls": sim_controls_wh,
+                "soil_analysis": soil_analysis
+            },
+            {
+                "cultivar": cultivar_fa, "planting": planting_fa,
+                "harvest": harvest_fa, "simulation_controls": sim_controls_fa
+            },
+            {
+                "cultivar": cultivar_mz, "planting": planting_mz,
+                "tillage": tillage_mz, "fertilizer": fertilizer_mz,
+                "irrigation": irrigation_mz, "harvest": harvest_mz,
+                "simulation_controls": sim_controls_mz
+            }
+        ]
+    )
+    
+    # Verify summary results
+    # Index 0 is Wheat, Index 2 is Maize
+    assert np.isclose(3922, summary.loc[0, 'HWAM'], rtol=0.01)
+    assert np.isclose(3153, summary.loc[2, 'HWAM'], rtol=0.01)
     dssat.close()
 
 if __name__ == "__main__":
